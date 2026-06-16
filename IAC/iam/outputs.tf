@@ -17,3 +17,8 @@ output "terraform_role_arns" {
   description = "ARNs de los roles de provisioning por capa."
   value       = { for k, r in aws_iam_role.terraform : k => r.arn }
 }
+
+output "replication_role_arn" {
+  description = "ARN del rol IAM para replicación S3 cross-region."
+  value       = aws_iam_role.s3_replication.arn
+}

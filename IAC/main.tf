@@ -114,3 +114,14 @@ module "observability" {
   ecs_cluster_name = module.compute.ecs_cluster_name
   sns_topic_arn    = module.messaging.sns_arn
 }
+
+module "frontend" {
+  source            = "./modules/frontend"
+  project           = var.project
+  env               = var.env
+  kms_key_arn       = module.data.kms_key_arn
+  cloudfront_arn    = module.edge.cloudfront_arn
+  cloudfront_oac_id = module.edge.oac_id
+  sns_topic_arn        = module.messaging.sns_arn        # ← agregar
+  replication_role_arn = module.iam.replication_role_arn # ← agregar
+}

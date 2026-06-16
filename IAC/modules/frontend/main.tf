@@ -65,3 +65,60 @@ resource "aws_s3_bucket_policy" "this" {
   bucket   = each.value.id
   policy   = data.aws_iam_policy_document.oac[each.key].json
 }
+
+# CKV_AWS_18 — Access logging habilitado
+resource "aws_s3_bucket_logging" "this" {
+  for_each      = aws_s3_bucket.this
+  bucket        = each.value.id
+  target_bucket = each.value.id
+  target_prefix = "access-logs/"
+}
+
+# CKV_AWS_144 — Cross-region replication
+resource "aws_s3_bucket_replication_configuration" "this" {
+  for_each = aws_s3_bucket.this
+  bucket   = each.value.id
+  role     = var.replication_role_arn
+
+  rule {
+    id     = "replicar-todo"
+    status = "Enabled"
+
+    destination {
+      bucket        = "arn:aws:s3:::${each.value.bucket}-replica"
+      storage_class = "STANDARD"
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.this]
+}
+
+# CKV2_AWS_61 — Lifecycle configuration
+resource "aws_s3_bucket_lifecycle_configuration" "this" {
+  for_each = aws_s3_bucket.this
+  bucket   = each.value.id
+
+  rule {
+    id     = "expire-versiones-antiguas"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+# CKV2_AWS_62 — Event notifications
+resource "aws_s3_bucket_notification" "this" {
+  for_each = aws_s3_bucket.this
+  bucket   = each.value.id
+
+  topic {
+    topic_arn = var.sns_topic_arn
+    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+  }
+}
