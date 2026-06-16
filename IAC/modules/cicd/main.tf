@@ -14,14 +14,21 @@ resource "aws_ecr_repository" "this" {
     scan_on_push = true
   }
   encryption_configuration {
-    encryption_type = "AES256"
+    encryption_type = "KMS"
+    kms_key         = var.kms_key_arn
   }
+}
+
+resource "aws_cloudwatch_log_group" "codebuild" {
+  name              = "/${var.project}/codebuild"
+  retention_in_days = 365
 }
 
 # ── CodeBuild: tests de integracion + SAST ──
 resource "aws_codebuild_project" "this" {
-  name         = "${var.project}-build"
-  service_role = aws_iam_role.codebuild.arn
+  name           = "${var.project}-build"
+  service_role   = aws_iam_role.codebuild.arn
+  encryption_key = var.kms_key_arn      # CKV_AWS_147
 
   artifacts {
     type = "CODEPIPELINE"
@@ -30,7 +37,12 @@ resource "aws_codebuild_project" "this" {
     compute_type    = "BUILD_GENERAL1_SMALL"
     image           = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
     type            = "LINUX_CONTAINER"
-    privileged_mode = true
+    privileged_mode = false             # CKV_AWS_316
+  }
+  logs_config {                         # CKV_AWS_314
+    cloudwatch_logs {
+      group_name = aws_cloudwatch_log_group.codebuild.name
+    }
   }
   source {
     type = "CODEPIPELINE"

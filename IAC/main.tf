@@ -57,6 +57,7 @@ module "cicd" {
   project       = var.project
   env           = var.env
   microservices = local.microservices
+  kms_key_arn   = module.data.kms_key_arn
 }
 
 # ── CAPA 4: Compute (API Gateway, VPC Link, ALB, ECS Fargate, Auto Scaling) ──
