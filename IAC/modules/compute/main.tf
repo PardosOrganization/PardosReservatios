@@ -12,6 +12,7 @@ resource "aws_lb" "this" {
   security_groups    = [var.alb_sg_id]
   subnets            = var.private_subnet_ids
   drop_invalid_header_fields = true   # ->LINEA AGREGADA.
+  enable_deletion_protection  = true   # CKV_AWS_150: Proteccion contra borrado accidental.
 }
 
 resource "aws_lb_target_group" "this" {
@@ -83,18 +84,42 @@ resource "aws_apigatewayv2_integration" "this" {
   connection_id      = aws_apigatewayv2_vpc_link.this.id
 }
 
+
+# CKV_AWS_309
 resource "aws_apigatewayv2_route" "this" {
   api_id    = aws_apigatewayv2_api.this.id
   route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+  # LINEA NECESARIA PARA LA AUTORIZACIÓN
+  authorization_type = "AWS_IAM" 
+}
+
+# CKV_AWS_76 
+# NUEVO RECURSO PARA LOS LOGS
+resource "aws_cloudwatch_log_group" "api_gw_logs" {
+  name              = "/aws/vendedlogs/apigateway/${var.project}-api-logs"
+  retention_in_days = 365  # CKV_AWS_338: Retener logs al menos 1 año.
 }
 
 resource "aws_apigatewayv2_stage" "this" {
   api_id      = aws_apigatewayv2_api.this.id
   name        = "$default"
   auto_deploy = true
+  # AGREGAR ESTE BLOQUE PARA HABILITAR LOS LOGS
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw_logs.arn
+    format          = jsonencode({
+      requestId      = "$context.requestId"
+      ip             = "$context.identity.sourceIp"
+      requestTime    = "$context.requestTime"
+      httpMethod     = "$context.httpMethod"
+      routeKey       = "$context.routeKey"
+      status         = "$context.status"
+      protocol       = "$context.protocol"
+      responseLength = "$context.responseLength"
+    })
+  }
 }
-
 # ── ECS Fargate ──
 resource "aws_ecs_cluster" "this" {
   name = "${var.project}-cluster-${var.env}"
