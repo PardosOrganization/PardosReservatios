@@ -11,6 +11,7 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
   subnets            = var.private_subnet_ids
+  drop_invalid_header_fields = true   # ->LINEA AGREGADA
 }
 
 resource "aws_lb_target_group" "this" {
@@ -29,14 +30,18 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "http_redirect" {
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.this[var.microservices[0]].arn
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
@@ -211,5 +216,17 @@ resource "aws_appautoscaling_scheduled_action" "cena_up" {
   scalable_target_action {
     min_capacity = 6
     max_capacity = 10
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.this.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this[var.microservices[0]].arn
   }
 }

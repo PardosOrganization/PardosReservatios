@@ -63,3 +63,8 @@ variable "container_port" {
   type    = number
   default = 8080
 }
+
+variable "certificate_arn" {
+  description = "ARN del certificado ACM para el listener HTTPS del ALB."
+  type        = string
+}
