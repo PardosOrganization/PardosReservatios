@@ -1,0 +1,80 @@
+/**
+ * src/features/reservations/ReservationForm.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos del formulario de reservas.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.phoneSearch { position: relative; }
+
+.clientFoundBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-top: 6px;
+}
+
+.newClientBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-info);
+  background: var(--color-info-soft);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-top: 6px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.row3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .row2, .row3 { grid-template-columns: 1fr; }
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light);
+}

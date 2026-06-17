@@ -1,0 +1,295 @@
+/**
+ * src/features/clients/ClientsPage.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos de la página de gestión de clientes.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.4s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text-dark);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* ── Filter bar ────────────────────── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  flex-wrap: wrap;
+}
+
+.searchBox { position: relative; flex: 1; min-width: 200px; }
+
+.searchIcon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 14px 9px 35px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  background: var(--color-cream);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.searchInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  background: #fff;
+}
+
+.vipBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  color: var(--color-text-mid);
+  transition: all var(--transition-fast);
+}
+
+.vipBtn:hover {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.vipActive {
+  background: var(--color-warning-soft) !important;
+  border-color: var(--color-warning) !important;
+  color: var(--color-warning) !important;
+}
+
+/* ── Grid ──────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── Client Card ───────────────────── */
+.clientCard {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  animation: cardIn 0.3s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.clientCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.vipCard {
+  border-color: #ffd70055;
+  background: linear-gradient(135deg, #fff 80%, #fffbea 100%);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.clientMeta { flex: 1; }
+
+.clientName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vipIcon { color: #f0b429; }
+
+.visits {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  display: block;
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.starBtn:hover  { color: #f0b429; background: #fffbec; }
+.starActive     { color: #f0b429 !important; }
+
+/* ── Info ──────────────────────────── */
+.clientInfo {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-mid);
+}
+
+.infoRow svg { color: var(--color-primary); flex-shrink: 0; }
+
+.pref {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-cream);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--color-primary-soft);
+}
+
+.allergy {
+  font-size: 11px;
+  color: #c0392b;
+  background: var(--color-primary-soft);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+/* ── Footer ────────────────────────── */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--color-border-light);
+  background: var(--color-cream);
+}
+
+.lastVisit {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  transition: all var(--transition-fast);
+}
+
+.editBtn:hover { color: var(--color-primary); background: var(--color-primary-soft); }
+
+/* ── Empty ─────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 24px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.empty h3 { font-size: 1.1rem; color: var(--color-text-dark); }
+
+/* ── Form modal ────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 500px) {
+  .row2 { grid-template-columns: 1fr; }
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light);
+}

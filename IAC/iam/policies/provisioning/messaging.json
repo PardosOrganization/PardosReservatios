@@ -1,0 +1,48 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SQS",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:CreateQueue",
+        "sqs:DeleteQueue",
+        "sqs:SetQueueAttributes",
+        "sqs:GetQueueAttributes",
+        "sqs:ListQueues",
+        "sqs:TagQueue"
+      ],
+      "Resource": "arn:aws:sqs:${region}:${account_id}:${project}-*"
+    },
+    {
+      "Sid": "SNS",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:DeleteTopic",
+        "sns:GetTopicAttributes",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:Unsubscribe",
+        "sns:ListSubscriptionsByTopic",
+        "sns:TagResource"
+      ],
+      "Resource": "arn:aws:sns:${region}:${account_id}:${project}-*"
+    },
+    {
+      "Sid": "ElastiCacheRedis",
+      "Effect": "Allow",
+      "Action": [
+        "elasticache:CreateReplicationGroup",
+        "elasticache:DeleteReplicationGroup",
+        "elasticache:ModifyReplicationGroup",
+        "elasticache:DescribeReplicationGroups",
+        "elasticache:CreateCacheSubnetGroup",
+        "elasticache:DeleteCacheSubnetGroup",
+        "elasticache:DescribeCacheSubnetGroups",
+        "elasticache:AddTagsToResource"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

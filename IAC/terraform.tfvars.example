@@ -1,0 +1,8 @@
+# Copia este archivo a terraform.tfvars y rellena los valores reales.
+account_id = "123456789012"
+project    = "pardos"
+env        = "prod"
+region     = "us-east-1"
+domain     = "pardos.com.pe"
+vpc_cidr   = "10.20.0.0/16"
+azs        = ["us-east-1a", "us-east-1b"]

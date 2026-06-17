@@ -1,0 +1,317 @@
+/**
+ * src/features/auth/LoginPage.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos de la página de Login — diseño split-screen con sidebar de branding.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Layout ────────────────────────── */
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  .aside { display: none; }
+}
+
+/* ── Aside — Branding ──────────────── */
+.aside {
+  background: linear-gradient(155deg, #3b1a1a 0%, #7b2020 50%, #e8453c 100%);
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.asideBrand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.logo {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.brandName {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.brandTagline {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.asideInfo { z-index: 1; }
+
+.asideTitle {
+  font-size: 1.9rem;
+  line-height: 1.25;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.featureList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255,255,255,0.88);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.featureDot {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Decoraciones ─────────────────────── */
+.asideDecor1 {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  top: -80px;
+  right: -100px;
+}
+
+.asideDecor2 {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  bottom: 60px;
+  left: -60px;
+}
+
+/* ── Main — Formulario ─────────────── */
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--color-cream);
+}
+
+.formCard {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: 36px;
+  animation: fadeIn 0.5s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.logoSmall {
+  width: 48px;
+  height: 48px;
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.formTitle {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text-dark);
+}
+
+.formSubtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.passwordField {
+  position: relative;
+}
+
+.togglePass {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color var(--transition-fast);
+  z-index: 2;
+}
+
+.togglePass:hover { color: var(--color-primary); }
+
+/* ── Quick access ──────────────────── */
+.quickAccess {
+  border-top: 1px solid var(--color-border-light);
+  padding-top: 20px;
+}
+
+.quickLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 400px) {
+  .quickGrid { grid-template-columns: 1fr 1fr; }
+}
+
+.quickBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-cream);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.quickBtn:hover {
+  border-color: var(--role-color, var(--color-primary));
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.quickAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--role-color, var(--color-primary));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quickInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.quickName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  line-height: 1.1;
+}
+
+.quickRole {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ── Booking CTA ────────────────────── */
+.bookingCta {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f9f4ff, #f0e6fa);
+  border: 1.5px solid #c39bd3;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.bookingCtaText {
+  font-size: 12px;
+  color: #6c3483;
+}
+
+.bookingCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: #8e44ad;
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.bookingCtaBtn:hover {
+  background: #6c3483;
+  transform: translateY(-1px);
+}

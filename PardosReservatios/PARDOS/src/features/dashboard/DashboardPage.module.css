@@ -1,0 +1,179 @@
+/**
+ * src/features/dashboard/DashboardPage.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos del Dashboard.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.4s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text-dark);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+/* ── Stats Grid ────────────────────── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* ── Bottom Grid ───────────────────── */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .bottomGrid { grid-template-columns: 1fr; }
+}
+
+/* ── Tabla de reservas ─────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  background: var(--color-cream);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 10px 16px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table tr {
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background var(--transition-fast);
+}
+
+.table tbody tr:hover { background: var(--color-cream); }
+.table tbody tr:last-child { border-bottom: none; }
+
+.table td {
+  padding: 12px 16px;
+  color: var(--color-text-dark);
+  vertical-align: middle;
+}
+
+.time {
+  font-weight: 700;
+  color: var(--color-primary) !important;
+  font-size: 14px !important;
+  white-space: nowrap;
+}
+
+.clientName {
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.clientPhone {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.center { text-align: center; }
+
+/* ── Empty state ───────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* ── Summary ───────────────────────── */
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  color: var(--color-text-mid);
+  min-width: 110px;
+}
+
+.summaryBar {
+  flex: 1;
+  height: 8px;
+  background: var(--color-cream-dark);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.summaryBarFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+  min-width: 4px;
+}
+
+.summaryValue {
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: right;
+}
+
+.historicNote {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.historicNote strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-primary);
+}

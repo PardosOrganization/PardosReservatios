@@ -1,0 +1,309 @@
+/**
+ * src/features/booking/BookingPage.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos de la página pública de reservas — diseño premium tipo landing page.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Layout ─────────────────────────── */
+.page {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: 100vh;
+  background: var(--color-cream);
+  font-family: var(--font-sans);
+}
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+}
+
+/* ── Aside ──────────────────────────── */
+.aside {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(160deg, #3b1a1a 0%, #5a2020 55%, #7b2d2d 100%);
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  color: rgba(255,255,255,0.9);
+}
+
+@media (max-width: 900px) {
+  .aside { position: static; height: auto; padding: 28px 24px; }
+}
+
+.asideLogo {
+  width: 64px; height: 64px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.asideBrand {
+  font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 4px;
+  font-family: var(--font-serif);
+}
+
+.asideTag {
+  font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 32px;
+  font-style: italic;
+}
+
+.asideInfo { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+
+.infoItem {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: rgba(255,255,255,0.75);
+}
+.infoItem svg { color: rgba(255,255,255,0.5); flex-shrink: 0; }
+
+.asideFeats { display: flex; flex-direction: column; gap: 8px; margin-bottom: auto; }
+
+.feat {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.07);
+  padding: 7px 12px; border-radius: 32px;
+  border: 1px solid rgba(255,255,255,0.12);
+  width: fit-content;
+}
+
+.staffLink {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: rgba(255,255,255,0.5);
+  text-decoration: none; margin-top: 28px;
+  transition: color var(--transition-fast);
+}
+.staffLink:hover { color: rgba(255,255,255,0.9); }
+
+/* Decoraciones */
+.asideDecor1 {
+  position: absolute; top: -80px; right: -80px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  pointer-events: none;
+}
+.asideDecor2 {
+  position: absolute; bottom: -60px; left: -60px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+}
+
+/* ── Main ───────────────────────────── */
+.main {
+  padding: 32px 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .main { padding: 20px 16px; }
+}
+
+.formCard {
+  width: 100%;
+  max-width: 680px;
+  animation: fadeIn 0.5s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.formHeader { margin-bottom: 28px; }
+.formTitle  { font-size: 1.5rem; font-weight: 800; color: var(--color-text-dark); margin-bottom: 6px; }
+.formSub    { font-size: 14px; color: var(--color-text-muted); }
+
+/* ── Form ───────────────────────────── */
+.form { display: flex; flex-direction: column; gap: 24px; }
+
+.section {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border-light);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-xs);
+}
+
+.sectionTitle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700;
+  color: var(--color-text-dark); text-transform: uppercase;
+  letter-spacing: 0.5px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ── Field ──────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.label { font-size: 12px; font-weight: 700; color: var(--color-text-mid); text-transform: uppercase; letter-spacing: .4px; }
+.req   { color: var(--color-primary); margin-left: 2px; }
+.fieldError { font-size: 11px; color: var(--color-primary); margin-top: 2px; }
+
+.inputWrap { position: relative; }
+.inputIcon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--color-text-muted); pointer-events: none;
+}
+
+.input {
+  width: 100%; padding: 10px 12px 10px 36px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px; font-family: var(--font-sans);
+  color: var(--color-text-dark);
+  background: var(--color-cream);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+  box-sizing: border-box;
+}
+.input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+.inputError  { border-color: var(--color-primary) !important; }
+
+.textarea { padding-left: 12px !important; resize: vertical; min-height: 72px; }
+
+/* ── Time slots ─────────────────────── */
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.timeBtn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 8px 10px; border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md); background: var(--color-cream);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans); color: var(--color-text-mid);
+  transition: all var(--transition-fast);
+}
+.timeBtn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft); }
+.timeBtnSel   { border-color: var(--color-primary) !important; background: var(--color-primary) !important; color: #fff !important; }
+
+/* ── Occasion grid ──────────────────── */
+.occasionGrid {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+
+.occBtn {
+  padding: 7px 14px; border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full); background: var(--color-cream);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans); color: var(--color-text-mid);
+  transition: all var(--transition-fast);
+}
+.occBtn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.occBtnSel   { border-color: var(--color-primary) !important; background: var(--color-primary-soft) !important; color: var(--color-primary) !important; font-weight: 700 !important; }
+
+/* ── Submit ─────────────────────────── */
+.submitBtn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  color: #fff; border: none; border-radius: var(--radius-lg);
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-sans);
+  box-shadow: 0 6px 24px rgba(232,69,60,.35);
+  transition: all var(--transition-fast);
+}
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(232,69,60,.45);
+}
+.submitBtn:active { transform: translateY(0); }
+
+.disclaimer {
+  font-size: 11px; color: var(--color-text-muted); text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Confirmed ──────────────────────── */
+.container {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 32px;
+  background: var(--color-cream);
+}
+
+.confirmed {
+  background: #fff;
+  border-radius: 24px;
+  border: 1.5px solid var(--color-border-light);
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.5s ease both;
+}
+
+.confirmedIcon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--color-success-soft); color: var(--color-success);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.confirmedTitle { font-size: 1.4rem; font-weight: 800; color: var(--color-text-dark); margin-bottom: 10px; }
+.confirmedSub   { font-size: 14px; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 24px; }
+
+.confirmedBox {
+  background: var(--color-cream);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-light);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.confirmedRow {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--color-text-mid);
+  padding-bottom: 8px; border-bottom: 1px solid var(--color-border-light);
+}
+.confirmedRow:last-child { border-bottom: none; padding-bottom: 0; }
+.confirmedRow strong { color: var(--color-text-dark); font-size: 14px; }
+
+.confirmedNote {
+  font-size: 13px; color: var(--color-text-mid); line-height: 1.6;
+  background: var(--color-warning-soft); border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px;
+}
+
+.confirmedActions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.btnNew {
+  padding: 10px 20px; background: none;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans); color: var(--color-text-mid);
+  transition: all var(--transition-fast);
+}
+.btnNew:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.btnLogin {
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: #fff; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+.btnLogin:hover { background: var(--color-primary-dark); }
