@@ -1,3 +1,10 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
 # Logs
 logs
 *.log
@@ -7,10 +14,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Environment
 *.local
+*.env
 
 # Editor directories and files
 .vscode/*
@@ -22,4 +28,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Terraform
+iac/.terraform/
+iac/*.tfstate
+iac/*.tfstate.backup
+iac/.terraform.lock.hcl
 iac/results.xml/*
