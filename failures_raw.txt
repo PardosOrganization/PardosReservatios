@@ -1,0 +1,1625 @@
+FAIL #1: CKV_AWS_158 - Ensure that CloudWatch Log Group is encrypted by KMS
+File/Lines: /modules/cicd/main.tf: 22-25
+Resource: module.cicd.aws_cloudwatch_log_group.codebuild
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+Code snippet:
+
+Resource: module.cicd.aws_cloudwatch_log_group.codebuild
+File: /modules/cicd/main.tf: 22-25
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+
+		22 | resource "aws_cloudwatch_log_group" "codebuild" {
+		23 |   name              = "/${var.project}/codebuild"
+		24 |   retention_in_days = 365
+		25 | }
+
+================================================================================
+
+FAIL #2: CKV_AWS_91 - Ensure the ELBv2 (Application/Network) has access logging enabled
+File/Lines: /modules/compute/main.tf: 8-15
+Resource: module.compute.aws_lb.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-22
+Code snippet:
+
+Resource: module.compute.aws_lb.this
+File: /modules/compute/main.tf: 8-15
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-22
+
+		8  | resource "aws_lb" "this" {
+		9  |   name               = "${var.project}-alb-${var.env}"
+		10 |   internal           = true
+		11 |   load_balancer_type = "application"
+		12 |   security_groups    = [var.alb_sg_id]
+		13 |   subnets            = var.private_subnet_ids
+		14 |   drop_invalid_header_fields = true   # ->LINEA AGREGADA.
+		15 | }
+
+================================================================================
+
+FAIL #3: CKV_AWS_150 - Ensure that Load Balancer has deletion protection enabled
+File/Lines: /modules/compute/main.tf: 8-15
+Resource: module.compute.aws_lb.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-150
+Code snippet:
+
+Resource: module.compute.aws_lb.this
+File: /modules/compute/main.tf: 8-15
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-150
+
+		8  | resource "aws_lb" "this" {
+		9  |   name               = "${var.project}-alb-${var.env}"
+		10 |   internal           = true
+		11 |   load_balancer_type = "application"
+		12 |   security_groups    = [var.alb_sg_id]
+		13 |   subnets            = var.private_subnet_ids
+		14 |   drop_invalid_header_fields = true   # ->LINEA AGREGADA.
+		15 | }
+
+================================================================================
+
+FAIL #4: CKV_AWS_309 - Ensure API GatewayV2 routes specify an authorization type
+File/Lines: /modules/compute/main.tf: 86-90
+Resource: module.compute.aws_apigatewayv2_route.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-309
+Code snippet:
+
+Resource: module.compute.aws_apigatewayv2_route.this
+File: /modules/compute/main.tf: 86-90
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-309
+
+		86 | resource "aws_apigatewayv2_route" "this" {
+		87 |   api_id    = aws_apigatewayv2_api.this.id
+		88 |   route_key = "ANY /{proxy+}"
+		89 |   target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+		90 | }
+
+================================================================================
+
+FAIL #5: CKV_AWS_76 - Ensure API Gateway has Access Logging enabled
+File/Lines: /modules/compute/main.tf: 92-96
+Resource: module.compute.aws_apigatewayv2_stage.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-17
+Code snippet:
+
+Resource: module.compute.aws_apigatewayv2_stage.this
+File: /modules/compute/main.tf: 92-96
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-17
+
+		92 | resource "aws_apigatewayv2_stage" "this" {
+		93 |   api_id      = aws_apigatewayv2_api.this.id
+		94 |   name        = "$default"
+		95 |   auto_deploy = true
+		96 | }
+
+================================================================================
+
+FAIL #6: CKV_AWS_139 - Ensure that RDS clusters have deletion protection enabled
+File/Lines: /modules/data/main.tf: 45-59
+Resource: module.data.aws_rds_cluster.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-rds-clusters-and-instances-have-deletion-protection-enabled
+Code snippet:
+
+Resource: module.data.aws_rds_cluster.this
+File: /modules/data/main.tf: 45-59
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-rds-clusters-and-instances-have-deletion-protection-enabled
+
+		45 | resource "aws_rds_cluster" "this" {
+		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
+		47 |   engine                    = "aurora-postgresql"
+		48 |   engine_version            = var.engine_version
+		49 |   database_name             = "pardos"
+		50 |   master_username           = "pardos_app"
+		51 |   master_password           = random_password.db.result
+		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
+		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
+		54 |   storage_encrypted         = true
+		55 |   kms_key_id                = aws_kms_key.this.arn
+		56 |   backup_retention_period   = 7
+		57 |   skip_final_snapshot       = false
+		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+		59 | }
+
+================================================================================
+
+FAIL #7: CKV_AWS_313 - Ensure RDS cluster configured to copy tags to snapshots
+File/Lines: /modules/data/main.tf: 45-59
+Resource: module.data.aws_rds_cluster.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-313
+Code snippet:
+
+Resource: module.data.aws_rds_cluster.this
+File: /modules/data/main.tf: 45-59
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-313
+
+		45 | resource "aws_rds_cluster" "this" {
+		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
+		47 |   engine                    = "aurora-postgresql"
+		48 |   engine_version            = var.engine_version
+		49 |   database_name             = "pardos"
+		50 |   master_username           = "pardos_app"
+		51 |   master_password           = random_password.db.result
+		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
+		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
+		54 |   storage_encrypted         = true
+		55 |   kms_key_id                = aws_kms_key.this.arn
+		56 |   backup_retention_period   = 7
+		57 |   skip_final_snapshot       = false
+		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+		59 | }
+
+================================================================================
+
+FAIL #8: CKV_AWS_324 - Ensure that RDS Cluster log capture is enabled
+File/Lines: /modules/data/main.tf: 45-59
+Resource: module.data.aws_rds_cluster.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-324
+Code snippet:
+
+Resource: module.data.aws_rds_cluster.this
+File: /modules/data/main.tf: 45-59
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-324
+
+		45 | resource "aws_rds_cluster" "this" {
+		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
+		47 |   engine                    = "aurora-postgresql"
+		48 |   engine_version            = var.engine_version
+		49 |   database_name             = "pardos"
+		50 |   master_username           = "pardos_app"
+		51 |   master_password           = random_password.db.result
+		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
+		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
+		54 |   storage_encrypted         = true
+		55 |   kms_key_id                = aws_kms_key.this.arn
+		56 |   backup_retention_period   = 7
+		57 |   skip_final_snapshot       = false
+		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+		59 | }
+
+================================================================================
+
+FAIL #9: CKV_AWS_162 - Ensure RDS cluster has IAM authentication enabled
+File/Lines: /modules/data/main.tf: 45-59
+Resource: module.data.aws_rds_cluster.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-cluster-has-iam-authentication-enabled
+Code snippet:
+
+Resource: module.data.aws_rds_cluster.this
+File: /modules/data/main.tf: 45-59
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-cluster-has-iam-authentication-enabled
+
+		45 | resource "aws_rds_cluster" "this" {
+		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
+		47 |   engine                    = "aurora-postgresql"
+		48 |   engine_version            = var.engine_version
+		49 |   database_name             = "pardos"
+		50 |   master_username           = "pardos_app"
+		51 |   master_password           = random_password.db.result
+		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
+		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
+		54 |   storage_encrypted         = true
+		55 |   kms_key_id                = aws_kms_key.this.arn
+		56 |   backup_retention_period   = 7
+		57 |   skip_final_snapshot       = false
+		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+		59 | }
+
+================================================================================
+
+FAIL #10: CKV_AWS_118 - Ensure that enhanced monitoring is enabled for Amazon RDS instances
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[0]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[0]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #11: CKV_AWS_226 - Ensure DB instance gets all minor upgrades automatically
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[0]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[0]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #12: CKV_AWS_353 - Ensure that RDS instances have performance insights enabled
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[0]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[0]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #13: CKV_AWS_118 - Ensure that enhanced monitoring is enabled for Amazon RDS instances
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[1]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[1]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #14: CKV_AWS_226 - Ensure DB instance gets all minor upgrades automatically
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[1]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[1]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #15: CKV_AWS_353 - Ensure that RDS instances have performance insights enabled
+File/Lines: /modules/data/main.tf: 62-70
+Resource: module.data.aws_rds_cluster_instance.this[1]
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
+Code snippet:
+
+Resource: module.data.aws_rds_cluster_instance.this[1]
+File: /modules/data/main.tf: 62-70
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
+
+		62 | resource "aws_rds_cluster_instance" "this" {
+		63 |   count                = 2
+		64 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		65 |   cluster_identifier   = aws_rds_cluster.this.id
+		66 |   instance_class       = "db.r6g.large"
+		67 |   engine               = aws_rds_cluster.this.engine
+		68 |   engine_version       = aws_rds_cluster.this.engine_version
+		69 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		70 | }
+
+================================================================================
+
+FAIL #16: CKV_AWS_192 - Ensure WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell
+File/Lines: /modules/edge/main.tf: 17-52
+Resource: module.edge.aws_wafv2_web_acl.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-waf-prevents-message-lookup-in-log4j2
+Code snippet:
+
+Resource: module.edge.aws_wafv2_web_acl.this
+File: /modules/edge/main.tf: 17-52
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-waf-prevents-message-lookup-in-log4j2
+
+		17 | resource "aws_wafv2_web_acl" "this" {
+		18 |   provider = aws.us_east_1
+		19 |   name     = "${var.project}-webacl"
+		20 |   scope    = "CLOUDFRONT"
+		21 | 
+		22 |   default_action {
+		23 |     allow {}
+		24 |   }
+		25 | 
+		26 |   # Rate limiting de reservas: max 3 intentos por IP en 5 minutos.
+		27 |   rule {
+		28 |     name     = "rate-limit-reservas"
+		29 |     priority = 1
+		30 | 
+		31 |     action {
+		32 |       block {}
+		33 |     }
+		34 |     statement {
+		35 |       rate_based_statement {
+		36 |         limit              = 300
+		37 |         aggregate_key_type = "IP"
+		38 |       }
+		39 |     }
+		40 |     visibility_config {
+		41 |       cloudwatch_metrics_enabled = true
+		42 |       metric_name                = "rate-limit-reservas"
+		43 |       sampled_requests_enabled   = true
+		44 |     }
+		45 |   }
+		46 | 
+		47 |   visibility_config {
+		48 |     cloudwatch_metrics_enabled = true
+		49 |     metric_name                = "${var.project}-webacl"
+		50 |     sampled_requests_enabled   = true
+		51 |   }
+		52 | }
+
+================================================================================
+
+FAIL #17: CKV_AWS_86 - Ensure CloudFront distribution has Access Logging enabled
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-20
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-20
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #18: CKV_AWS_305 - Ensure CloudFront distribution has a default root object configured
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-305
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-305
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #19: CKV_AWS_310 - Ensure CloudFront distributions should have origin failover configured
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-310
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-310
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #20: CKV_AWS_174 - Verify CloudFront Distribution Viewer Certificate is using TLS v1.2 or higher
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-networking-63
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-networking-63
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #21: CKV_AWS_374 - Ensure AWS CloudFront web distribution has geo restriction enabled
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-374
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-374
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #22: CKV_AWS_31 - Ensure all data stored in the ElastiCache Replication Group is securely encrypted at transit and has auth token
+File/Lines: /modules/messaging/main.tf: 39-53
+Resource: module.messaging.aws_elasticache_replication_group.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-11
+Code snippet:
+
+Resource: module.messaging.aws_elasticache_replication_group.this
+File: /modules/messaging/main.tf: 39-53
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-11
+
+		39 | resource "aws_elasticache_replication_group" "this" {
+		40 |   replication_group_id       = "${var.project}-redis-${var.env}"
+		41 |   description                = "Cache de disponibilidad de mesas de Pardos"
+		42 |   engine                     = "redis"
+		43 |   node_type                  = "cache.t4g.small"
+		44 |   num_cache_clusters         = 2
+		45 |   automatic_failover_enabled = true
+		46 |   multi_az_enabled           = true
+		47 |   subnet_group_name          = aws_elasticache_subnet_group.this.name
+		48 |   security_group_ids         = [var.redis_sg_id]
+		49 |   at_rest_encryption_enabled = true
+		50 |   transit_encryption_enabled = true
+		51 |   kms_key_id                 = var.kms_key_arn
+		52 |   port                       = 6379
+		53 | }
+
+================================================================================
+
+FAIL #23: CKV_AWS_382 - Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+File/Lines: /modules/network/main.tf: 41-67
+Resource: module.network.aws_security_group.alb
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+Code snippet:
+
+Resource: module.network.aws_security_group.alb
+File: /modules/network/main.tf: 41-67
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+
+		41 | resource "aws_security_group" "alb" {
+		42 |   name_prefix = "${local.name}-alb-"
+		43 |   vpc_id      = aws_vpc.this.id
+		44 |   description = "ALB: recibe trafico del VPC Link"
+		45 | 
+		46 |   ingress {
+		47 |     description = "HTTPS"
+		48 |     from_port   = 443
+		49 |     to_port     = 443
+		50 |     protocol    = "tcp"
+		51 |     cidr_blocks = [var.vpc_cidr]
+		52 |   }
+		53 |   ingress {
+		54 |     description = "HTTP redirige a HTTPS"
+		55 |     from_port   = 80
+		56 |     to_port     = 80
+		57 |     protocol    = "tcp"
+		58 |     cidr_blocks = [var.vpc_cidr]
+		59 |   }
+		60 |   egress {
+		61 |     from_port   = 0
+		62 |     to_port     = 0
+		63 |     protocol    = "-1"
+		64 |     cidr_blocks = ["0.0.0.0/0"]
+		65 |   }
+		66 |   tags = { Name = "${local.name}-alb-sg" }
+		67 | }
+
+================================================================================
+
+FAIL #24: CKV_AWS_23 - Ensure every security group and rule has a description
+File/Lines: /modules/network/main.tf: 41-67
+Resource: module.network.aws_security_group.alb
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+Code snippet:
+
+Resource: module.network.aws_security_group.alb
+File: /modules/network/main.tf: 41-67
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		41 | resource "aws_security_group" "alb" {
+		42 |   name_prefix = "${local.name}-alb-"
+		43 |   vpc_id      = aws_vpc.this.id
+		44 |   description = "ALB: recibe trafico del VPC Link"
+		45 | 
+		46 |   ingress {
+		47 |     description = "HTTPS"
+		48 |     from_port   = 443
+		49 |     to_port     = 443
+		50 |     protocol    = "tcp"
+		51 |     cidr_blocks = [var.vpc_cidr]
+		52 |   }
+		53 |   ingress {
+		54 |     description = "HTTP redirige a HTTPS"
+		55 |     from_port   = 80
+		56 |     to_port     = 80
+		57 |     protocol    = "tcp"
+		58 |     cidr_blocks = [var.vpc_cidr]
+		59 |   }
+		60 |   egress {
+		61 |     from_port   = 0
+		62 |     to_port     = 0
+		63 |     protocol    = "-1"
+		64 |     cidr_blocks = ["0.0.0.0/0"]
+		65 |   }
+		66 |   tags = { Name = "${local.name}-alb-sg" }
+		67 | }
+
+================================================================================
+
+FAIL #25: CKV_AWS_382 - Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+File/Lines: /modules/network/main.tf: 69-88
+Resource: module.network.aws_security_group.ecs
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+Code snippet:
+
+Resource: module.network.aws_security_group.ecs
+File: /modules/network/main.tf: 69-88
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+
+		69 | resource "aws_security_group" "ecs" {
+		70 |   name_prefix = "${local.name}-ecs-"
+		71 |   vpc_id      = aws_vpc.this.id
+		72 |   description = "ECS Fargate: recibe del ALB"
+		73 | 
+		74 |   ingress {
+		75 |     description     = "Trafico del ALB"
+		76 |     from_port       = 8080
+		77 |     to_port         = 8080
+		78 |     protocol        = "tcp"
+		79 |     security_groups = [aws_security_group.alb.id]
+		80 |   }
+		81 |   egress {
+		82 |     from_port   = 0
+		83 |     to_port     = 0
+		84 |     protocol    = "-1"
+		85 |     cidr_blocks = ["0.0.0.0/0"]
+		86 |   }
+		87 |   tags = { Name = "${local.name}-ecs-sg" }
+		88 | }
+
+================================================================================
+
+FAIL #26: CKV_AWS_23 - Ensure every security group and rule has a description
+File/Lines: /modules/network/main.tf: 69-88
+Resource: module.network.aws_security_group.ecs
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+Code snippet:
+
+Resource: module.network.aws_security_group.ecs
+File: /modules/network/main.tf: 69-88
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		69 | resource "aws_security_group" "ecs" {
+		70 |   name_prefix = "${local.name}-ecs-"
+		71 |   vpc_id      = aws_vpc.this.id
+		72 |   description = "ECS Fargate: recibe del ALB"
+		73 | 
+		74 |   ingress {
+		75 |     description     = "Trafico del ALB"
+		76 |     from_port       = 8080
+		77 |     to_port         = 8080
+		78 |     protocol        = "tcp"
+		79 |     security_groups = [aws_security_group.alb.id]
+		80 |   }
+		81 |   egress {
+		82 |     from_port   = 0
+		83 |     to_port     = 0
+		84 |     protocol    = "-1"
+		85 |     cidr_blocks = ["0.0.0.0/0"]
+		86 |   }
+		87 |   tags = { Name = "${local.name}-ecs-sg" }
+		88 | }
+
+================================================================================
+
+FAIL #27: CKV_AWS_382 - Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+File/Lines: /modules/network/main.tf: 90-109
+Resource: module.network.aws_security_group.proxy
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+Code snippet:
+
+Resource: module.network.aws_security_group.proxy
+File: /modules/network/main.tf: 90-109
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+
+		90  | resource "aws_security_group" "proxy" {
+		91  |   name_prefix = "${local.name}-proxy-"
+		92  |   vpc_id      = aws_vpc.this.id
+		93  |   description = "RDS Proxy: solo desde ECS"
+		94  | 
+		95  |   ingress {
+		96  |     description     = "PostgreSQL desde ECS"
+		97  |     from_port       = 5432
+		98  |     to_port         = 5432
+		99  |     protocol        = "tcp"
+		100 |     security_groups = [aws_security_group.ecs.id]
+		101 |   }
+		102 |   egress {
+		103 |     from_port   = 0
+		104 |     to_port     = 0
+		105 |     protocol    = "-1"
+		106 |     cidr_blocks = ["0.0.0.0/0"]
+		107 |   }
+		108 |   tags = { Name = "${local.name}-proxy-sg" }
+		109 | }
+
+================================================================================
+
+FAIL #28: CKV_AWS_23 - Ensure every security group and rule has a description
+File/Lines: /modules/network/main.tf: 90-109
+Resource: module.network.aws_security_group.proxy
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+Code snippet:
+
+Resource: module.network.aws_security_group.proxy
+File: /modules/network/main.tf: 90-109
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		90  | resource "aws_security_group" "proxy" {
+		91  |   name_prefix = "${local.name}-proxy-"
+		92  |   vpc_id      = aws_vpc.this.id
+		93  |   description = "RDS Proxy: solo desde ECS"
+		94  | 
+		95  |   ingress {
+		96  |     description     = "PostgreSQL desde ECS"
+		97  |     from_port       = 5432
+		98  |     to_port         = 5432
+		99  |     protocol        = "tcp"
+		100 |     security_groups = [aws_security_group.ecs.id]
+		101 |   }
+		102 |   egress {
+		103 |     from_port   = 0
+		104 |     to_port     = 0
+		105 |     protocol    = "-1"
+		106 |     cidr_blocks = ["0.0.0.0/0"]
+		107 |   }
+		108 |   tags = { Name = "${local.name}-proxy-sg" }
+		109 | }
+
+================================================================================
+
+FAIL #29: CKV_AWS_382 - Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+File/Lines: /modules/network/main.tf: 111-130
+Resource: module.network.aws_security_group.aurora
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+Code snippet:
+
+Resource: module.network.aws_security_group.aurora
+File: /modules/network/main.tf: 111-130
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+
+		111 | resource "aws_security_group" "aurora" {
+		112 |   name_prefix = "${local.name}-aurora-"
+		113 |   vpc_id      = aws_vpc.this.id
+		114 |   description = "Aurora: solo desde RDS Proxy"
+		115 | 
+		116 |   ingress {
+		117 |     description     = "PostgreSQL desde RDS Proxy"
+		118 |     from_port       = 5432
+		119 |     to_port         = 5432
+		120 |     protocol        = "tcp"
+		121 |     security_groups = [aws_security_group.proxy.id]
+		122 |   }
+		123 |   egress {
+		124 |     from_port   = 0
+		125 |     to_port     = 0
+		126 |     protocol    = "-1"
+		127 |     cidr_blocks = ["0.0.0.0/0"]
+		128 |   }
+		129 |   tags = { Name = "${local.name}-aurora-sg" }
+		130 | }
+
+================================================================================
+
+FAIL #30: CKV_AWS_23 - Ensure every security group and rule has a description
+File/Lines: /modules/network/main.tf: 111-130
+Resource: module.network.aws_security_group.aurora
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+Code snippet:
+
+Resource: module.network.aws_security_group.aurora
+File: /modules/network/main.tf: 111-130
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		111 | resource "aws_security_group" "aurora" {
+		112 |   name_prefix = "${local.name}-aurora-"
+		113 |   vpc_id      = aws_vpc.this.id
+		114 |   description = "Aurora: solo desde RDS Proxy"
+		115 | 
+		116 |   ingress {
+		117 |     description     = "PostgreSQL desde RDS Proxy"
+		118 |     from_port       = 5432
+		119 |     to_port         = 5432
+		120 |     protocol        = "tcp"
+		121 |     security_groups = [aws_security_group.proxy.id]
+		122 |   }
+		123 |   egress {
+		124 |     from_port   = 0
+		125 |     to_port     = 0
+		126 |     protocol    = "-1"
+		127 |     cidr_blocks = ["0.0.0.0/0"]
+		128 |   }
+		129 |   tags = { Name = "${local.name}-aurora-sg" }
+		130 | }
+
+================================================================================
+
+FAIL #31: CKV_AWS_382 - Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+File/Lines: /modules/network/main.tf: 132-151
+Resource: module.network.aws_security_group.redis
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+Code snippet:
+
+Resource: module.network.aws_security_group.redis
+File: /modules/network/main.tf: 132-151
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382
+
+		132 | resource "aws_security_group" "redis" {
+		133 |   name_prefix = "${local.name}-redis-"
+		134 |   vpc_id      = aws_vpc.this.id
+		135 |   description = "ElastiCache Redis: solo desde ECS"
+		136 | 
+		137 |   ingress {
+		138 |     description     = "Redis desde ECS"
+		139 |     from_port       = 6379
+		140 |     to_port         = 6379
+		141 |     protocol        = "tcp"
+		142 |     security_groups = [aws_security_group.ecs.id]
+		143 |   }
+		144 |   egress {
+		145 |     from_port   = 0
+		146 |     to_port     = 0
+		147 |     protocol    = "-1"
+		148 |     cidr_blocks = ["0.0.0.0/0"]
+		149 |   }
+		150 |   tags = { Name = "${local.name}-redis-sg" }
+		151 | }
+
+================================================================================
+
+FAIL #32: CKV_AWS_23 - Ensure every security group and rule has a description
+File/Lines: /modules/network/main.tf: 132-151
+Resource: module.network.aws_security_group.redis
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+Code snippet:
+
+Resource: module.network.aws_security_group.redis
+File: /modules/network/main.tf: 132-151
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31
+
+		132 | resource "aws_security_group" "redis" {
+		133 |   name_prefix = "${local.name}-redis-"
+		134 |   vpc_id      = aws_vpc.this.id
+		135 |   description = "ElastiCache Redis: solo desde ECS"
+		136 | 
+		137 |   ingress {
+		138 |     description     = "Redis desde ECS"
+		139 |     from_port       = 6379
+		140 |     to_port         = 6379
+		141 |     protocol        = "tcp"
+		142 |     security_groups = [aws_security_group.ecs.id]
+		143 |   }
+		144 |   egress {
+		145 |     from_port   = 0
+		146 |     to_port     = 0
+		147 |     protocol    = "-1"
+		148 |     cidr_blocks = ["0.0.0.0/0"]
+		149 |   }
+		150 |   tags = { Name = "${local.name}-redis-sg" }
+		151 | }
+
+================================================================================
+
+FAIL #33: CKV_AWS_158 - Ensure that CloudWatch Log Group is encrypted by KMS
+File/Lines: /modules/observability/main.tf: 8-12
+Resource: module.observability.aws_cloudwatch_log_group.ecs
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+Code snippet:
+
+Resource: module.observability.aws_cloudwatch_log_group.ecs
+File: /modules/observability/main.tf: 8-12
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+
+		8  | resource "aws_cloudwatch_log_group" "ecs" {
+		9  |   for_each          = toset(var.microservices)
+		10 |   name              = "/${var.project}/ecs/${each.key}"
+		11 |   retention_in_days = var.log_retention_days
+		12 | }
+
+================================================================================
+
+FAIL #34: CKV_AWS_338 - Ensure CloudWatch log groups retains logs for at least 1 year
+File/Lines: /modules/observability/main.tf: 8-12
+Resource: module.observability.aws_cloudwatch_log_group.ecs
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338
+Code snippet:
+
+Resource: module.observability.aws_cloudwatch_log_group.ecs
+File: /modules/observability/main.tf: 8-12
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338
+
+		8  | resource "aws_cloudwatch_log_group" "ecs" {
+		9  |   for_each          = toset(var.microservices)
+		10 |   name              = "/${var.project}/ecs/${each.key}"
+		11 |   retention_in_days = var.log_retention_days
+		12 | }
+
+================================================================================
+
+FAIL #35: CKV_AWS_158 - Ensure that CloudWatch Log Group is encrypted by KMS
+File/Lines: /modules/observability/main.tf: 14-17
+Resource: module.observability.aws_cloudwatch_log_group.alb
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+Code snippet:
+
+Resource: module.observability.aws_cloudwatch_log_group.alb
+File: /modules/observability/main.tf: 14-17
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms
+
+		14 | resource "aws_cloudwatch_log_group" "alb" {
+		15 |   name              = "/${var.project}/alb"
+		16 |   retention_in_days = var.log_retention_days
+		17 | }
+
+================================================================================
+
+FAIL #36: CKV_AWS_338 - Ensure CloudWatch log groups retains logs for at least 1 year
+File/Lines: /modules/observability/main.tf: 14-17
+Resource: module.observability.aws_cloudwatch_log_group.alb
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338
+Code snippet:
+
+Resource: module.observability.aws_cloudwatch_log_group.alb
+File: /modules/observability/main.tf: 14-17
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338
+
+		14 | resource "aws_cloudwatch_log_group" "alb" {
+		15 |   name              = "/${var.project}/alb"
+		16 |   retention_in_days = var.log_retention_days
+		17 | }
+
+================================================================================
+
+FAIL #37: CKV2_AWS_27 - Ensure Postgres RDS as aws_rds_cluster has Query Logging enabled
+File/Lines: /modules/data/main.tf: 45-59
+Resource: module.data.aws_rds_cluster.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-logging-32
+Code snippet:
+
+Resource: module.data.aws_rds_cluster.this
+File: /modules/data/main.tf: 45-59
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-logging-32
+
+		45 | resource "aws_rds_cluster" "this" {
+		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
+		47 |   engine                    = "aurora-postgresql"
+		48 |   engine_version            = var.engine_version
+		49 |   database_name             = "pardos"
+		50 |   master_username           = "pardos_app"
+		51 |   master_password           = random_password.db.result
+		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
+		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
+		54 |   storage_encrypted         = true
+		55 |   kms_key_id                = aws_kms_key.this.arn
+		56 |   backup_retention_period   = 7
+		57 |   skip_final_snapshot       = false
+		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+		59 | }
+
+================================================================================
+
+FAIL #38: CKV2_AWS_38 - Ensure Domain Name System Security Extensions (DNSSEC) signing is enabled for Amazon Route 53 public hosted zones
+File/Lines: /modules/edge/main.tf: 132-134
+Resource: module.edge.aws_route53_zone.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-2-38
+Code snippet:
+
+Resource: module.edge.aws_route53_zone.this
+File: /modules/edge/main.tf: 132-134
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-2-38
+
+		132 | resource "aws_route53_zone" "this" {
+		133 |   name = var.domain
+		134 | }
+
+================================================================================
+
+FAIL #39: CKV2_AWS_32 - Ensure CloudFront distribution has a response headers policy attached
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-networking-65
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-networking-65
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #40: CKV2_AWS_31 - Ensure WAF2 has a Logging Configuration
+File/Lines: /modules/edge/main.tf: 17-52
+Resource: module.edge.aws_wafv2_web_acl.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-33
+Code snippet:
+
+Resource: module.edge.aws_wafv2_web_acl.this
+File: /modules/edge/main.tf: 17-52
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-33
+
+		17 | resource "aws_wafv2_web_acl" "this" {
+		18 |   provider = aws.us_east_1
+		19 |   name     = "${var.project}-webacl"
+		20 |   scope    = "CLOUDFRONT"
+		21 | 
+		22 |   default_action {
+		23 |     allow {}
+		24 |   }
+		25 | 
+		26 |   # Rate limiting de reservas: max 3 intentos por IP en 5 minutos.
+		27 |   rule {
+		28 |     name     = "rate-limit-reservas"
+		29 |     priority = 1
+		30 | 
+		31 |     action {
+		32 |       block {}
+		33 |     }
+		34 |     statement {
+		35 |       rate_based_statement {
+		36 |         limit              = 300
+		37 |         aggregate_key_type = "IP"
+		38 |       }
+		39 |     }
+		40 |     visibility_config {
+		41 |       cloudwatch_metrics_enabled = true
+		42 |       metric_name                = "rate-limit-reservas"
+		43 |       sampled_requests_enabled   = true
+		44 |     }
+		45 |   }
+		46 | 
+		47 |   visibility_config {
+		48 |     cloudwatch_metrics_enabled = true
+		49 |     metric_name                = "${var.project}-webacl"
+		50 |     sampled_requests_enabled   = true
+		51 |   }
+		52 | }
+
+================================================================================
+
+FAIL #41: CKV2_AWS_57 - Ensure Secrets Manager secrets should have automatic rotation enabled
+File/Lines: /modules/data/main.tf: 26-29
+Resource: module.data.aws_secretsmanager_secret.db
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-2-57
+Code snippet:
+
+Resource: module.data.aws_secretsmanager_secret.db
+File: /modules/data/main.tf: 26-29
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-2-57
+
+		26 | resource "aws_secretsmanager_secret" "db" {
+		27 |   name       = "${var.project}/rds-credentials"
+		28 |   kms_key_id = aws_kms_key.this.arn
+		29 | }
+
+================================================================================
+
+FAIL #42: CKV2_AWS_42 - Ensure AWS CloudFront distribution uses custom SSL certificate
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-cloudfront-distribution-uses-custom-ssl-certificate
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-cloudfront-distribution-uses-custom-ssl-certificate
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #43: CKV2_AWS_11 - Ensure VPC flow logging is enabled in all VPCs
+File/Lines: /modules/network/main.tf: 7-12
+Resource: module.network.aws_vpc.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-9-enable-vpc-flow-logging
+Code snippet:
+
+Resource: module.network.aws_vpc.this
+File: /modules/network/main.tf: 7-12
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-9-enable-vpc-flow-logging
+
+		7  | resource "aws_vpc" "this" {
+		8  |   cidr_block           = var.vpc_cidr
+		9  |   enable_dns_support   = true
+		10 |   enable_dns_hostnames = true
+		11 |   tags                 = { Name = "${local.name}-vpc" }
+		12 | }
+
+================================================================================
+
+FAIL #44: CKV2_AWS_64 - Ensure KMS key Policy is defined
+File/Lines: /modules/data/main.tf: 8-13
+Resource: module.data.aws_kms_key.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-64
+Code snippet:
+
+Resource: module.data.aws_kms_key.this
+File: /modules/data/main.tf: 8-13
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-64
+
+		8  | resource "aws_kms_key" "this" {
+		9  |   description             = "Clave maestra del proyecto ${var.project}"
+		10 |   enable_key_rotation     = true
+		11 |   deletion_window_in_days = 30
+		12 |   tags                    = { Name = "${local.name}-kms" }
+		13 | }
+
+================================================================================
+
+FAIL #45: CKV2_AWS_5 - Ensure that Security Groups are attached to another resource
+File/Lines: /modules/network/main.tf: 41-67
+Resource: module.network.aws_security_group.alb
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+Code snippet:
+
+Resource: module.network.aws_security_group.alb
+File: /modules/network/main.tf: 41-67
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+
+		41 | resource "aws_security_group" "alb" {
+		42 |   name_prefix = "${local.name}-alb-"
+		43 |   vpc_id      = aws_vpc.this.id
+		44 |   description = "ALB: recibe trafico del VPC Link"
+		45 | 
+		46 |   ingress {
+		47 |     description = "HTTPS"
+		48 |     from_port   = 443
+		49 |     to_port     = 443
+		50 |     protocol    = "tcp"
+		51 |     cidr_blocks = [var.vpc_cidr]
+		52 |   }
+		53 |   ingress {
+		54 |     description = "HTTP redirige a HTTPS"
+		55 |     from_port   = 80
+		56 |     to_port     = 80
+		57 |     protocol    = "tcp"
+		58 |     cidr_blocks = [var.vpc_cidr]
+		59 |   }
+		60 |   egress {
+		61 |     from_port   = 0
+		62 |     to_port     = 0
+		63 |     protocol    = "-1"
+		64 |     cidr_blocks = ["0.0.0.0/0"]
+		65 |   }
+		66 |   tags = { Name = "${local.name}-alb-sg" }
+		67 | }
+
+================================================================================
+
+FAIL #46: CKV2_AWS_5 - Ensure that Security Groups are attached to another resource
+File/Lines: /modules/network/main.tf: 69-88
+Resource: module.network.aws_security_group.ecs
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+Code snippet:
+
+Resource: module.network.aws_security_group.ecs
+File: /modules/network/main.tf: 69-88
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+
+		69 | resource "aws_security_group" "ecs" {
+		70 |   name_prefix = "${local.name}-ecs-"
+		71 |   vpc_id      = aws_vpc.this.id
+		72 |   description = "ECS Fargate: recibe del ALB"
+		73 | 
+		74 |   ingress {
+		75 |     description     = "Trafico del ALB"
+		76 |     from_port       = 8080
+		77 |     to_port         = 8080
+		78 |     protocol        = "tcp"
+		79 |     security_groups = [aws_security_group.alb.id]
+		80 |   }
+		81 |   egress {
+		82 |     from_port   = 0
+		83 |     to_port     = 0
+		84 |     protocol    = "-1"
+		85 |     cidr_blocks = ["0.0.0.0/0"]
+		86 |   }
+		87 |   tags = { Name = "${local.name}-ecs-sg" }
+		88 | }
+
+================================================================================
+
+FAIL #47: CKV2_AWS_5 - Ensure that Security Groups are attached to another resource
+File/Lines: /modules/network/main.tf: 90-109
+Resource: module.network.aws_security_group.proxy
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+Code snippet:
+
+Resource: module.network.aws_security_group.proxy
+File: /modules/network/main.tf: 90-109
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+
+		90  | resource "aws_security_group" "proxy" {
+		91  |   name_prefix = "${local.name}-proxy-"
+		92  |   vpc_id      = aws_vpc.this.id
+		93  |   description = "RDS Proxy: solo desde ECS"
+		94  | 
+		95  |   ingress {
+		96  |     description     = "PostgreSQL desde ECS"
+		97  |     from_port       = 5432
+		98  |     to_port         = 5432
+		99  |     protocol        = "tcp"
+		100 |     security_groups = [aws_security_group.ecs.id]
+		101 |   }
+		102 |   egress {
+		103 |     from_port   = 0
+		104 |     to_port     = 0
+		105 |     protocol    = "-1"
+		106 |     cidr_blocks = ["0.0.0.0/0"]
+		107 |   }
+		108 |   tags = { Name = "${local.name}-proxy-sg" }
+		109 | }
+
+================================================================================
+
+FAIL #48: CKV2_AWS_5 - Ensure that Security Groups are attached to another resource
+File/Lines: /modules/network/main.tf: 111-130
+Resource: module.network.aws_security_group.aurora
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+Code snippet:
+
+Resource: module.network.aws_security_group.aurora
+File: /modules/network/main.tf: 111-130
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+
+		111 | resource "aws_security_group" "aurora" {
+		112 |   name_prefix = "${local.name}-aurora-"
+		113 |   vpc_id      = aws_vpc.this.id
+		114 |   description = "Aurora: solo desde RDS Proxy"
+		115 | 
+		116 |   ingress {
+		117 |     description     = "PostgreSQL desde RDS Proxy"
+		118 |     from_port       = 5432
+		119 |     to_port         = 5432
+		120 |     protocol        = "tcp"
+		121 |     security_groups = [aws_security_group.proxy.id]
+		122 |   }
+		123 |   egress {
+		124 |     from_port   = 0
+		125 |     to_port     = 0
+		126 |     protocol    = "-1"
+		127 |     cidr_blocks = ["0.0.0.0/0"]
+		128 |   }
+		129 |   tags = { Name = "${local.name}-aurora-sg" }
+		130 | }
+
+================================================================================
+
+FAIL #49: CKV2_AWS_5 - Ensure that Security Groups are attached to another resource
+File/Lines: /modules/network/main.tf: 132-151
+Resource: module.network.aws_security_group.redis
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+Code snippet:
+
+Resource: module.network.aws_security_group.redis
+File: /modules/network/main.tf: 132-151
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis
+
+		132 | resource "aws_security_group" "redis" {
+		133 |   name_prefix = "${local.name}-redis-"
+		134 |   vpc_id      = aws_vpc.this.id
+		135 |   description = "ElastiCache Redis: solo desde ECS"
+		136 | 
+		137 |   ingress {
+		138 |     description     = "Redis desde ECS"
+		139 |     from_port       = 6379
+		140 |     to_port         = 6379
+		141 |     protocol        = "tcp"
+		142 |     security_groups = [aws_security_group.ecs.id]
+		143 |   }
+		144 |   egress {
+		145 |     from_port   = 0
+		146 |     to_port     = 0
+		147 |     protocol    = "-1"
+		148 |     cidr_blocks = ["0.0.0.0/0"]
+		149 |   }
+		150 |   tags = { Name = "${local.name}-redis-sg" }
+		151 | }
+
+================================================================================
+
+FAIL #50: CKV2_AWS_39 - Ensure Domain Name System (DNS) query logging is enabled for Amazon Route 53 hosted zones
+File/Lines: /modules/edge/main.tf: 132-134
+Resource: module.edge.aws_route53_zone.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-39
+Code snippet:
+
+Resource: module.edge.aws_route53_zone.this
+File: /modules/edge/main.tf: 132-134
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-39
+
+		132 | resource "aws_route53_zone" "this" {
+		133 |   name = var.domain
+		134 | }
+
+================================================================================
+
+FAIL #51: CKV2_AWS_47 - Ensure AWS CloudFront attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability
+File/Lines: /modules/edge/main.tf: 63-104
+Resource: module.edge.aws_cloudfront_distribution.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-47
+Code snippet:
+
+Resource: module.edge.aws_cloudfront_distribution.this
+File: /modules/edge/main.tf: 63-104
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-47
+
+		63  | resource "aws_cloudfront_distribution" "this" {
+		64  |   enabled         = true
+		65  |   is_ipv6_enabled = true
+		66  |   comment         = "${local.name} CDN"
+		67  |   web_acl_id      = aws_wafv2_web_acl.this.arn
+		68  | 
+		69  |   origin {
+		70  |     domain_name = var.alb_dns_name
+		71  |     origin_id   = "alb-dinamico"
+		72  | 
+		73  |     custom_origin_config {
+		74  |       http_port              = 80
+		75  |       https_port             = 443
+		76  |       origin_protocol_policy = "http-only"
+		77  |       origin_ssl_protocols   = ["TLSv1.2"]
+		78  |     }
+		79  |   }
+		80  | 
+		81  |   default_cache_behavior {
+		82  |     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+		83  |     cached_methods         = ["GET", "HEAD"]
+		84  |     target_origin_id       = "alb-dinamico"
+		85  |     viewer_protocol_policy = "redirect-to-https"
+		86  | 
+		87  |     forwarded_values {
+		88  |       query_string = true
+		89  |       cookies {
+		90  |         forward = "all"
+		91  |       }
+		92  |     }
+		93  |   }
+		94  | 
+		95  |   restrictions {
+		96  |     geo_restriction {
+		97  |       restriction_type = "none"
+		98  |     }
+		99  |   }
+		100 | 
+		101 |   viewer_certificate {
+		102 |     cloudfront_default_certificate = true
+		103 |   }
+		104 | }
+
+================================================================================
+
+FAIL #52: CKV2_AWS_12 - Ensure the default security group of every VPC restricts all traffic
+File/Lines: /modules/network/main.tf: 7-12
+Resource: module.network.aws_vpc.this
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4
+Code snippet:
+
+Resource: module.network.aws_vpc.this
+File: /modules/network/main.tf: 7-12
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4
+
+		7  | resource "aws_vpc" "this" {
+		8  |   cidr_block           = var.vpc_cidr
+		9  |   enable_dns_support   = true
+		10 |   enable_dns_hostnames = true
+		11 |   tags                 = { Name = "${local.name}-vpc" }
+		12 | }
+
+================================================================================
+

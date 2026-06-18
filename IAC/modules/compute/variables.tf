@@ -68,3 +68,8 @@ variable "certificate_arn" {
   description = "ARN del certificado ACM para el listener HTTPS del ALB."
   type        = string
 }
+
+variable "kms_key_arn" {
+  description = "ARN de la clave KMS del proyecto para cifrar el bucket de ALB access logs (CKV_AWS_91)."
+  type        = string
+}

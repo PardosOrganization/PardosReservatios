@@ -1,5 +1,14 @@
 # CAPA 5 — Mensajeria y cache: SQS FIFO, SNS, ElastiCache Redis Multi-AZ.
 
+terraform {
+  required_providers {
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
+  }
+}
+
 locals {
   name = "${var.project}-${var.env}"
 }
@@ -36,6 +45,13 @@ resource "aws_elasticache_subnet_group" "this" {
   subnet_ids = var.private_subnet_ids
 }
 
+# CKV_AWS_31: generar auth token seguro para Redis con autenticacion habilitada.
+resource "random_password" "redis_auth" {
+  length           = 32
+  special          = true
+  override_special = "!&#$^<>-"
+}
+
 resource "aws_elasticache_replication_group" "this" {
   replication_group_id       = "${var.project}-redis-${var.env}"
   description                = "Cache de disponibilidad de mesas de Pardos"
@@ -48,6 +64,8 @@ resource "aws_elasticache_replication_group" "this" {
   security_group_ids         = [var.redis_sg_id]
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
+  transit_encryption_mode    = "required"  # Fuerza TLS; requerido junto con auth_token.
+  auth_token                 = random_password.redis_auth.result # CKV_AWS_31
   kms_key_id                 = var.kms_key_arn
   port                       = 6379
 }

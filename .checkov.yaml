@@ -1,0 +1,23 @@
+# Configuracion global de Checkov para el proyecto PardosReservations.
+# Este archivo se carga automaticamente cada vez que ejecutas: checkov -d ./IAC
+# Documentacion: https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
+
+directory:
+  - IAC
+
+# Genera SIEMPRE los dos formatos: texto en consola + XML para el reporte
+output:
+  - cli
+  - junitxml
+
+# Carpeta donde se guarda el XML (se crea si no existe)
+output-file-path: IAC/results.xml
+
+# Ignorar recursos de Terraform que no aplican al proyecto
+# (descomenta si necesitas skip checks especificos)
+# skip-check:
+#   - CKV2_AWS_5   # SGs adjuntos - falso positivo en modulos
+
+# Soft-fail: que el comando devuelva exit 0 aunque haya failures
+# (util para CI/CD donde no quieres bloquear el pipeline aun)
+# soft-fail: true

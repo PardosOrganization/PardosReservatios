@@ -44,3 +44,8 @@ variable "microservices" {
   type        = list(string)
   default     = ["anfitriona", "mozo", "caja", "cocina", "administrador"]
 }
+
+variable "certificate_arn" {
+  description = "ARN del certificado ACM (us-east-1) para el listener HTTPS del ALB interno."
+  type        = string
+}

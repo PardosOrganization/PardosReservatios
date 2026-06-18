@@ -1,7 +1,92 @@
 # CAPA 4 — Compute: API Gateway -> VPC Link v2 -> ALB -> ECS Fargate + Auto Scaling.
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 locals {
-  name = "${var.project}-${var.env}"
+  name            = "${var.project}-${var.env}"
+  # ELB service account IDs por region (para la bucket policy de ALB access logs)
+  # Source: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
+  elb_account_ids = {
+    us-east-1      = "127311923021"
+    us-east-2      = "033677994240"
+    us-west-1      = "027434742980"
+    us-west-2      = "797873946194"
+    eu-west-1      = "156460612806"
+    eu-central-1   = "054676820928"
+    ap-southeast-1 = "114774131450"
+    ap-northeast-1 = "582318560864"
+    sa-east-1      = "507241528517"
+  }
+  elb_account_id = local.elb_account_ids[data.aws_region.current.name]
+}
+
+# ── S3 bucket para ALB Access Logs (CKV_AWS_91) ──
+#checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
+#checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs de acceso efimeros.
+resource "aws_s3_bucket" "alb_logs" {
+  bucket        = "${var.project}-alb-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
+  force_destroy = false
+}
+
+# CKV2_AWS_61: Lifecycle para expirar logs despues de 1 año.
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  rule {
+    id     = "expire-alb-logs"
+    status = "Enabled"
+    expiration {
+      days = 365
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = var.kms_key_arn
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "alb_logs" {
+  bucket                  = aws_s3_bucket.alb_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Bucket policy: permite al servicio ELB escribir los logs de acceso.
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowELBLogs"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${local.elb_account_id}:root"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.alb_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+      }
+    ]
+  })
 }
 
 # ── ALB interno (recibe trafico del VPC Link) ──
@@ -11,8 +96,17 @@ resource "aws_lb" "this" {
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
   subnets            = var.private_subnet_ids
-  drop_invalid_header_fields = true   # ->LINEA AGREGADA.
-  enable_deletion_protection  = true   # CKV_AWS_150: Proteccion contra borrado accidental.
+  drop_invalid_header_fields  = true # CKV_AWS_131
+  enable_deletion_protection  = true # CKV_AWS_150: Proteccion contra borrado accidental.
+
+  # CKV_AWS_91: Habilitar access logs del ALB hacia S3.
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.alb_logs]
 }
 
 resource "aws_lb_target_group" "this" {

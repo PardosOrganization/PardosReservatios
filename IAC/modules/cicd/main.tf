@@ -22,6 +22,7 @@ resource "aws_ecr_repository" "this" {
 resource "aws_cloudwatch_log_group" "codebuild" {
   name              = "/${var.project}/codebuild"
   retention_in_days = 365
+  kms_key_id        = var.kms_key_arn # CKV_AWS_158: encrypt log group with CMK
 }
 
 # ── CodeBuild: tests de integracion + SAST ──

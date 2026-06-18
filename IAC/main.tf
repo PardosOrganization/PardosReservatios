@@ -78,6 +78,8 @@ module "compute" {
   db_secret_arn      = module.data.db_secret_arn
   sqs_queue_arn      = module.messaging.sqs_arn
   sns_topic_arn      = module.messaging.sns_arn
+  certificate_arn    = var.certificate_arn   # ACM cert ARN for HTTPS listener
+  kms_key_arn        = module.data.kms_key_arn # CKV_AWS_91: bucket de logs del ALB
 }
 
 # ── CAPA 1: Edge y seguridad (Route 53, CloudFront, WAF, Shield, Cognito) ──
@@ -96,12 +98,14 @@ module "edge" {
 
 # ── CAPA 2: Frontend (S3 Landing+Reservas / Empleados, servido vía CloudFront/OAC) ──
 module "frontend" {
-  source            = "./modules/frontend"
-  project           = var.project
-  env               = var.env
-  kms_key_arn       = module.data.kms_key_arn
-  cloudfront_arn    = module.edge.cloudfront_arn
-  cloudfront_oac_id = module.edge.oac_id
+  source               = "./modules/frontend"
+  project              = var.project
+  env                  = var.env
+  kms_key_arn          = module.data.kms_key_arn
+  cloudfront_arn       = module.edge.cloudfront_arn
+  cloudfront_oac_id    = module.edge.oac_id
+  sns_topic_arn        = module.messaging.sns_arn
+  replication_role_arn = module.iam.replication_role_arn
 }
 
 # ── CAPA 7: Observabilidad (CloudWatch logs, alarmas SLA, dashboard) ──
@@ -114,15 +118,4 @@ module "observability" {
   alb_arn_suffix   = module.compute.alb_arn_suffix
   ecs_cluster_name = module.compute.ecs_cluster_name
   sns_topic_arn    = module.messaging.sns_arn
-}
-
-module "frontend" {
-  source            = "./modules/frontend"
-  project           = var.project
-  env               = var.env
-  kms_key_arn       = module.data.kms_key_arn
-  cloudfront_arn    = module.edge.cloudfront_arn
-  cloudfront_oac_id = module.edge.oac_id
-  sns_topic_arn        = module.messaging.sns_arn        # ← agregar
-  replication_role_arn = module.iam.replication_role_arn # ← agregar
 }
