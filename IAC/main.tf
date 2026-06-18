@@ -118,4 +118,5 @@ module "observability" {
   alb_arn_suffix   = module.compute.alb_arn_suffix
   ecs_cluster_name = module.compute.ecs_cluster_name
   sns_topic_arn    = module.messaging.sns_arn
+  kms_key_arn      = module.data.kms_key_arn
 }

@@ -13,3 +13,6 @@ results.xml/
 
 # Ignorar el script de Python
 format_results.py
+
+distribucion_failures.txt
+results.xml/*.xml

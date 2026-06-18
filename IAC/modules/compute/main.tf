@@ -193,6 +193,7 @@ resource "aws_apigatewayv2_route" "this" {
 resource "aws_cloudwatch_log_group" "api_gw_logs" {
   name              = "/aws/vendedlogs/apigateway/${var.project}-api-logs"
   retention_in_days = 365  # CKV_AWS_338: Retener logs al menos 1 año.
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_apigatewayv2_stage" "this" {

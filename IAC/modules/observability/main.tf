@@ -4,16 +4,19 @@ locals {
   name = "${var.project}-${var.env}"
 }
 
-# ── Log Groups: uno por microservicio + ALB ──
+
 resource "aws_cloudwatch_log_group" "ecs" {
   for_each          = toset(var.microservices)
   name              = "/${var.project}/ecs/${each.key}"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
+
 }
 
 resource "aws_cloudwatch_log_group" "alb" {
   name              = "/${var.project}/alb"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
 }
 
 # ── Alarmas SLA ──
