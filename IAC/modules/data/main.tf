@@ -57,6 +57,7 @@ resource "aws_rds_cluster" "this" {
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
   copy_tags_to_snapshot     = true # CKV_AWS_313
+  iam_database_authentication_enabled = true # CKV_AWS_162
 }
 
 # Writer (us-east-1a) + Reader (us-east-1b)
