@@ -56,6 +56,7 @@ resource "aws_rds_cluster" "this" {
   backup_retention_period   = 7
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
+  copy_tags_to_snapshot     = true # CKV_AWS_313
 }
 
 # Writer (us-east-1a) + Reader (us-east-1b)
