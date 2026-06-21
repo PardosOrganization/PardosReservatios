@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
-<testsuites disabled="0" errors="0" failures="46" tests="338" time="0.0">
-	<testsuite disabled="0" errors="0" failures="46" name="terraform scan" skipped="0" tests="338" time="0">
+<testsuites disabled="0" errors="0" failures="45" tests="338" time="0.0">
+	<testsuite disabled="0" errors="0" failures="45" name="terraform scan" skipped="0" tests="338" time="0">
 		<properties>
-			<property name="directory" value="['IAC']"/>
+			<property name="directory" value="['iac']"/>
 			<property name="add_check" value="False"/>
 			<property name="list" value="False"/>
-			<property name="output" value="['junitxml']"/>
+			<property name="output" value="['cli', 'junitxml']"/>
 			<property name="output_file_path" value="IAC/results.xml"/>
 			<property name="output_bc_ids" value="False"/>
 			<property name="include_all_checkov_policies" value="True"/>
@@ -14,9 +14,9 @@
 			<property name="framework" value="['all']"/>
 			<property name="skip_framework" value="[]"/>
 			<property name="run_all_external_checks" value="False"/>
-			<property name="soft_fail" value="False"/>
+			<property name="soft_fail" value="True"/>
 			<property name="skip_results_upload" value="False"/>
-			<property name="repo_id" value="cli_repo/IAC"/>
+			<property name="repo_id" value="cli_repo/iac"/>
 			<property name="branch" value="master"/>
 			<property name="skip_download" value="False"/>
 			<property name="use_enforcement_rules" value="False"/>
@@ -67,13 +67,13 @@
 		<testcase name="[NONE][CKV_AWS_111] Ensure IAM policies does not allow write access without constraints" classname="\iam\main.tf.module.iam.aws_iam_policy_document.rds_proxy_assume" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_356] Ensure no IAM policies documents allow &quot;*&quot; as a statement's resource for restrictable actions" classname="\iam\main.tf.module.iam.aws_iam_policy_document.rds_proxy_assume" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_49] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy_document.rds_proxy_assume" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.ecs_execution" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.ecs_execution" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.ecs_execution" file="\iam\main.tf"/>
@@ -95,22 +95,18 @@
 		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.rds_proxy" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.rds_proxy" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.rds_proxy" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
@@ -119,27 +115,31 @@
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_393] Ensure AWS GitHub Actions OIDC authorization policies only allow safe claims and claim order on IAM role" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_62] Ensure IAM policies that allow full &quot;*-*&quot; administrative privileges are not created" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_63] Ensure no IAM policies documents allow &quot;*&quot; as a statement's actions" classname="\iam\main.tf.module.iam.aws_iam_policy.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\iam\main.tf.module.iam.aws_iam_role_policy_attachment.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_158] Ensure that CloudWatch Log Group is encrypted by KMS" classname="\modules\cicd\main.tf.module.cicd.aws_cloudwatch_log_group.codebuild" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_66] Ensure that CloudWatch Log Group specifies retention days" classname="\modules\cicd\main.tf.module.cicd.aws_cloudwatch_log_group.codebuild" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_338] Ensure CloudWatch log groups retains logs for at least 1 year" classname="\modules\cicd\main.tf.module.cicd.aws_cloudwatch_log_group.codebuild" file="\modules\cicd\main.tf"/>
@@ -157,18 +157,18 @@
 		<testcase name="[NONE][CKV_AWS_61] Ensure AWS IAM policy does not allow assume role permission across all services" classname="\modules\cicd\main.tf.module.cicd.aws_iam_role.codedeploy" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_60] Ensure IAM role allows only specific services or principals to assume it" classname="\modules\cicd\main.tf.module.cicd.aws_iam_role.codedeploy" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_274] Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy" classname="\modules\cicd\main.tf.module.cicd.aws_iam_role_policy_attachment.codedeploy" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;administrador&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;cocina&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;mozo&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;mozo&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;mozo&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;caja&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;caja&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;caja&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_163] Ensure ECR image scanning on push is enabled" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_51] Ensure ECR Image Tags are immutable" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_136] Ensure that ECR repositories are encrypted using KMS" classname="\modules\cicd\main.tf.module.cicd.aws_ecr_repository.this[&quot;anfitriona&quot;]" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_93] Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_53] Ensure S3 bucket has block public ACLS enabled" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket_public_access_block.alb_logs" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_54] Ensure S3 bucket has block public policy enabled" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket_public_access_block.alb_logs" file="\modules\compute\main.tf"/>
@@ -206,6 +206,7 @@
 		<testcase name="[NONE][CKV_AWS_313] Ensure RDS cluster configured to copy tags to snapshots" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_327] Ensure RDS Clusters are encrypted using KMS CMKs" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_162] Ensure RDS cluster has IAM authentication enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_324] Ensure that RDS Cluster log capture is enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_250] Ensure that RDS PostgreSQL instances use a non vulnerable version with the log_fdw extension (https://aws.amazon.com/security/security-bulletins/AWS-2022-004/)" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_354] Ensure RDS Performance Insights are encrypted using KMS CMKs" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[0]" file="\modules\data\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_17] Ensure all data stored in RDS is not publicly accessible" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[0]" file="\modules\data\main.tf"/>
@@ -284,51 +285,51 @@
 		<testcase name="[NONE][CKV2_AWS_76] Ensure AWS ALB attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability" classname="\modules\compute\main.tf.module.compute.aws_lb.this" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_77] Ensure AWS API Gateway Rest API attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability" classname="\modules\compute\main.tf.module.compute.aws_apigatewayv2_api.this" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_51] Ensure AWS API Gateway endpoints uses client certificate authentication" classname="\modules\compute\main.tf.module.compute.aws_apigatewayv2_stage.this" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_35] AWS NAT Gateways should be utilized for the default route" classname="\modules\network\main.tf.module.network.aws_route_table.private" file="\modules\network\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_103] Ensure that load balancer is using at least TLS 1.2" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.https" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_103] Ensure that load balancer is using at least TLS 1.2" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.http_redirect" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_35] AWS NAT Gateways should be utilized for the default route" classname="\modules\network\main.tf.module.network.aws_route_table.private" file="\modules\network\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_54] Ensure AWS CloudFront distribution is using secure SSL protocols for HTTPS communication" classname="\modules\edge\main.tf.module.edge.aws_cloudfront_distribution.this" file="\modules\edge\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_46] Ensure AWS CloudFront Distribution with S3 have Origin Access set to enabled" classname="\modules\edge\main.tf.module.edge.aws_cloudfront_distribution.this" file="\modules\edge\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_74] Ensure AWS Load Balancers use strong ciphers" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.http_redirect" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_74] Ensure AWS Load Balancers use strong ciphers" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.https" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.ecs_execution" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.ecs_task" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.rds_proxy" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\modules\cicd\main.tf.module.cicd.aws_iam_role_policy_attachment.codedeploy" file="\modules\cicd\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\modules\data\main.tf.module.data.aws_iam_role_policy_attachment.backup" file="\modules\data\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;edge&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;cicd&quot;]" file="\iam\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;observability&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;data&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;compute&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;frontend&quot;]" file="\iam\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_56] Ensure AWS Managed IAMFullAccess IAM policy is not used." classname="\iam\main.tf.module.iam.aws_iam_role.terraform[&quot;messaging&quot;]" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_50] Ensure AWS ElastiCache Redis cluster with Multi-AZ Automatic Failover feature set to enabled" classname="\modules\messaging\main.tf.module.messaging.aws_elasticache_replication_group.this" file="\modules\messaging\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_74] Ensure AWS Load Balancers use strong ciphers" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.http_redirect" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_74] Ensure AWS Load Balancers use strong ciphers" classname="\modules\compute\main.tf.module.compute.aws_lb_listener.https" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_8] Ensure that RDS clusters has backup plan of AWS Backup" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_62] Ensure S3 buckets should have event notifications enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_40] Ensure AWS IAM policy does not allow full IAM privileges" classname="\iam\main.tf.module.iam.aws_iam_policy_document.terraform_assume" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_40] Ensure AWS IAM policy does not allow full IAM privileges" classname="\iam\main.tf.module.iam.aws_iam_policy_document.ecs_tasks_assume" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_40] Ensure AWS IAM policy does not allow full IAM privileges" classname="\iam\main.tf.module.iam.aws_iam_policy_document.rds_proxy_assume" file="\iam\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_40] Ensure AWS IAM policy does not allow full IAM privileges" classname="\modules\frontend\main.tf.module.frontend.aws_iam_policy_document.oac" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_61] Ensure that an S3 bucket has a lifecycle configuration" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_61] Ensure that an S3 bucket has a lifecycle configuration" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_378] Ensure AWS Load Balancer doesn't use HTTP protocol" classname="\modules\compute\main.tf.module.compute.aws_lb_target_group.this" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_62] Ensure S3 buckets should have event notifications enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV2_AWS_23] Route53 A Record has Attached Resource" classname="\modules\edge\main.tf.module.edge.aws_route53_record.root" file="\modules\edge\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_18] Ensure the S3 bucket has access logging enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_6] Ensure that S3 bucket has a Public Access block" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_6] Ensure that S3 bucket has a Public Access block" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_144] Ensure that S3 bucket has cross-region replication enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_19] Ensure all data stored in the S3 bucket is securely encrypted at rest" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_19] Ensure all data stored in the S3 bucket is securely encrypted at rest" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV2_AWS_44] Ensure AWS route table with VPC peering does not contain routes overly permissive to all traffic" classname="\modules\network\main.tf.module.network.aws_route_table.private" file="\modules\network\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_57] S3 Bucket has an ACL defined which allows public WRITE access." classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_57] S3 Bucket has an ACL defined which allows public WRITE access." classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_20] S3 Bucket has an ACL defined which allows public READ access." classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_20] S3 Bucket has an ACL defined which allows public READ access." classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_145] Ensure that S3 buckets are encrypted with KMS by default" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
-		<testcase name="[NONE][CKV_AWS_145] Ensure that S3 buckets are encrypted with KMS by default" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_18] Ensure the S3 bucket has access logging enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_61] Ensure that an S3 bucket has a lifecycle configuration" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_61] Ensure that an S3 bucket has a lifecycle configuration" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_144] Ensure that S3 bucket has cross-region replication enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_57] S3 Bucket has an ACL defined which allows public WRITE access." classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_57] S3 Bucket has an ACL defined which allows public WRITE access." classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_6] Ensure that S3 bucket has a Public Access block" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_6] Ensure that S3 bucket has a Public Access block" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_21] Ensure all data stored in the S3 bucket have versioning enabled" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_21] Ensure all data stored in the S3 bucket have versioning enabled" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV2_AWS_44] Ensure AWS route table with VPC peering does not contain routes overly permissive to all traffic" classname="\modules\network\main.tf.module.network.aws_route_table.private" file="\modules\network\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_145] Ensure that S3 buckets are encrypted with KMS by default" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_145] Ensure that S3 buckets are encrypted with KMS by default" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_19] Ensure all data stored in the S3 bucket is securely encrypted at rest" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf"/>
+		<testcase name="[NONE][CKV_AWS_19] Ensure all data stored in the S3 bucket is securely encrypted at rest" classname="\modules\frontend\main.tf.module.frontend.aws_s3_bucket.this" file="\modules\frontend\main.tf"/>
 		<testcase name="[NONE][CKV_AWS_300] Ensure S3 lifecycle configuration sets period for aborting failed uploads" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket_lifecycle_configuration.alb_logs" file="\modules\compute\main.tf">
 			<failure type="failure" message="Ensure S3 lifecycle configuration sets period for aborting failed uploads">
 Resource: module.compute.aws_s3_bucket_lifecycle_configuration.alb_logs
@@ -350,35 +351,10 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		45 | }
 </failure>
 		</testcase>
-		<testcase name="[NONE][CKV_AWS_324] Ensure that RDS Cluster log capture is enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf">
-			<failure type="failure" message="Ensure that RDS Cluster log capture is enabled">
-Resource: module.data.aws_rds_cluster.this
-File: \modules\data\main.tf: 45-61
-Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-324
-
-		45 | resource "aws_rds_cluster" "this" {
-		46 |   cluster_identifier        = "${var.project}-aurora-${var.env}"
-		47 |   engine                    = "aurora-postgresql"
-		48 |   engine_version            = var.engine_version
-		49 |   database_name             = "pardos"
-		50 |   master_username           = "pardos_app"
-		51 |   master_password           = random_password.db.result
-		52 |   db_subnet_group_name      = aws_db_subnet_group.this.name
-		53 |   vpc_security_group_ids    = [var.aurora_sg_id]
-		54 |   storage_encrypted         = true
-		55 |   kms_key_id                = aws_kms_key.this.arn
-		56 |   backup_retention_period   = 7
-		57 |   skip_final_snapshot       = false
-		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
-		59 |   copy_tags_to_snapshot     = true # CKV_AWS_313
-		60 |   iam_database_authentication_enabled = true # CKV_AWS_162
-		61 | }
-</failure>
-		</testcase>
 		<testcase name="[NONE][CKV_AWS_139] Ensure that RDS clusters have deletion protection enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure that RDS clusters have deletion protection enabled">
 Resource: module.data.aws_rds_cluster.this
-File: \modules\data\main.tf: 45-61
+File: \modules\data\main.tf: 45-62
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-rds-clusters-and-instances-have-deletion-protection-enabled
 
 		45 | resource "aws_rds_cluster" "this" {
@@ -397,109 +373,110 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
 		59 |   copy_tags_to_snapshot     = true # CKV_AWS_313
 		60 |   iam_database_authentication_enabled = true # CKV_AWS_162
-		61 | }
+		61 |   enabled_cloudwatch_logs_exports = ["postgresql"] # CKV_AWS_324
+		62 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_226] Ensure DB instance gets all minor upgrades automatically" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[0]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure DB instance gets all minor upgrades automatically">
 Resource: module.data.aws_rds_cluster_instance.this[0]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_118] Ensure that enhanced monitoring is enabled for Amazon RDS instances" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[0]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure that enhanced monitoring is enabled for Amazon RDS instances">
 Resource: module.data.aws_rds_cluster_instance.this[0]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_353] Ensure that RDS instances have performance insights enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[0]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure that RDS instances have performance insights enabled">
 Resource: module.data.aws_rds_cluster_instance.this[0]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_226] Ensure DB instance gets all minor upgrades automatically" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[1]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure DB instance gets all minor upgrades automatically">
 Resource: module.data.aws_rds_cluster_instance.this[1]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-db-instance-gets-all-minor-upgrades-automatically
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_118] Ensure that enhanced monitoring is enabled for Amazon RDS instances" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[1]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure that enhanced monitoring is enabled for Amazon RDS instances">
 Resource: module.data.aws_rds_cluster_instance.this[1]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_353] Ensure that RDS instances have performance insights enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster_instance.this[1]" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure that RDS instances have performance insights enabled">
 Resource: module.data.aws_rds_cluster_instance.this[1]
-File: \modules\data\main.tf: 64-72
+File: \modules\data\main.tf: 65-73
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-353
 
-		64 | resource "aws_rds_cluster_instance" "this" {
-		65 |   count                = 2
-		66 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
-		67 |   cluster_identifier   = aws_rds_cluster.this.id
-		68 |   instance_class       = "db.r6g.large"
-		69 |   engine               = aws_rds_cluster.this.engine
-		70 |   engine_version       = aws_rds_cluster.this.engine_version
-		71 |   db_subnet_group_name = aws_db_subnet_group.this.name
-		72 | }
+		65 | resource "aws_rds_cluster_instance" "this" {
+		66 |   count                = 2
+		67 |   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
+		68 |   cluster_identifier   = aws_rds_cluster.this.id
+		69 |   instance_class       = "db.r6g.large"
+		70 |   engine               = aws_rds_cluster.this.engine
+		71 |   engine_version       = aws_rds_cluster.this.engine_version
+		72 |   db_subnet_group_name = aws_db_subnet_group.this.name
+		73 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV_AWS_192] Ensure WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell" classname="\modules\edge\main.tf.module.edge.aws_wafv2_web_acl.this" file="\modules\edge\main.tf">
@@ -1268,10 +1245,24 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		104 | }
 </failure>
 		</testcase>
+		<testcase name="[NONE][CKV2_AWS_64] Ensure KMS key Policy is defined" classname="\modules\data\main.tf.module.data.aws_kms_key.this" file="\modules\data\main.tf">
+			<failure type="failure" message="Ensure KMS key Policy is defined">
+Resource: module.data.aws_kms_key.this
+File: \modules\data\main.tf: 8-13
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-64
+
+		8  | resource "aws_kms_key" "this" {
+		9  |   description             = "Clave maestra del proyecto ${var.project}"
+		10 |   enable_key_rotation     = true
+		11 |   deletion_window_in_days = 30
+		12 |   tags                    = { Name = "${local.name}-kms" }
+		13 | }
+</failure>
+		</testcase>
 		<testcase name="[NONE][CKV2_AWS_27] Ensure Postgres RDS as aws_rds_cluster has Query Logging enabled" classname="\modules\data\main.tf.module.data.aws_rds_cluster.this" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure Postgres RDS as aws_rds_cluster has Query Logging enabled">
 Resource: module.data.aws_rds_cluster.this
-File: \modules\data\main.tf: 45-61
+File: \modules\data\main.tf: 45-62
 Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-logging-32
 
 		45 | resource "aws_rds_cluster" "this" {
@@ -1290,21 +1281,8 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		58 |   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
 		59 |   copy_tags_to_snapshot     = true # CKV_AWS_313
 		60 |   iam_database_authentication_enabled = true # CKV_AWS_162
-		61 | }
-</failure>
-		</testcase>
-		<testcase name="[NONE][CKV2_AWS_64] Ensure KMS key Policy is defined" classname="\modules\data\main.tf.module.data.aws_kms_key.this" file="\modules\data\main.tf">
-			<failure type="failure" message="Ensure KMS key Policy is defined">
-Resource: module.data.aws_kms_key.this
-File: \modules\data\main.tf: 8-13
-Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-64
-
-		8  | resource "aws_kms_key" "this" {
-		9  |   description             = "Clave maestra del proyecto ${var.project}"
-		10 |   enable_key_rotation     = true
-		11 |   deletion_window_in_days = 30
-		12 |   tags                    = { Name = "${local.name}-kms" }
-		13 | }
+		61 |   enabled_cloudwatch_logs_exports = ["postgresql"] # CKV_AWS_324
+		62 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV2_AWS_38] Ensure Domain Name System Security Extensions (DNSSEC) signing is enabled for Amazon Route 53 public hosted zones" classname="\modules\edge\main.tf.module.edge.aws_route53_zone.this" file="\modules\edge\main.tf">
@@ -1353,6 +1331,18 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		30 | }
 </failure>
 		</testcase>
+		<testcase name="[NONE][CKV_AWS_144] Ensure that S3 bucket has cross-region replication enabled" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf">
+			<failure type="failure" message="Ensure that S3 bucket has cross-region replication enabled">
+Resource: module.compute.aws_s3_bucket.alb_logs
+File: \modules\compute\main.tf: 27-30
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled
+
+		27 | resource "aws_s3_bucket" "alb_logs" {
+		28 |   bucket        = "${var.project}-alb-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
+		29 |   force_destroy = false
+		30 | }
+</failure>
+		</testcase>
 		<testcase name="[NONE][CKV2_AWS_57] Ensure Secrets Manager secrets should have automatic rotation enabled" classname="\modules\data\main.tf.module.data.aws_secretsmanager_secret.db" file="\modules\data\main.tf">
 			<failure type="failure" message="Ensure Secrets Manager secrets should have automatic rotation enabled">
 Resource: module.data.aws_secretsmanager_secret.db
@@ -1363,20 +1353,6 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		27 |   name       = "${var.project}/rds-credentials"
 		28 |   kms_key_id = aws_kms_key.this.arn
 		29 | }
-</failure>
-		</testcase>
-		<testcase name="[NONE][CKV2_AWS_12] Ensure the default security group of every VPC restricts all traffic" classname="\modules\network\main.tf.module.network.aws_vpc.this" file="\modules\network\main.tf">
-			<failure type="failure" message="Ensure the default security group of every VPC restricts all traffic">
-Resource: module.network.aws_vpc.this
-File: \modules\network\main.tf: 7-12
-Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4
-
-		7  | resource "aws_vpc" "this" {
-		8  |   cidr_block           = var.vpc_cidr
-		9  |   enable_dns_support   = true
-		10 |   enable_dns_hostnames = true
-		11 |   tags                 = { Name = "${local.name}-vpc" }
-		12 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV2_AWS_5] Ensure that Security Groups are attached to another resource" classname="\modules\network\main.tf.module.network.aws_security_group.alb" file="\modules\network\main.tf">
@@ -1526,6 +1502,20 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		151 | }
 </failure>
 		</testcase>
+		<testcase name="[NONE][CKV2_AWS_12] Ensure the default security group of every VPC restricts all traffic" classname="\modules\network\main.tf.module.network.aws_vpc.this" file="\modules\network\main.tf">
+			<failure type="failure" message="Ensure the default security group of every VPC restricts all traffic">
+Resource: module.network.aws_vpc.this
+File: \modules\network\main.tf: 7-12
+Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4
+
+		7  | resource "aws_vpc" "this" {
+		8  |   cidr_block           = var.vpc_cidr
+		9  |   enable_dns_support   = true
+		10 |   enable_dns_hostnames = true
+		11 |   tags                 = { Name = "${local.name}-vpc" }
+		12 | }
+</failure>
+		</testcase>
 		<testcase name="[NONE][CKV2_AWS_11] Ensure VPC flow logging is enabled in all VPCs" classname="\modules\network\main.tf.module.network.aws_vpc.this" file="\modules\network\main.tf">
 			<failure type="failure" message="Ensure VPC flow logging is enabled in all VPCs">
 Resource: module.network.aws_vpc.this
@@ -1538,18 +1528,6 @@ Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aw
 		10 |   enable_dns_hostnames = true
 		11 |   tags                 = { Name = "${local.name}-vpc" }
 		12 | }
-</failure>
-		</testcase>
-		<testcase name="[NONE][CKV_AWS_144] Ensure that S3 bucket has cross-region replication enabled" classname="\modules\compute\main.tf.module.compute.aws_s3_bucket.alb_logs" file="\modules\compute\main.tf">
-			<failure type="failure" message="Ensure that S3 bucket has cross-region replication enabled">
-Resource: module.compute.aws_s3_bucket.alb_logs
-File: \modules\compute\main.tf: 27-30
-Guideline: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled
-
-		27 | resource "aws_s3_bucket" "alb_logs" {
-		28 |   bucket        = "${var.project}-alb-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
-		29 |   force_destroy = false
-		30 | }
 </failure>
 		</testcase>
 		<testcase name="[NONE][CKV2_AWS_31] Ensure WAF2 has a Logging Configuration" classname="\modules\edge\main.tf.module.edge.aws_wafv2_web_acl.this" file="\modules\edge\main.tf">

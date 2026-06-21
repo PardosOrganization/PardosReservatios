@@ -58,6 +58,7 @@ resource "aws_rds_cluster" "this" {
   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
   copy_tags_to_snapshot     = true # CKV_AWS_313
   iam_database_authentication_enabled = true # CKV_AWS_162
+  enabled_cloudwatch_logs_exports = ["postgresql"] # CKV_AWS_324
 }
 
 # Writer (us-east-1a) + Reader (us-east-1b)
