@@ -61,6 +61,25 @@ resource "aws_db_subnet_group" "this" {
   subnet_ids = var.private_subnet_ids
 }
 
+# CKV2_AWS_27
+resource "aws_rds_cluster_parameter_group" "this" {
+  name        = "${local.name}-aurora-pg"
+  family      = "aurora-postgresql16"
+  description = "Grupo de parametros personalizado para habilitar log de consultas"
+
+  parameter {
+    name  = "log_statement"
+    value = "all"
+  }
+
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "1"
+  }
+}
+
+
+#---------------------
 resource "aws_rds_cluster" "this" {
   cluster_identifier        = "${var.project}-aurora-${var.env}"
   engine                    = "aurora-postgresql"
@@ -79,6 +98,7 @@ resource "aws_rds_cluster" "this" {
   iam_database_authentication_enabled = true # CKV_AWS_162
   enabled_cloudwatch_logs_exports = ["postgresql"] # CKV_AWS_324
   deletion_protection = true # CKV_AWS_139
+  db_cluster_parameter_group_name     = aws_rds_cluster_parameter_group.this.name #CKV2_AWS_27
 }
 
 # Writer (us-east-1a) + Reader (us-east-1b)
