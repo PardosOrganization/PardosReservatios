@@ -10,6 +10,25 @@ resource "aws_kms_key" "this" {
   enable_key_rotation     = true
   deletion_window_in_days = 30
   tags                    = { Name = "${local.name}-kms" }
+
+  # CKV2_AWS_64
+   policy      = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Id": "default",
+    "Statement": [
+      {
+        "Sid": "DefaultAllow",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::123456789012:root"
+        },
+        "Action": "kms:*",
+        "Resource": "*"
+      }
+    ]
+  }
+POLICY
 }
 
 resource "aws_kms_alias" "this" {
