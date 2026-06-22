@@ -73,6 +73,7 @@ resource "aws_rds_cluster_instance" "this" {
   db_subnet_group_name = aws_db_subnet_group.this.name
   auto_minor_version_upgrade = true # CKV_AWS_226
   monitoring_interval  = 5 # CKV_AWS_118
+  performance_insights_enabled = true # CKV_AWS_353
 }
 
 # ── RDS Proxy: ÚNICO punto de acceso a Aurora (pool de conexiones) ──
