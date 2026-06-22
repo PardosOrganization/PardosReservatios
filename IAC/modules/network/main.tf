@@ -160,3 +160,76 @@ resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.this.id
   tags   = { Name = "${local.name}-default-sg-restringido" }
 }
+
+#VPC Flow Logs (CKV2_AWS_11)
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+#(CKV_AWS_158 / CKV_AWS_7)
+resource "aws_kms_key" "flow" {
+  description             = "CMK para VPC Flow Logs de ${local.name}"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnableRootPermissions"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowCloudWatchLogs"
+        Effect    = "Allow"
+        Principal = { Service = "logs.${data.aws_region.current.name}.amazonaws.com" }
+        Action    = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:Describe*"]
+        Resource  = "*"
+      }
+    ]
+  })
+}
+
+#(CKV_AWS_66 / 158 / 338)
+resource "aws_cloudwatch_log_group" "flow" {
+  name              = "/${var.project}/vpc/flow-logs"
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.flow.arn
+}
+
+#(CKV_AWS_60)
+resource "aws_iam_role" "flow" {
+  name = "${local.name}-vpc-flow-logs"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "flow" {
+  name = "${local.name}-vpc-flow-logs"
+  role = aws_iam_role.flow.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"]
+      Resource = "${aws_cloudwatch_log_group.flow.arn}:*"
+    }]
+  })
+}
+
+# Flow Log de la VPC (CKV2_AWS_11)
+resource "aws_flow_log" "this" {
+  vpc_id          = aws_vpc.this.id
+  traffic_type    = "ALL"
+  iam_role_arn    = aws_iam_role.flow.arn
+  log_destination = aws_cloudwatch_log_group.flow.arn
+  tags            = { Name = "${local.name}-vpc-flow-log" }
+}
