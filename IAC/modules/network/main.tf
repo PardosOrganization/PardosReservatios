@@ -58,6 +58,7 @@ resource "aws_security_group" "alb" {
     cidr_blocks = [var.vpc_cidr]
   }
   egress {
+    description = "Salida permitida hacia la VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -79,6 +80,7 @@ resource "aws_security_group" "ecs" {
     security_groups = [aws_security_group.alb.id]
   }
   egress {
+    description = "Salida permitida hacia la VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -100,6 +102,7 @@ resource "aws_security_group" "proxy" {
     security_groups = [aws_security_group.ecs.id]
   }
   egress {
+    description = "Salida permitida hacia la VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -121,6 +124,7 @@ resource "aws_security_group" "aurora" {
     security_groups = [aws_security_group.proxy.id]
   }
   egress {
+    description = "Salida permitida hacia la VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -142,6 +146,7 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_security_group.ecs.id]
   }
   egress {
+    description = "Salida permitida hacia la VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
