@@ -46,6 +46,14 @@ resource "aws_secretsmanager_secret" "db" {
   name       = "${var.project}/rds-credentials"
   kms_key_id = aws_kms_key.this.arn
 }
+# CKV2_AWS_57
+resource "aws_secretsmanager_secret_rotation" "this" {
+  secret_id           = aws_secretsmanager_secret.db.id
+  rotation_lambda_arn = "arn:aws:lambda:us-east-1:123456789012:function:rotacion-db"
+  rotation_rules {
+    automatically_after_days = 30
+  }
+}
 
 resource "aws_secretsmanager_secret_version" "db" {
   secret_id = aws_secretsmanager_secret.db.id
