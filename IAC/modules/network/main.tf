@@ -39,6 +39,7 @@ resource "aws_route_table_association" "private" {
 # ── Security Groups por componente ──
 
 resource "aws_security_group" "alb" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia al ALB en el modulo compute via output alb_sg_id
   name_prefix = "${local.name}-alb-"
   vpc_id      = aws_vpc.this.id
   description = "ALB: recibe trafico del VPC Link"
@@ -68,6 +69,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group" "ecs" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia a ECS Fargate en el modulo compute via output ecs_sg_id
   name_prefix = "${local.name}-ecs-"
   vpc_id      = aws_vpc.this.id
   description = "ECS Fargate: recibe del ALB"
@@ -90,6 +92,7 @@ resource "aws_security_group" "ecs" {
 }
 
 resource "aws_security_group" "proxy" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia al RDS Proxy en el modulo data via output proxy_sg_id
   name_prefix = "${local.name}-proxy-"
   vpc_id      = aws_vpc.this.id
   description = "RDS Proxy: solo desde ECS"
@@ -112,6 +115,7 @@ resource "aws_security_group" "proxy" {
 }
 
 resource "aws_security_group" "aurora" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia al cluster Aurora en el modulo data via output aurora_sg_id
   name_prefix = "${local.name}-aurora-"
   vpc_id      = aws_vpc.this.id
   description = "Aurora: solo desde RDS Proxy"
@@ -134,6 +138,7 @@ resource "aws_security_group" "aurora" {
 }
 
 resource "aws_security_group" "redis" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia a ElastiCache en el modulo messaging via output redis_sg_id
   name_prefix = "${local.name}-redis-"
   vpc_id      = aws_vpc.this.id
   description = "ElastiCache Redis: solo desde ECS"
