@@ -62,7 +62,7 @@ resource "aws_security_group" "alb" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
   tags = { Name = "${local.name}-alb-sg" }
 }
@@ -84,7 +84,7 @@ resource "aws_security_group" "ecs" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
   tags = { Name = "${local.name}-ecs-sg" }
 }
@@ -106,7 +106,7 @@ resource "aws_security_group" "proxy" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
   tags = { Name = "${local.name}-proxy-sg" }
 }
@@ -128,7 +128,7 @@ resource "aws_security_group" "aurora" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
   tags = { Name = "${local.name}-aurora-sg" }
 }
@@ -150,7 +150,7 @@ resource "aws_security_group" "redis" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
   tags = { Name = "${local.name}-redis-sg" }
 }
