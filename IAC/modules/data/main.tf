@@ -71,6 +71,7 @@ resource "aws_rds_cluster_instance" "this" {
   engine               = aws_rds_cluster.this.engine
   engine_version       = aws_rds_cluster.this.engine_version
   db_subnet_group_name = aws_db_subnet_group.this.name
+  auto_minor_version_upgrade = true # CKV_AWS_226
 }
 
 # ── RDS Proxy: ÚNICO punto de acceso a Aurora (pool de conexiones) ──
