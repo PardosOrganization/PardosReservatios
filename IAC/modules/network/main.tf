@@ -154,3 +154,9 @@ resource "aws_security_group" "redis" {
   }
   tags = { Name = "${local.name}-redis-sg" }
 }
+
+#(CKV2_AWS_12)
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.this.id
+  tags   = { Name = "${local.name}-default-sg-restringido" }
+}
