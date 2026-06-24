@@ -11,6 +11,6 @@ variable "microservices" {
 }
 
 variable "kms_key_arn" {
-  description = "ARN de la clave KMS del proyecto para cifrar ECR y artefactos de CodeBuild."
+  description = "ARN de la clave KMS del proyecto para cifrar ECR."
   type        = string
 }

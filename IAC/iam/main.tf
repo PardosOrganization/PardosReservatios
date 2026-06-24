@@ -18,7 +18,6 @@ locals {
   provisioning_layers = [
     "edge",
     "frontend",
-    "cicd",
     "compute",
     "messaging",
     "data",

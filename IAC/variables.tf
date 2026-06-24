@@ -42,7 +42,7 @@ variable "azs" {
 variable "microservices" {
   description = "Microservicios sobre ECS Fargate (SVC del diagrama)."
   type        = list(string)
-  default     = ["anfitriona", "mozo", "caja", "cocina", "administrador"]
+  default     = ["anfitriona", "mozo", "caja", "cocina"]
 }
 
 variable "certificate_arn" {

@@ -1,10 +1,9 @@
 # Raíz de la infraestructura de Pardos Chicken.
 # Orquesta los módulos por capa del diagrama respetando el grafo de dependencias:
 #
-#   iam ─┐
-#        ├─> network ─> data ─> messaging ─> compute ─> edge ─> frontend
-#   cicd ┘                                      │
-#                                          observability (consume todos)
+#   iam ─> network ─> data ─> messaging ─> compute ─> edge ─> frontend
+#                                   │           │
+#                                 cicd    observability (consume todos)
 
 locals {
   name_prefix   = "${var.project}-${var.env}"
@@ -51,7 +50,7 @@ module "messaging" {
   kms_key_arn        = module.data.kms_key_arn
 }
 
-# ── CAPA 3: CI/CD (ECR, CodeBuild, CodeDeploy, CodePipeline) ──
+# ── CAPA 3: CI/CD (ECR; build y deploy via GitHub Actions) ──
 module "cicd" {
   source        = "./modules/cicd"
   project       = var.project
