@@ -22,9 +22,10 @@ locals {
 }
 
 # ── S3 bucket para ALB Access Logs (CKV_AWS_91) ──
-#checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
-#checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs de acceso efimeros.
 resource "aws_s3_bucket" "alb_logs" {
+  #checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
+  #checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs de acceso efimeros.
+  #checkov:skip=CKV2_AWS_62:Bucket de solo escritura de logs de acceso, sin consumidor downstream que requiera notificaciones de eventos.
   bucket        = "${var.project}-alb-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
   force_destroy = false
 }
@@ -40,6 +41,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
     }
     noncurrent_version_expiration {
       noncurrent_days = 30
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
     }
   }
 }
