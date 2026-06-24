@@ -65,6 +65,7 @@ resource "aws_cloudfront_distribution" "this" {
   is_ipv6_enabled = true
   comment         = "${local.name} CDN"
   web_acl_id      = aws_wafv2_web_acl.this.arn
+  default_root_object = "index.html"   # CKV_AWS_305
 
   origin {
     domain_name = var.alb_dns_name
