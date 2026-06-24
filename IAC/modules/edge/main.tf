@@ -84,6 +84,8 @@ resource "aws_cloudfront_origin_access_control" "this" {
 resource "aws_cloudfront_distribution" "this" {
   #checkov:skip=CKV_AWS_86:Logging via bucket con ACLs queda fuera del alcance del POC
   #checkov:skip=CKV_AWS_310:Diseno de origen unico (ALB); failover no aplica
+  #checkov:skip=CKV_AWS_174:POC usa el certificado por defecto de CloudFront (sin ACM propio)
+  #checkov:skip=CKV2_AWS_42:POC usa el certificado por defecto de CloudFront (sin ACM propio)
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${local.name} CDN"
