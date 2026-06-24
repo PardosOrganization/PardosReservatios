@@ -44,6 +44,27 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
+  # Grupo administrado AWS que cubre Log4Shell y entradas maliciosas
+  rule {
+    name     = "AWS-KnownBadInputs"
+    priority = 2
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "known-bad-inputs"
+      sampled_requests_enabled   = true
+    }
+  }
+
+
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${var.project}-webacl"
