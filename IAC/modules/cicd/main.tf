@@ -1,20 +1,20 @@
-# CAPA 3 — CI/CD: ECR (GitHub Actions se encarga del build y deploy).
+
 
 locals {
   name = "${var.project}-${var.env}"
 }
 
-# ── ECR: un repositorio por microservicio (pardos-svc-mozo, etc.) ──
+#   AWS ECR
 resource "aws_ecr_repository" "this" {
   for_each             = toset(var.microservices)
   name                 = "${var.project}-svc-${each.key}"
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "IMMUTABLE"              # TAGS NO SOBREESCRIBIBLES
 
   image_scanning_configuration {
-    scan_on_push = true
+    scan_on_push = true                           # ESCANEO AUTOMÁTICO
   }
   encryption_configuration {
-    encryption_type = "KMS"
+    encryption_type = "KMS"                       # CIFRADO KMS
     kms_key         = var.kms_key_arn
   }
 }
