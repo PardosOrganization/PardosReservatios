@@ -82,6 +82,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
 
 # ── CloudFront: sirve frontend estatico (S3) + reservas dinamicas (ALB) ──
 resource "aws_cloudfront_distribution" "this" {
+  #checkov:skip=CKV_AWS_86:Logging via bucket con ACLs queda fuera del alcance del POC
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${local.name} CDN"
