@@ -246,3 +246,31 @@ resource "aws_wafv2_web_acl_logging_configuration" "this" {
   resource_arn            = aws_wafv2_web_acl.this.arn
   log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
 }
+
+resource "aws_cloudwatch_log_group" "route53" {
+  provider          = aws.us_east_1
+  name              = "/aws/route53/${var.domain}"
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.logs.arn
+}
+ 
+# Permite que el servicio Route53 escriba en CloudWatch Logs
+resource "aws_cloudwatch_log_resource_policy" "route53" {
+  provider    = aws.us_east_1
+  policy_name = "${var.project}-route53-query-logging"
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "route53.amazonaws.com" }
+      Action    = ["logs:CreateLogStream","logs:PutLogEvents"]
+      Resource  = "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/route53/*"
+    }]
+  })
+}
+ 
+resource "aws_route53_query_log" "this" {
+  zone_id                  = aws_route53_zone.this.id
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.route53.arn
+  depends_on               = [aws_cloudwatch_log_resource_policy.route53]
+}
