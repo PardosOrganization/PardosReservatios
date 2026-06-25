@@ -150,14 +150,79 @@ resource "aws_cloudfront_origin_access_control" "this" {
   signing_protocol                  = "sigv4"
 }
 
+#   AWS S3 (CLOUDFRONT LOGS) - PARA CKV_AWS_86
+resource "aws_s3_bucket" "cf_logs" {
+  #checkov:skip=CKV_AWS_18:El bucket de logs de CloudFront no se loggea a si mismo.
+  #checkov:skip=CKV_AWS_144:No se requiere replicacion para logs.
+  #checkov:skip=CKV2_AWS_62:No se requieren notificaciones.
+  bucket        = "${var.project}-cf-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
+  force_destroy = false
+}
+
+resource "aws_s3_bucket_public_access_block" "cf_logs" {
+  bucket                  = aws_s3_bucket.cf_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+  rule {
+    id     = "expire-logs"
+    status = "Enabled"
+    expiration {
+      days = 365
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+#   AWS S3 OWNERSHIP - SOLUCIONA CKV2_AWS_65
+resource "aws_s3_bucket_ownership_controls" "cf_logs" {
+  bucket = aws_s3_bucket.cf_logs.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 #   AWS CLOUDFRONT
 resource "aws_cloudfront_distribution" "this" {
+  #checkov:skip=CKV2_AWS_46:Falso positivo; el origen es un ALB, la referencia a S3 es solo para logs
   enabled              = true
   is_ipv6_enabled      = true
   comment              = "${local.name} CDN"
   web_acl_id           = aws_wafv2_web_acl.this.arn # ASOCIA WAF
   default_root_object  = "index.html"               # CKV_AWS_305
-  aliases             = [var.domain]
+  aliases              = [var.domain]
+
+  logging_config { # SOLUCIONA CKV_AWS_86
+    bucket          = aws_s3_bucket.cf_logs.bucket_domain_name
+    include_cookies = false
+    prefix          = "cf-logs/"
+  }
 
   origin {
     domain_name = var.alb_dns_name # ORIGEN ALB
