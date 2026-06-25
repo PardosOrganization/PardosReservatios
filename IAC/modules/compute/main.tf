@@ -1,4 +1,4 @@
-# CAPA 4 — Compute: API Gateway -> VPC Link v2 -> ALB -> ECS Fargate + Auto Scaling.
+
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -21,10 +21,11 @@ locals {
   elb_account_id = local.elb_account_ids[data.aws_region.current.name]
 }
 
-# ── S3 bucket para ALB Access Logs (CKV_AWS_91) ──
-#checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
-#checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs de acceso efimeros.
+#   AWS S3 (ALB LOGS)
 resource "aws_s3_bucket" "alb_logs" {
+  #checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
+  #checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs de acceso efimeros.
+  #checkov:skip=CKV2_AWS_62:Bucket de solo escritura de logs de acceso, sin consumidor downstream que requiera notificaciones de eventos.
   bucket        = "${var.project}-alb-logs-${var.env}-${data.aws_caller_identity.current.account_id}"
   force_destroy = false
 }
@@ -41,6 +42,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
     noncurrent_version_expiration {
       noncurrent_days = 30
     }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
   }
 }
 
@@ -55,7 +59,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
+      sse_algorithm     = "aws:kms"             # CIFRADO KMS
       kms_master_key_id = var.kms_key_arn
     }
     bucket_key_enabled = true
@@ -89,11 +93,11 @@ resource "aws_s3_bucket_policy" "alb_logs" {
   })
 }
 
-# ── ALB interno (recibe trafico del VPC Link) ──
+#   AWS ALB
 resource "aws_lb" "this" {
   name               = "${var.project}-alb-${var.env}"
-  internal           = true
-  load_balancer_type = "application"
+  internal           = true                     # SOLO TRÁFICO INTERNO
+  load_balancer_type = "application"             # CAPA 7 HTTP/HTTPS
   security_groups    = [var.alb_sg_id]
   subnets            = var.private_subnet_ids
   drop_invalid_header_fields  = true # CKV_AWS_131
@@ -115,10 +119,10 @@ resource "aws_lb_target_group" "this" {
   port        = var.container_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "ip"                             # FARGATE USA IP
 
   health_check {
-    path                = "/health"
+    path                = "/health"              # RUTA HEALTHCHECK
     matcher             = "200"
     healthy_threshold   = 2
     unhealthy_threshold = 3
@@ -157,7 +161,7 @@ resource "aws_lb_listener_rule" "this" {
   }
 }
 
-# ── API Gateway HTTP + VPC Link v2 ──
+#   AWS API GATEWAY
 resource "aws_apigatewayv2_vpc_link" "this" {
   name               = "${var.project}-vpclink"
   subnet_ids         = var.private_subnet_ids
@@ -166,15 +170,15 @@ resource "aws_apigatewayv2_vpc_link" "this" {
 
 resource "aws_apigatewayv2_api" "this" {
   name          = "${var.project}-api"
-  protocol_type = "HTTP"
+  protocol_type = "HTTP"                         # API HTTP (NO REST)
 }
 
 resource "aws_apigatewayv2_integration" "this" {
   api_id             = aws_apigatewayv2_api.this.id
-  integration_type   = "HTTP_PROXY"
+  integration_type   = "HTTP_PROXY"              # PROXY HACIA ALB
   integration_uri    = aws_lb_listener.http.arn
   integration_method = "ANY"
-  connection_type    = "VPC_LINK"
+  connection_type    = "VPC_LINK"                # ENLACE PRIVADO
   connection_id      = aws_apigatewayv2_vpc_link.this.id
 }
 
@@ -185,7 +189,7 @@ resource "aws_apigatewayv2_route" "this" {
   route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.this.id}"
   # LINEA NECESARIA PARA LA AUTORIZACIÓN
-  authorization_type = "AWS_IAM" 
+  authorization_type = "AWS_IAM"                 # AUTORIZACIÓN IAM
 }
 
 # CKV_AWS_76 
@@ -215,23 +219,23 @@ resource "aws_apigatewayv2_stage" "this" {
     })
   }
 }
-# ── ECS Fargate ──
+#   AWS ECS FARGATE
 resource "aws_ecs_cluster" "this" {
   name = "${var.project}-cluster-${var.env}"
 
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = "enabled"                            # MÉTRICAS CONTENEDOR
   }
 }
 
 resource "aws_ecs_task_definition" "this" {
   for_each                 = toset(var.microservices)
   family                   = "${var.project}-svc-${each.key}"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = 512
-  memory                   = 1024
+  requires_compatibilities = ["FARGATE"]         # SERVERLESS
+  network_mode             = "awsvpc"            # IP PROPIA POR TAREA
+  cpu                      = 512                # 0.5 vCPU
+  memory                   = 1024               # 1 GB RAM
   execution_role_arn       = var.execution_role_arn
   task_role_arn            = var.task_role_arn
 
@@ -269,8 +273,8 @@ resource "aws_ecs_service" "this" {
   name            = "svc-${each.key}"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this[each.key].arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  desired_count   = 2                            # MÍNIMO 2 TAREAS
+  launch_type     = "FARGATE"                    # SIN SERVIDORES
 
   network_configuration {
     subnets         = var.private_subnet_ids
@@ -284,11 +288,11 @@ resource "aws_ecs_service" "this" {
   }
 }
 
-# ── Auto Scaling: Target Tracking (CPU 70%) + Scheduled (pre-pico) ──
+#   AWS AUTO SCALING
 resource "aws_appautoscaling_target" "this" {
   for_each           = toset(var.microservices)
-  max_capacity       = 10
-  min_capacity       = 2
+  max_capacity       = 10                       # MÁXIMO 10 TAREAS
+  min_capacity       = 2                        # MÍNIMO 2 TAREAS
   resource_id        = "service/${aws_ecs_cluster.this.name}/${aws_ecs_service.this[each.key].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -306,7 +310,7 @@ resource "aws_appautoscaling_policy" "cpu" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value = 70
+    target_value = 70                            # ESCALA AL 70% CPU
   }
 }
 
@@ -317,7 +321,7 @@ resource "aws_appautoscaling_scheduled_action" "almuerzo_up" {
   service_namespace  = aws_appautoscaling_target.this[each.key].service_namespace
   resource_id        = aws_appautoscaling_target.this[each.key].resource_id
   scalable_dimension = aws_appautoscaling_target.this[each.key].scalable_dimension
-  schedule           = "cron(45 11 * * ? *)"
+  schedule           = "cron(45 11 * * ? *)"    # 11:45 PRE-ALMUERZO
 
   scalable_target_action {
     min_capacity = 6
@@ -331,7 +335,7 @@ resource "aws_appautoscaling_scheduled_action" "cena_up" {
   service_namespace  = aws_appautoscaling_target.this[each.key].service_namespace
   resource_id        = aws_appautoscaling_target.this[each.key].resource_id
   scalable_dimension = aws_appautoscaling_target.this[each.key].scalable_dimension
-  schedule           = "cron(45 18 * * ? *)"
+  schedule           = "cron(45 18 * * ? *)"    # 18:45 PRE-CENA
 
   scalable_target_action {
     min_capacity = 6
@@ -339,11 +343,12 @@ resource "aws_appautoscaling_scheduled_action" "cena_up" {
   }
 }
 
+#   AWS ALB LISTENER HTTPS
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.this.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"  # TLS 1.3
   certificate_arn   = var.certificate_arn
   default_action {
     type             = "forward"

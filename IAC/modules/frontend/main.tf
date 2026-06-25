@@ -1,5 +1,4 @@
-# CAPA 2 — Frontend: buckets S3 para Landing+Reservas y Pagina de Empleados.
-# Acceso SOLO via CloudFront (OAC); sin acceso publico directo.
+
 
 locals {
   buckets = {
@@ -8,6 +7,7 @@ locals {
   }
 }
 
+#   AWS S3 (FRONTEND)
 resource "aws_s3_bucket" "this" {
   for_each = local.buckets
   bucket   = each.value
@@ -16,7 +16,7 @@ resource "aws_s3_bucket" "this" {
 resource "aws_s3_bucket_public_access_block" "this" {
   for_each                = aws_s3_bucket.this
   bucket                  = each.value.id
-  block_public_acls       = true
+  block_public_acls       = true                # BLOQUEA ACL PÚBLICAS
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
@@ -35,12 +35,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   bucket   = each.value.id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
+      sse_algorithm     = "aws:kms"             # CIFRADO KMS
       kms_master_key_id = var.kms_key_arn
     }
   }
 }
 
+#   AWS IAM POLICY (CLOUDFRONT OAC)
 # Politica de bucket: solo CloudFront (OAC) puede leer.
 data "aws_iam_policy_document" "oac" {
   for_each = aws_s3_bucket.this
@@ -74,6 +75,7 @@ resource "aws_s3_bucket_logging" "this" {
   target_prefix = "access-logs/"
 }
 
+#   AWS S3 REPLICATION
 # CKV_AWS_144 — Cross-region replication
 resource "aws_s3_bucket_replication_configuration" "this" {
   for_each = aws_s3_bucket.this
@@ -103,7 +105,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
     status = "Enabled"
 
     noncurrent_version_expiration {
-      noncurrent_days = 90
+      noncurrent_days = 90                      # EXPIRA EN 90 DÍAS
     }
 
     abort_incomplete_multipart_upload {
@@ -112,6 +114,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
   }
 }
 
+#   AWS S3 NOTIFICATIONS
 # CKV2_AWS_62 — Event notifications
 resource "aws_s3_bucket_notification" "this" {
   for_each = aws_s3_bucket.this

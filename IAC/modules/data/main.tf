@@ -1,14 +1,14 @@
-# CAPA 6 — Datos: KMS, Secrets Manager, Aurora PostgreSQL Multi-AZ, RDS Proxy, Backup.
+
 
 locals {
   name = "${var.project}-${var.env}"
 }
 
-# ── KMS: clave maestra del proyecto (cifra Aurora, Secrets, SQS, etc.) ──
+#   AWS KMS
 resource "aws_kms_key" "this" {
   description             = "Clave maestra del proyecto ${var.project}"
-  enable_key_rotation     = true
-  deletion_window_in_days = 30
+  enable_key_rotation     = true                # ROTACIÓN AUTOMÁTICA
+  deletion_window_in_days = 30                  # 30 DÍAS PARA BORRAR
   tags                    = { Name = "${local.name}-kms" }
 
   # CKV2_AWS_64
@@ -36,7 +36,7 @@ resource "aws_kms_alias" "this" {
   target_key_id = aws_kms_key.this.key_id
 }
 
-# ── Secrets Manager: credenciales de Aurora ──
+#   AWS SECRETS MANAGER
 resource "random_password" "db" {
   length  = 24
   special = false
@@ -44,14 +44,14 @@ resource "random_password" "db" {
 
 resource "aws_secretsmanager_secret" "db" {
   name       = "${var.project}/rds-credentials"
-  kms_key_id = aws_kms_key.this.arn
+  kms_key_id = aws_kms_key.this.arn              # CIFRADO CON KMS
 }
 # CKV2_AWS_57
 resource "aws_secretsmanager_secret_rotation" "this" {
   secret_id           = aws_secretsmanager_secret.db.id
   rotation_lambda_arn = "arn:aws:lambda:us-east-1:123456789012:function:rotacion-db"
   rotation_rules {
-    automatically_after_days = 30
+    automatically_after_days = 30                # ROTA CADA 30 DÍAS
   }
 }
 
@@ -63,7 +63,7 @@ resource "aws_secretsmanager_secret_version" "db" {
   })
 }
 
-# ── Aurora PostgreSQL Multi-AZ (Primary writer 1a + Standby reader 1b) ──
+#   AWS AURORA POSTGRESQL
 resource "aws_db_subnet_group" "this" {
   name       = "${local.name}-aurora"
   subnet_ids = var.private_subnet_ids
@@ -90,16 +90,16 @@ resource "aws_rds_cluster_parameter_group" "this" {
 #---------------------
 resource "aws_rds_cluster" "this" {
   cluster_identifier        = "${var.project}-aurora-${var.env}"
-  engine                    = "aurora-postgresql"
+  engine                    = "aurora-postgresql" # MOTOR BD
   engine_version            = var.engine_version
   database_name             = "pardos"
   master_username           = "pardos_app"
   master_password           = random_password.db.result
   db_subnet_group_name      = aws_db_subnet_group.this.name
   vpc_security_group_ids    = [var.aurora_sg_id]
-  storage_encrypted         = true
+  storage_encrypted         = true               # CIFRADO EN REPOSO
   kms_key_id                = aws_kms_key.this.arn
-  backup_retention_period   = 7
+  backup_retention_period   = 7                  # 7 DÍAS BACKUP
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.project}-aurora-final-${var.env}"
   copy_tags_to_snapshot     = true # CKV_AWS_313
@@ -114,23 +114,24 @@ resource "aws_rds_cluster_instance" "this" {
   count                = 2
   identifier           = "${var.project}-aurora-${var.env}-${count.index}"
   cluster_identifier   = aws_rds_cluster.this.id
-  instance_class       = "db.r6g.large"
+  instance_class       = "db.r6g.large"          # INSTANCIA OPTIMIZADA
   engine               = aws_rds_cluster.this.engine
   engine_version       = aws_rds_cluster.this.engine_version
   db_subnet_group_name = aws_db_subnet_group.this.name
   auto_minor_version_upgrade = true # CKV_AWS_226
   monitoring_interval  = 5 # CKV_AWS_118
-  performance_insights_enabled = true # CKV_AWS_353
+  performance_insights_enabled    = true             # CKV_AWS_353
+  performance_insights_kms_key_id = aws_kms_key.this.arn # CKV_AWS_354
 }
 
-# ── RDS Proxy: ÚNICO punto de acceso a Aurora (pool de conexiones) ──
+#   AWS RDS PROXY
 resource "aws_db_proxy" "this" {
   name                   = "${var.project}-proxy-${var.env}"
   engine_family          = "POSTGRESQL"
   role_arn               = var.rds_proxy_role_arn
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.proxy_sg_id]
-  require_tls            = true
+  require_tls            = true                  # FUERZA TLS
 
   auth {
     auth_scheme = "SECRETS"
@@ -149,7 +150,7 @@ resource "aws_db_proxy_target" "this" {
   db_cluster_identifier = aws_rds_cluster.this.id
 }
 
-# ── AWS Backup (Snapshots de Aurora, retencion 7 dias) ──
+#   AWS BACKUP
 resource "aws_backup_vault" "this" {
   name        = "${var.project}-vault"
   kms_key_arn = aws_kms_key.this.arn
@@ -177,7 +178,7 @@ resource "aws_backup_plan" "this" {
   rule {
     rule_name         = "diario-nocturno"
     target_vault_name = aws_backup_vault.this.name
-    schedule          = "cron(0 7 * * ? *)"
+    schedule          = "cron(0 7 * * ? *)"     # 2AM LIMA (UTC-5)
     lifecycle {
       delete_after = 7
     }

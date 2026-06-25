@@ -1,12 +1,27 @@
+# CAPA 1 — Edge y seguridad: Route 53, CloudFront, WAF, Shield, Cognito.
+
+terraform {
+  required_providers {
+    aws = {
+      source                = "hashicorp/aws"
+      configuration_aliases = [aws.us_east_1]
+    }
+  }
+}
+
 # Datos de la cuenta y region (para politicas de KMS y logs)
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" { provider = aws.us_east_1 }
- 
+
+locals {
+  name = "${var.project}-${var.env}"
+}
+
 # CMK simetrica para cifrar los Log Groups de WAF y Route53 (us-east-1)
 resource "aws_kms_key" "logs" {
   provider                = aws.us_east_1
   description             = "CMK logs WAF/Route53 ${local.name}"
-  enable_key_rotation     = true        # CKV_AWS_7
+  enable_key_rotation     = true # CKV_AWS_7
   deletion_window_in_days = 7
   policy = jsonencode({
     Version = "2012-10-17"
@@ -22,33 +37,18 @@ resource "aws_kms_key" "logs" {
         Sid       = "CloudWatchLogs"
         Effect    = "Allow"
         Principal = { Service = "logs.${data.aws_region.current.name}.amazonaws.com" }
-        Action    = ["kms:Encrypt","kms:Decrypt","kms:ReEncrypt*","kms:GenerateDataKey*","kms:Describe*"]
+        Action    = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:Describe*"]
         Resource  = "*"
       }
     ]
   })
 }
 
-# CAPA 1 — Edge y seguridad: Route 53, CloudFront, WAF, Shield, Cognito.
-
-terraform {
-  required_providers {
-    aws = {
-      source                = "hashicorp/aws"
-      configuration_aliases = [aws.us_east_1]
-    }
-  }
-}
-
-locals {
-  name = "${var.project}-${var.env}"
-}
-
-# ── WAF v2 (scope CLOUDFRONT debe vivir en us-east-1) ──
+#   AWS WAF
 resource "aws_wafv2_web_acl" "this" {
   provider = aws.us_east_1
   name     = "${var.project}-webacl"
-  scope    = "CLOUDFRONT"
+  scope    = "CLOUDFRONT" # ALCANCE GLOBAL CDN
 
   default_action {
     allow {}
@@ -64,7 +64,7 @@ resource "aws_wafv2_web_acl" "this" {
     }
     statement {
       rate_based_statement {
-        limit              = 300
+        limit              = 300 # MÁXIMO PETICIONES/5MIN
         aggregate_key_type = "IP"
       }
     }
@@ -75,26 +75,50 @@ resource "aws_wafv2_web_acl" "this" {
     }
   }
 
-  # Grupo administrado AWS que cubre Log4Shell y entradas maliciosas
+  # CKV2_AWS_47: requiere ambas reglas administradas de AWS contra Log4j (CVE-2021-44228).
   rule {
-    name     = "AWS-KnownBadInputs"
+    name     = "known-bad-inputs-log4j"
     priority = 2
+
     override_action {
       none {}
     }
+
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesKnownBadInputsRuleSet"
         vendor_name = "AWS"
       }
     }
+
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "known-bad-inputs"
+      metric_name                = "known-bad-inputs-log4j"
       sampled_requests_enabled   = true
     }
   }
 
+  rule {
+    name     = "anonymous-ip-list"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAnonymousIpList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "anonymous-ip-list"
+      sampled_requests_enabled   = true
+    }
+  }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
@@ -103,35 +127,49 @@ resource "aws_wafv2_web_acl" "this" {
   }
 }
 
-# ── Origin Access Control para S3 ──
+# Log Group para los logs del WAF (el nombre DEBE empezar con aws-waf-logs-)
+resource "aws_cloudwatch_log_group" "waf" {
+  provider          = aws.us_east_1
+  name              = "aws-waf-logs-${var.project}"
+  retention_in_days = 365                  # CKV_AWS_338 / CKV_AWS_66
+  kms_key_id        = aws_kms_key.logs.arn # CKV_AWS_158
+}
+
+# Asocia el WAF con su destino de logs (CKV2_AWS_31)
+resource "aws_wafv2_web_acl_logging_configuration" "this" {
+  provider                = aws.us_east_1
+  resource_arn            = aws_wafv2_web_acl.this.arn
+  log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
+}
+
+#   AWS CLOUDFRONT (OAC)
 resource "aws_cloudfront_origin_access_control" "this" {
   name                              = "${var.project}-oac"
   origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
+  signing_behavior                  = "always" # FIRMA OBLIGATORIA
   signing_protocol                  = "sigv4"
 }
 
-# ── CloudFront: sirve frontend estatico (S3) + reservas dinamicas (ALB) ──
+#   AWS CLOUDFRONT
 resource "aws_cloudfront_distribution" "this" {
   #checkov:skip=CKV_AWS_86:Logging via bucket con ACLs queda fuera del alcance del POC
   #checkov:skip=CKV_AWS_310:Diseno de origen unico (ALB); failover no aplica
   #checkov:skip=CKV_AWS_174:POC usa el certificado por defecto de CloudFront (sin ACM propio)
   #checkov:skip=CKV2_AWS_42:POC usa el certificado por defecto de CloudFront (sin ACM propio)
-  #checkov:skip=CKV2_AWS_47:Falso positivo de Prisma Cloud. El WAFv2 con proteccion Log4j si esta asociado correctamente.
-  enabled         = true
-  is_ipv6_enabled = true
-  comment         = "${local.name} CDN"
-  web_acl_id      = aws_wafv2_web_acl.this.arn
-  default_root_object = "index.html"   # CKV_AWS_305
+  enabled              = true
+  is_ipv6_enabled      = true
+  comment              = "${local.name} CDN"
+  web_acl_id           = aws_wafv2_web_acl.this.arn # ASOCIA WAF
+  default_root_object  = "index.html"               # CKV_AWS_305
 
   origin {
-    domain_name = var.alb_dns_name
+    domain_name = var.alb_dns_name # ORIGEN ALB
     origin_id   = "alb-dinamico"
 
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "http-only"
+      origin_protocol_policy = "http-only" # TRÁFICO INTERNO HTTP
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
@@ -140,9 +178,8 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods             = ["GET", "HEAD"]
     target_origin_id           = "alb-dinamico"
-    viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id   # CKV2_AWS_32
-
+    viewer_protocol_policy     = "redirect-to-https" # FUERZA HTTPS
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id # CKV2_AWS_32
 
     forwarded_values {
       query_string = true
@@ -154,8 +191,8 @@ resource "aws_cloudfront_distribution" "this" {
 
   restrictions {
     geo_restriction {
-      restriction_type = "whitelist"   # CKV_AWS_374
-      locations        = ["PE"]
+      restriction_type = "whitelist" # CKV_AWS_374
+      locations         = ["PE"]
     }
   }
 
@@ -190,19 +227,18 @@ resource "aws_cloudfront_response_headers_policy" "this" {
   }
 }
 
-
-# ── Shield: proteccion DDoS sobre CloudFront ──
+#   AWS SHIELD
 resource "aws_shield_protection" "cloudfront" {
   name         = "${var.project}-cf"
-  resource_arn = aws_cloudfront_distribution.this.arn
+  resource_arn = aws_cloudfront_distribution.this.arn # PROTEGE CLOUDFRONT
 }
 
-# ── Cognito: login del personal (empleados) ──
+#   AWS COGNITO
 resource "aws_cognito_user_pool" "this" {
   name = "${var.project}-empleados"
 
   password_policy {
-    minimum_length    = 10
+    minimum_length    = 10 # MÍNIMO CARACTERES
     require_uppercase = true
     require_numbers   = true
     require_symbols   = true
@@ -212,11 +248,11 @@ resource "aws_cognito_user_pool" "this" {
 resource "aws_cognito_user_pool_client" "this" {
   name                = "${var.project}-empleados-spa"
   user_pool_id        = aws_cognito_user_pool.this.id
-  generate_secret     = false
+  generate_secret     = false # SPA SIN SECRET
   explicit_auth_flows = ["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
 }
 
-# ── Route 53: zona y registros DNS ──
+#   AWS ROUTE 53
 resource "aws_route53_zone" "this" {
   name = var.domain
 }
@@ -224,28 +260,13 @@ resource "aws_route53_zone" "this" {
 resource "aws_route53_record" "root" {
   zone_id = aws_route53_zone.this.id
   name    = var.domain
-  type    = "A"
+  type    = "A" # REGISTRO ALIAS
 
   alias {
-    name                   = aws_cloudfront_distribution.this.domain_name
+    name                   = aws_cloudfront_distribution.this.domain_name # APUNTA A CDN
     zone_id                = aws_cloudfront_distribution.this.hosted_zone_id
     evaluate_target_health = false
   }
-}
-
-# Log Group para los logs del WAF (el nombre DEBE empezar con aws-waf-logs-)
-resource "aws_cloudwatch_log_group" "waf" {
-  provider          = aws.us_east_1
-  name              = "aws-waf-logs-${var.project}"
-  retention_in_days = 365                 # CKV_AWS_338 / CKV_AWS_66
-  kms_key_id        = aws_kms_key.logs.arn # CKV_AWS_158
-}
- 
-# Asocia el WAF con su destino de logs (CKV2_AWS_31)
-resource "aws_wafv2_web_acl_logging_configuration" "this" {
-  provider                = aws.us_east_1
-  resource_arn            = aws_wafv2_web_acl.this.arn
-  log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
 }
 
 resource "aws_cloudwatch_log_group" "route53" {
@@ -254,7 +275,7 @@ resource "aws_cloudwatch_log_group" "route53" {
   retention_in_days = 365
   kms_key_id        = aws_kms_key.logs.arn
 }
- 
+
 # Permite que el servicio Route53 escriba en CloudWatch Logs
 resource "aws_cloudwatch_log_resource_policy" "route53" {
   provider    = aws.us_east_1
@@ -264,52 +285,66 @@ resource "aws_cloudwatch_log_resource_policy" "route53" {
     Statement = [{
       Effect    = "Allow"
       Principal = { Service = "route53.amazonaws.com" }
-      Action    = ["logs:CreateLogStream","logs:PutLogEvents"]
+      Action    = ["logs:CreateLogStream", "logs:PutLogEvents"]
       Resource  = "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/route53/*"
     }]
   })
 }
- 
+
 resource "aws_route53_query_log" "this" {
   zone_id                  = aws_route53_zone.this.id
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.route53.arn
   depends_on               = [aws_cloudwatch_log_resource_policy.route53]
 }
 
+# ── DNSSEC (CKV2_AWS_38): la KSK debe vivir en us-east-1 (requisito de AWS) ──
 resource "aws_kms_key" "dnssec" {
-  provider                 = aws.us_east_1
+  provider = aws.us_east_1
   #checkov:skip=CKV_AWS_7:Las CMK asimetricas (ECC) para DNSSEC no soportan rotacion automatica
+  description              = "Clave KSK para firmar DNSSEC de ${var.domain}"
   customer_master_key_spec = "ECC_NIST_P256"
   key_usage                = "SIGN_VERIFY"
   deletion_window_in_days  = 7
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "Root"
+        Sid       = "AllowAccountAdmin"
         Effect    = "Allow"
         Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
         Action    = "kms:*"
         Resource  = "*"
       },
       {
-        Sid       = "Route53DNSSEC"
+        Sid       = "AllowRoute53DNSSECService"
         Effect    = "Allow"
         Principal = { Service = "dnssec-route53.amazonaws.com" }
-        Action    = ["kms:DescribeKey","kms:GetPublicKey","kms:Sign","kms:CreateGrant"]
+        Action    = ["kms:DescribeKey", "kms:GetPublicKey", "kms:Sign"]
         Resource  = "*"
+      },
+      {
+        Sid       = "AllowRoute53DNSSECGrant"
+        Effect    = "Allow"
+        Principal = { Service = "dnssec-route53.amazonaws.com" }
+        Action    = "kms:CreateGrant"
+        Resource  = "*"
+        Condition = {
+          Bool = { "kms:GrantIsForAWSResource" = "true" }
+        }
       }
     ]
   })
 }
- 
+
 resource "aws_route53_key_signing_key" "this" {
-  hosted_zone_id             = aws_route53_zone.this.id
+  provider                    = aws.us_east_1
+  hosted_zone_id              = aws_route53_zone.this.id
   key_management_service_arn  = aws_kms_key.dnssec.arn
-  name                       = "${var.project}-ksk"
+  name                        = "${var.project}-ksk"
 }
- 
+
 resource "aws_route53_hosted_zone_dnssec" "this" {
-  hosted_zone_id = aws_route53_key_signing_key.this.hosted_zone_id
   depends_on     = [aws_route53_key_signing_key.this]
+  hosted_zone_id = aws_route53_key_signing_key.this.hosted_zone_id
 }
