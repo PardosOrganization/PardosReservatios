@@ -1,0 +1,33 @@
+name: CI/CD - Sonar gate + Docker deploy
+
+on:
+  push:
+    branches: [ main, develop, feat/sonarqube ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ---------- JOB 1: Análisis estático ANTES de desplegar ----------
+  sonarqube:
+    name: Análisis estático (SonarQube Cloud)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # Sonar necesita el historial completo
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        with:
+          args: >
+            -Dproject.settings=SonarQube/sonar-project.properties
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: Quality Gate (falla el pipeline si no pasa)
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
