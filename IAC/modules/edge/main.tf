@@ -231,3 +231,18 @@ resource "aws_route53_record" "root" {
     evaluate_target_health = false
   }
 }
+
+# Log Group para los logs del WAF (el nombre DEBE empezar con aws-waf-logs-)
+resource "aws_cloudwatch_log_group" "waf" {
+  provider          = aws.us_east_1
+  name              = "aws-waf-logs-${var.project}"
+  retention_in_days = 365                 # CKV_AWS_338 / CKV_AWS_66
+  kms_key_id        = aws_kms_key.logs.arn # CKV_AWS_158
+}
+ 
+# Asocia el WAF con su destino de logs (CKV2_AWS_31)
+resource "aws_wafv2_web_acl_logging_configuration" "this" {
+  provider                = aws.us_east_1
+  resource_arn            = aws_wafv2_web_acl.this.arn
+  log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
+}
