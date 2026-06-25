@@ -1,0 +1,36 @@
+---
+- name: Build y push de imagenes a AWS ECR (Pardos)
+  hosts: local
+  gather_facts: false
+  vars:
+    image_tag: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
+  tasks:
+    - name: Obtener Account ID de AWS
+      ansible.builtin.command: aws sts get-caller-identity --query Account --output text
+      register: aws_account
+      changed_when: false
+
+    - name: Definir registry de ECR
+      ansible.builtin.set_fact:
+        ecr_registry: "{{ aws_account.stdout }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+    - name: Login a ECR
+      ansible.builtin.shell: |
+        set -o pipefail
+        aws ecr get-login-password --region {{ aws_region }} \
+          | docker login --username AWS --password-stdin {{ ecr_registry }}
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Build de la imagen por microservicio
+      ansible.builtin.command: >
+        docker build
+        -t {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+        {{ playbook_dir }}/docker/{{ item }}
+      loop: "{{ microservices }}"
+
+    - name: Push de la imagen a ECR
+      ansible.builtin.command: >
+        docker push {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+      loop: "{{ microservices }}"
