@@ -275,3 +275,41 @@ resource "aws_route53_query_log" "this" {
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.route53.arn
   depends_on               = [aws_cloudwatch_log_resource_policy.route53]
 }
+
+resource "aws_kms_key" "dnssec" {
+  provider                 = aws.us_east_1
+  #checkov:skip=CKV_AWS_7:Las CMK asimetricas (ECC) para DNSSEC no soportan rotacion automatica
+  customer_master_key_spec = "ECC_NIST_P256"
+  key_usage                = "SIGN_VERIFY"
+  deletion_window_in_days  = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "Root"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "Route53DNSSEC"
+        Effect    = "Allow"
+        Principal = { Service = "dnssec-route53.amazonaws.com" }
+        Action    = ["kms:DescribeKey","kms:GetPublicKey","kms:Sign","kms:CreateGrant"]
+        Resource  = "*"
+      }
+    ]
+  })
+}
+ 
+resource "aws_route53_key_signing_key" "this" {
+  hosted_zone_id             = aws_route53_zone.this.id
+  key_management_service_arn  = aws_kms_key.dnssec.arn
+  name                       = "${var.project}-ksk"
+}
+ 
+resource "aws_route53_hosted_zone_dnssec" "this" {
+  hosted_zone_id = aws_route53_key_signing_key.this.hosted_zone_id
+  depends_on     = [aws_route53_key_signing_key.this]
+}
