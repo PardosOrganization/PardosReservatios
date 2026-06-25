@@ -179,6 +179,8 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 #(CKV_AWS_158 / CKV_AWS_7)
+
+
 #   AWS KMS
 resource "aws_kms_key" "flow" {
   description             = "CMK para VPC Flow Logs de ${local.name}"
