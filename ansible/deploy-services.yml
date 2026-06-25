@@ -34,3 +34,30 @@
       ansible.builtin.command: >
         docker push {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
       loop: "{{ microservices }}"
+
+    # --- Actualizacion de ECS ---
+    - name: Registrar nueva revision de la task definition con la nueva imagen
+      ansible.builtin.shell: |
+        set -o pipefail
+        IMAGE="{{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}"
+        aws ecs describe-task-definition \
+          --task-definition {{ project }}-svc-{{ item }} \
+          --query taskDefinition > /tmp/td-{{ item }}.json
+        jq --arg IMG "$IMAGE" '
+          .containerDefinitions[0].image = $IMG
+          | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                .compatibilities, .registeredAt, .registeredBy)
+        ' /tmp/td-{{ item }}.json > /tmp/td-new-{{ item }}.json
+        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item }}.json
+      args:
+        executable: /bin/bash
+      loop: "{{ microservices }}"
+
+    - name: Forzar nuevo despliegue del servicio ECS
+      ansible.builtin.command: >
+        aws ecs update-service
+        --cluster {{ project }}-cluster-{{ env }}
+        --service svc-{{ item }}
+        --task-definition {{ project }}-svc-{{ item }}
+        --force-new-deployment
+      loop: "{{ microservices }}"
