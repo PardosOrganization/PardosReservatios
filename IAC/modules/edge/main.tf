@@ -1,3 +1,34 @@
+# Datos de la cuenta y region (para politicas de KMS y logs)
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" { provider = aws.us_east_1 }
+ 
+# CMK simetrica para cifrar los Log Groups de WAF y Route53 (us-east-1)
+resource "aws_kms_key" "logs" {
+  provider                = aws.us_east_1
+  description             = "CMK logs WAF/Route53 ${local.name}"
+  enable_key_rotation     = true        # CKV_AWS_7
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "Root"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "CloudWatchLogs"
+        Effect    = "Allow"
+        Principal = { Service = "logs.${data.aws_region.current.name}.amazonaws.com" }
+        Action    = ["kms:Encrypt","kms:Decrypt","kms:ReEncrypt*","kms:GenerateDataKey*","kms:Describe*"]
+        Resource  = "*"
+      }
+    ]
+  })
+}
+
 # CAPA 1 — Edge y seguridad: Route 53, CloudFront, WAF, Shield, Cognito.
 
 terraform {
