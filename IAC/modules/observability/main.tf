@@ -1,25 +1,27 @@
-# CAPA 7 — Observabilidad: log groups, alarmas SLA y dashboard central.
+
 
 locals {
   name = "${var.project}-${var.env}"
 }
 
 
+#   AWS CLOUDWATCH LOGS (ECS)
 resource "aws_cloudwatch_log_group" "ecs" {
   for_each          = toset(var.microservices)
   name              = "/${var.project}/ecs/${each.key}"
-  retention_in_days = var.log_retention_days
+  retention_in_days = var.log_retention_days      # RETENCIÓN CONFIGURABLE
   kms_key_id        = var.kms_key_arn
 
 }
 
+#   AWS CLOUDWATCH LOGS (ALB)
 resource "aws_cloudwatch_log_group" "alb" {
   name              = "/${var.project}/alb"
   retention_in_days = var.log_retention_days
   kms_key_id        = var.kms_key_arn
 }
 
-# ── Alarmas SLA ──
+#   AWS CLOUDWATCH ALARMS
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   alarm_name          = "${local.name}-alb-5xx"
   comparison_operator = "GreaterThanThreshold"
@@ -28,7 +30,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   namespace           = "AWS/ApplicationELB"
   period              = 60
   statistic           = "Sum"
-  threshold           = 10
+  threshold           = 10                       # MÁXIMO 10 ERRORES/MIN
   alarm_actions       = [var.sns_topic_arn]
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
@@ -43,7 +45,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_latency" {
   namespace           = "AWS/ApplicationELB"
   period              = 60
   statistic           = "Average"
-  threshold           = 2
+  threshold           = 2                        # MÁXIMO 2 SEG LATENCIA
   alarm_actions       = [var.sns_topic_arn]
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
@@ -59,7 +61,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
   namespace           = "AWS/ECS"
   period              = 60
   statistic           = "Average"
-  threshold           = 80
+  threshold           = 80                       # ALERTA AL 80% CPU
   alarm_actions       = [var.sns_topic_arn]
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -67,7 +69,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
   }
 }
 
-# ── Dashboard central ──
+#   AWS CLOUDWATCH DASHBOARD
 resource "aws_cloudwatch_dashboard" "this" {
   dashboard_name = "${local.name}-kpis"
   dashboard_body = jsonencode({

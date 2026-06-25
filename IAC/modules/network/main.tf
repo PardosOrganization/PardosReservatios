@@ -1,26 +1,29 @@
-# VPC con 2 AZs y subredes privadas (us-east-1a / us-east-1b del diagrama).
+
 
 locals {
   name = "${var.project}-${var.env}"
 }
 
+#   AWS VPC
 resource "aws_vpc" "this" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
+  cidr_block           = var.vpc_cidr          # RANGO IP DE LA RED
+  enable_dns_support   = true                  # HABILITA DNS INTERNO
   enable_dns_hostnames = true
   tags                 = { Name = "${local.name}-vpc" }
 }
 
+#   AWS INTERNET GATEWAY
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
   tags   = { Name = "${local.name}-igw" }
 }
 
+#   AWS SUBNETS PRIVADAS
 # Subredes privadas, una por AZ. Alojan ECS, ElastiCache, Aurora y RDS Proxy.
 resource "aws_subnet" "private" {
   count             = length(var.azs)
   vpc_id            = aws_vpc.this.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index)
+  cidr_block        = cidrsubnet(var.vpc_cidr, 4, count.index)  # SUBRED /20
   availability_zone = var.azs[count.index]
   tags              = { Name = "${local.name}-private-${var.azs[count.index]}", Tier = "private" }
 }
@@ -36,8 +39,9 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# ── Security Groups por componente ──
 
+
+#   AWS SECURITY GROUP (ALB)
 resource "aws_security_group" "alb" {
   #checkov:skip=CKV2_AWS_5:El SG se asocia al ALB en el modulo compute via output alb_sg_id
   name_prefix = "${local.name}-alb-"
@@ -68,6 +72,7 @@ resource "aws_security_group" "alb" {
   tags = { Name = "${local.name}-alb-sg" }
 }
 
+#   AWS SECURITY GROUP (ECS)
 resource "aws_security_group" "ecs" {
   #checkov:skip=CKV2_AWS_5:El SG se asocia a ECS Fargate en el modulo compute via output ecs_sg_id
   name_prefix = "${local.name}-ecs-"
@@ -76,7 +81,7 @@ resource "aws_security_group" "ecs" {
 
   ingress {
     description     = "Trafico del ALB"
-    from_port       = 8080
+    from_port       = 8080                              # PUERTO CONTENEDOR
     to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
@@ -91,6 +96,7 @@ resource "aws_security_group" "ecs" {
   tags = { Name = "${local.name}-ecs-sg" }
 }
 
+#   AWS SECURITY GROUP (RDS PROXY)
 resource "aws_security_group" "proxy" {
   #checkov:skip=CKV2_AWS_5:El SG se asocia al RDS Proxy en el modulo data via output proxy_sg_id
   name_prefix = "${local.name}-proxy-"
@@ -99,7 +105,7 @@ resource "aws_security_group" "proxy" {
 
   ingress {
     description     = "PostgreSQL desde ECS"
-    from_port       = 5432
+    from_port       = 5432                              # PUERTO POSTGRESQL
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.ecs.id]
@@ -114,6 +120,7 @@ resource "aws_security_group" "proxy" {
   tags = { Name = "${local.name}-proxy-sg" }
 }
 
+#   AWS SECURITY GROUP (AURORA)
 resource "aws_security_group" "aurora" {
   #checkov:skip=CKV2_AWS_5:El SG se asocia al cluster Aurora en el modulo data via output aurora_sg_id
   name_prefix = "${local.name}-aurora-"
@@ -137,6 +144,7 @@ resource "aws_security_group" "aurora" {
   tags = { Name = "${local.name}-aurora-sg" }
 }
 
+#   AWS SECURITY GROUP (ELASTICACHE REDIS)
 resource "aws_security_group" "redis" {
   #checkov:skip=CKV2_AWS_5:El SG se asocia a ElastiCache en el modulo messaging via output redis_sg_id
   name_prefix = "${local.name}-redis-"
@@ -145,7 +153,7 @@ resource "aws_security_group" "redis" {
 
   ingress {
     description     = "Redis desde ECS"
-    from_port       = 6379
+    from_port       = 6379                              # PUERTO REDIS
     to_port         = 6379
     protocol        = "tcp"
     security_groups = [aws_security_group.ecs.id]
@@ -171,9 +179,12 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 #(CKV_AWS_158 / CKV_AWS_7)
+
+
+#   AWS KMS
 resource "aws_kms_key" "flow" {
   description             = "CMK para VPC Flow Logs de ${local.name}"
-  enable_key_rotation     = true
+  enable_key_rotation     = true                # ROTACIÓN AUTOMÁTICA
   deletion_window_in_days = 7
 
   policy = jsonencode({
@@ -198,9 +209,10 @@ resource "aws_kms_key" "flow" {
 }
 
 #(CKV_AWS_66 / 158 / 338)
+#   AWS CLOUDWATCH LOGS
 resource "aws_cloudwatch_log_group" "flow" {
   name              = "/${var.project}/vpc/flow-logs"
-  retention_in_days = 365
+  retention_in_days = 365                       # RETENCIÓN 1 AÑO
   kms_key_id        = aws_kms_key.flow.arn
 }
 
@@ -230,10 +242,11 @@ resource "aws_iam_role_policy" "flow" {
   })
 }
 
+#   AWS VPC FLOW LOGS
 # Flow Log de la VPC (CKV2_AWS_11)
 resource "aws_flow_log" "this" {
   vpc_id          = aws_vpc.this.id
-  traffic_type    = "ALL"
+  traffic_type    = "ALL"                       # CAPTURA TODO TRÁFICO
   iam_role_arn    = aws_iam_role.flow.arn
   log_destination = aws_cloudwatch_log_group.flow.arn
   tags            = { Name = "${local.name}-vpc-flow-log" }

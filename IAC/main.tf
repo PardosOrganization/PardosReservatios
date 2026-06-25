@@ -1,16 +1,9 @@
-# Raíz de la infraestructura de Pardos Chicken.
-# Orquesta los módulos por capa del diagrama respetando el grafo de dependencias:
-#
-#   iam ─> network ─> data ─> messaging ─> compute ─> edge ─> frontend
-#                                   │           │
-#                                 cicd    observability (consume todos)
-
 locals {
   name_prefix   = "${var.project}-${var.env}"
   microservices = var.microservices
 }
 
-# ── IAM: roles de provisioning (Terraform*) y runtime (ECS/Proxy) ──
+#   IAM (ROLES DE PROVISIONING Y RUNTIME)
 module "iam" {
   source     = "./iam"
   project    = var.project
@@ -19,7 +12,7 @@ module "iam" {
   account_id = var.account_id
 }
 
-# ── CAPA: Red base (VPC, AZs, subnets privadas, SGs) ──
+#   VPC (RED BASE DEL DIAGRAMA)
 module "network" {
   source   = "./modules/network"
   project  = var.project
@@ -28,7 +21,7 @@ module "network" {
   azs      = var.azs
 }
 
-# ── CAPA 6: Datos (KMS, Secrets, Aurora, RDS Proxy, Backup) ──
+#   AURORA + RDS PROXY + SECRETS + KMS + BACKUP
 module "data" {
   source             = "./modules/data"
   project            = var.project
@@ -40,7 +33,7 @@ module "data" {
   rds_proxy_role_arn = module.iam.rds_proxy_role_arn
 }
 
-# ── CAPA 5: Mensajería y caché (SQS, SNS, ElastiCache Redis) ──
+#   SQS + SNS + ELASTICACHE REDIS
 module "messaging" {
   source             = "./modules/messaging"
   project            = var.project
@@ -50,7 +43,7 @@ module "messaging" {
   kms_key_arn        = module.data.kms_key_arn
 }
 
-# ── CAPA 3: CI/CD (ECR; build y deploy via GitHub Actions) ──
+#   ECR (CI/CD CON GITHUB ACTIONS)
 module "cicd" {
   source        = "./modules/cicd"
   project       = var.project
@@ -59,7 +52,7 @@ module "cicd" {
   kms_key_arn   = module.data.kms_key_arn
 }
 
-# ── CAPA 4: Compute (API Gateway, VPC Link, ALB, ECS Fargate, Auto Scaling) ──
+#   API GATEWAY + ALB + ECS FARGATE + AUTO SCALING
 module "compute" {
   source             = "./modules/compute"
   project            = var.project
@@ -81,7 +74,7 @@ module "compute" {
   kms_key_arn        = module.data.kms_key_arn # CKV_AWS_91: bucket de logs del ALB
 }
 
-# ── CAPA 1: Edge y seguridad (Route 53, CloudFront, WAF, Shield, Cognito) ──
+#   ROUTE 53 + CLOUDFRONT + WAF + SHIELD + COGNITO
 module "edge" {
   source       = "./modules/edge"
   project      = var.project
@@ -95,7 +88,7 @@ module "edge" {
   }
 }
 
-# ── CAPA 2: Frontend (S3 Landing+Reservas / Empleados, servido vía CloudFront/OAC) ──
+#   S3 (LANDING + RESERVAS + EMPLEADOS)
 module "frontend" {
   source               = "./modules/frontend"
   project              = var.project
@@ -107,7 +100,7 @@ module "frontend" {
   replication_role_arn = module.iam.replication_role_arn
 }
 
-# ── CAPA 7: Observabilidad (CloudWatch logs, alarmas SLA, dashboard) ──
+#   CLOUDWATCH (LOGS + ALARMAS + DASHBOARD)
 module "observability" {
   source           = "./modules/observability"
   project          = var.project

@@ -1,12 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────────
-# IAM — Mínimo privilegio por capa.
-#
-# Se separan ESTRICTAMENTE dos planos:
-#   1) PROVISIONING: roles que Terraform/CI-CD asumen para crear infraestructura.
-#      -> Sin permisos de borrado crítico (rds:DeleteDBCluster, kms:ScheduleKeyDeletion).
-#   2) RUNTIME: roles que asumen ECS (execution/task) y el RDS Proxy en ejecución.
-#      -> Los microservicios NO tienen rds:* directo; acceden vía RDS Proxy.
-# ─────────────────────────────────────────────────────────────────────────
 
 locals {
   tpl_vars = {
@@ -25,9 +16,6 @@ locals {
   ]
 }
 
-# ===========================================================================
-# PLANO 1 — PROVISIONING (un rol Terraform por capa, política desde JSON)
-# ===========================================================================
 data "aws_iam_policy_document" "terraform_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -38,6 +26,7 @@ data "aws_iam_policy_document" "terraform_assume" {
   }
 }
 
+#   AWS IAM (PROVISIONING)
 resource "aws_iam_role" "terraform" {
   for_each           = toset(local.provisioning_layers)
   name               = "${var.project}-terraform-${each.key}"
@@ -57,11 +46,6 @@ resource "aws_iam_role_policy_attachment" "terraform" {
   policy_arn = aws_iam_policy.terraform[each.key].arn
 }
 
-# ===========================================================================
-# PLANO 2 — RUNTIME
-# ===========================================================================
-
-# --- ECS Task Execution Role (arranca el contenedor) ---
 data "aws_iam_policy_document" "ecs_tasks_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -72,6 +56,7 @@ data "aws_iam_policy_document" "ecs_tasks_assume" {
   }
 }
 
+#   AWS IAM (ECS EXECUTION ROLE)
 resource "aws_iam_role" "ecs_execution" {
   name               = "PardosECSExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
@@ -88,7 +73,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = aws_iam_policy.ecs_execution.arn
 }
 
-# --- ECS Task Role (runtime del microservicio: SQS/SNS/X-Ray, sin rds:*) ---
+#   AWS IAM (ECS TASK ROLE)
 resource "aws_iam_role" "ecs_task" {
   name               = "PardosECSTaskRole"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
@@ -105,7 +90,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task" {
   policy_arn = aws_iam_policy.ecs_task.arn
 }
 
-# --- RDS Proxy Role (lee credenciales de Secrets Manager + KMS Decrypt) ---
+#   AWS IAM (RDS PROXY ROLE)
 data "aws_iam_policy_document" "rds_proxy_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -116,6 +101,7 @@ data "aws_iam_policy_document" "rds_proxy_assume" {
   }
 }
 
+#   AWS IAM (RDS PROXY ROLE)
 resource "aws_iam_role" "rds_proxy" {
   name               = "PardosRDSProxyRole"
   assume_role_policy = data.aws_iam_policy_document.rds_proxy_assume.json
