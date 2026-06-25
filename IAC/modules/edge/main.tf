@@ -152,15 +152,12 @@ resource "aws_cloudfront_origin_access_control" "this" {
 
 #   AWS CLOUDFRONT
 resource "aws_cloudfront_distribution" "this" {
-  #checkov:skip=CKV_AWS_86:Logging via bucket con ACLs queda fuera del alcance del POC
-  #checkov:skip=CKV_AWS_310:Diseno de origen unico (ALB); failover no aplica
-  #checkov:skip=CKV_AWS_174:POC usa el certificado por defecto de CloudFront (sin ACM propio)
-  #checkov:skip=CKV2_AWS_42:POC usa el certificado por defecto de CloudFront (sin ACM propio)
   enabled              = true
   is_ipv6_enabled      = true
   comment              = "${local.name} CDN"
   web_acl_id           = aws_wafv2_web_acl.this.arn # ASOCIA WAF
   default_root_object  = "index.html"               # CKV_AWS_305
+  aliases             = [var.domain]
 
   origin {
     domain_name = var.alb_dns_name # ORIGEN ALB
@@ -196,8 +193,10 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
-  viewer_certificate {
-    cloudfront_default_certificate = true
+  viewer_certificate { # CKV2_AWS_42
+    acm_certificate_arn      = var.acm_certificate_arn # ARN del certificado en us-east-1
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
