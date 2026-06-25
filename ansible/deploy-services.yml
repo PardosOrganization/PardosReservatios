@@ -1,0 +1,63 @@
+---
+- name: Build y push de imagenes a AWS ECR (Pardos)
+  hosts: local
+  gather_facts: false
+  vars:
+    image_tag: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
+  tasks:
+    - name: Obtener Account ID de AWS
+      ansible.builtin.command: aws sts get-caller-identity --query Account --output text
+      register: aws_account
+      changed_when: false
+
+    - name: Definir registry de ECR
+      ansible.builtin.set_fact:
+        ecr_registry: "{{ aws_account.stdout }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+    - name: Login a ECR
+      ansible.builtin.shell: |
+        set -o pipefail
+        aws ecr get-login-password --region {{ aws_region }} \
+          | docker login --username AWS --password-stdin {{ ecr_registry }}
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Build de la imagen por microservicio
+      ansible.builtin.command: >
+        docker build
+        -t {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+        {{ playbook_dir }}/docker/{{ item }}
+      loop: "{{ microservices }}"
+
+    - name: Push de la imagen a ECR
+      ansible.builtin.command: >
+        docker push {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+      loop: "{{ microservices }}"
+
+    # --- Actualizacion de ECS ---
+    - name: Registrar nueva revision de la task definition con la nueva imagen
+      ansible.builtin.shell: |
+        set -o pipefail
+        IMAGE="{{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}"
+        aws ecs describe-task-definition \
+          --task-definition {{ project }}-svc-{{ item }} \
+          --query taskDefinition > /tmp/td-{{ item }}.json
+        jq --arg IMG "$IMAGE" '
+          .containerDefinitions[0].image = $IMG
+          | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                .compatibilities, .registeredAt, .registeredBy)
+        ' /tmp/td-{{ item }}.json > /tmp/td-new-{{ item }}.json
+        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item }}.json
+      args:
+        executable: /bin/bash
+      loop: "{{ microservices }}"
+
+    - name: Forzar nuevo despliegue del servicio ECS
+      ansible.builtin.command: >
+        aws ecs update-service
+        --cluster {{ project }}-cluster-{{ env }}
+        --service svc-{{ item }}
+        --task-definition {{ project }}-svc-{{ item }}
+        --force-new-deployment
+      loop: "{{ microservices }}"
