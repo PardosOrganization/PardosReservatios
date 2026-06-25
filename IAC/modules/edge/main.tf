@@ -208,6 +208,64 @@ resource "aws_s3_bucket_ownership_controls" "cf_logs" {
   }
 }
 
+#   AWS S3 (CLOUDFRONT FAILOVER BACKUP) - PARA CKV_AWS_310
+resource "aws_s3_bucket" "cf_failover" {
+  #checkov:skip=CKV_AWS_18:El bucket de failover no requiere logs.
+  #checkov:skip=CKV_AWS_144:No se requiere replicacion para failover.
+  #checkov:skip=CKV2_AWS_62:No se requieren notificaciones.
+  bucket        = "${var.project}-cf-failover-${var.env}-${data.aws_caller_identity.current.account_id}"
+  force_destroy = false
+}
+
+resource "aws_s3_bucket_public_access_block" "cf_failover" {
+  bucket                  = aws_s3_bucket.cf_failover.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "cf_failover" {
+  bucket = aws_s3_bucket.cf_failover.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cf_failover" {
+  bucket = aws_s3_bucket.cf_failover.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "cf_failover" {
+  bucket = aws_s3_bucket.cf_failover.id
+  rule {
+    id     = "expire-failover"
+    status = "Enabled"
+    expiration {
+      days = 365
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+#   AWS S3 OWNERSHIP - SOLUCIONA CKV2_AWS_65
+resource "aws_s3_bucket_ownership_controls" "cf_failover" {
+  bucket = aws_s3_bucket.cf_failover.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 #   AWS CLOUDFRONT
 resource "aws_cloudfront_distribution" "this" {
   #checkov:skip=CKV2_AWS_46:Falso positivo; el origen es un ALB, la referencia a S3 es solo para logs
@@ -224,6 +282,22 @@ resource "aws_cloudfront_distribution" "this" {
     prefix          = "cf-logs/"
   }
 
+  origin_group { # SOLUCIONA CKV_AWS_310
+    origin_id = "grupo-failover"
+
+    failover_criteria {
+      status_codes = [500, 502, 503, 504]
+    }
+
+    member {
+      origin_id = "alb-dinamico"
+    }
+
+    member {
+      origin_id = "s3-failover"
+    }
+  }
+
   origin {
     domain_name = var.alb_dns_name # ORIGEN ALB
     origin_id   = "alb-dinamico"
@@ -236,10 +310,15 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
+  origin { # ORIGEN FAILOVER PARA CKV_AWS_310
+    domain_name = aws_s3_bucket.cf_failover.bucket_regional_domain_name
+    origin_id   = "s3-failover"
+  }
+
   default_cache_behavior {
     allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods             = ["GET", "HEAD"]
-    target_origin_id           = "alb-dinamico"
+    target_origin_id           = "grupo-failover"
     viewer_protocol_policy     = "redirect-to-https" # FUERZA HTTPS
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id # CKV2_AWS_32
 
