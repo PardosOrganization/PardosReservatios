@@ -34,11 +34,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
   for_each = local.frontend_buckets
   bucket   = aws_s3_bucket.frontend[each.key].id
   rule {
-     apply_server_side_encryption_by_default {
-       kms_master_key_id = aws_kms_key.this.arn
-       sse_algorithm     = "aws:kms"
-     }
- }
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.this.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
 }
 
 data "aws_iam_policy_document" "frontend_oac" {
@@ -93,13 +93,15 @@ resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
 }
 
 resource "aws_s3_bucket_notification" "frontend" {
-  for_each = aws_s3_bucket.frontend
-  bucket   = each.value.id
+  for_each = local.frontend_buckets
+  bucket   = aws_s3_bucket.frontend[each.key].id
 
   topic {
     topic_arn = aws_sns_topic.notificaciones.arn
     events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
   }
+
+  depends_on = [aws_sns_topic_policy.notificaciones]
 }
 
 # CRÍTICO: LA REPLICACIÓN REQUIERE QUE LOS BUCKETS DESTINO "<bucket>-replica" YA EXISTAN.
