@@ -22,21 +22,29 @@ resource "aws_iam_role" "ecs_execution" {
 }
 
 data "aws_iam_policy_document" "ecs_execution" {
+  # GetAuthorizationToken es a nivel de servicio: AWS no permite acotarlo por ARN.
   statement {
-    sid = "ECRPullImagen"
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-    ]
+    sid       = "ECRAuthToken"
+    actions   = ["ecr:GetAuthorizationToken"]
     resources = ["*"]
   }
+
   statement {
     sid       = "CloudWatchLogsContenedor"
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["arn:aws:logs:${var.region}:${var.account_id}:log-group:/${local.name}/ecs/*:*"]
   }
+
+  statement {
+    sid = "ECRPullImagen"
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+    resources = [for r in aws_ecr_repository.this : r.arn]
+  }
+
   statement {
     sid     = "InyeccionSecretosArranque"
     actions = ["secretsmanager:GetSecretValue", "kms:Decrypt"]
