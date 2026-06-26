@@ -51,8 +51,13 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.this[var.microservices[0]].arn
+    type = "redirect" # CKV2_AWS_20: REDIRIGIR HTTP -> HTTPS
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 

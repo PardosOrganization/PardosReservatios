@@ -49,3 +49,6 @@ override.tf.json
 
 # Other
 results.xml/
+
+# Documentos generados (no se versionan)
+*.docx
