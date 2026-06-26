@@ -1,6 +1,7 @@
 #####################################################################
 # BUCKETS DE FRONTEND (LANDING + RESERVAS + EMPLEADOS)
 #####################################################################
+
 resource "aws_s3_bucket" "frontend" {
   for_each = local.frontend_buckets
   bucket   = each.value
@@ -9,6 +10,8 @@ resource "aws_s3_bucket" "frontend" {
     Environment = terraform.workspace
   }
 }
+
+
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
   for_each                = aws_s3_bucket.frontend
@@ -20,8 +23,8 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
 }
 
 resource "aws_s3_bucket_versioning" "frontend" {
-  for_each = aws_s3_bucket.frontend
-  bucket   = each.value.id
+  for_each = local.frontend_buckets
+  bucket   = aws_s3_bucket.frontend[each.key].id
   versioning_configuration {
     status = "Enabled"
   }
