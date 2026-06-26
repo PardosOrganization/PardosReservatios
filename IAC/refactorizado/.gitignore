@@ -1,0 +1,27 @@
+# Directorios de inicialización y plugins
+.terraform/
+.terraform.lock.hcl
+
+# Estados locales y backups
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+
+# Planes binarios y overrides locales
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Variables sensibles / secretos (NO subir)
+*secret*.tfvars
+*secrets*.tfvars
+*.auto.tfvars
+
+# CRÍTICO: SE PERMITE SUBIR LOS TFVARS DE ENTORNO (NO CONTIENEN SECRETOS)
+!dev.tfvars
+!qa.tfvars
+!prod.tfvars
