@@ -1,0 +1,193 @@
+================================================================================
+  DISTRIBUCIÓN DE FAILURES CHECKOV — 50 FAILURES / 4 INTEGRANTES
+  Generado: 2026-06-17
+================================================================================
+
+Cada integrante tiene asignado un grupo de módulos de infraestructura.
+Todos los archivos están en: iac/modules/<módulo>/main.tf o iac/iam/main.tf
+
+================================================================================
+  ALCANTARA — NETWORK (14 failures)
+  Archivo: iac/modules/network/main.tf
+================================================================================
+
+ 1. [CKV_AWS_23]  Ensure every security group and rule has a description
+                  Recurso: security group (5 ocurrencias)
+
+ 2. [CKV_AWS_382] Ensure no security groups allow egress from 0.0.0.0:0 to port -1
+                  Recurso: security group rules (5 ocurrencias)
+
+ 3. [CKV2_AWS_5]  Ensure that Security Groups are attached to another resource
+                  Recurso: security groups (5 ocurrencias — posiblemente no aplica si son nuevos)
+
+ 4. [CKV2_AWS_11] Ensure VPC flow logging is enabled in all VPCs
+                  Recurso: VPC
+
+ 5. [CKV2_AWS_12] Ensure the default security group of every VPC restricts all traffic
+                  Recurso: VPC default security group
+
+CÓMO CORREGIR:
+- Agregar "description" a todos los security groups y reglas
+- Restringir reglas de egress (no usar 0.0.0.0/0 con port -1)
+- Habilitar VPC Flow Logs (aws_flow_log)
+- Configurar default security group para denegar todo tráfico
+
+
+================================================================================
+  MATTHEW 2 — EDGE + CICD (14 failures)
+  Archivos: iac/modules/edge/main.tf, iac/modules/cicd/main.tf
+================================================================================
+
+--- EDGE (13 failures) ---
+
+ 1. [CKV_AWS_192] Ensure WAF prevents message lookup in Log4j2 (CVE-2021-44228)
+                  Recurso: WAF WebACL
+
+ 2. [CKV_AWS_305] Ensure CloudFront distribution has a default root object configured
+                  Recurso: CloudFront distribution
+
+ 3. [CKV_AWS_86]  Ensure CloudFront distribution has Access Logging enabled
+                  Recurso: CloudFront distribution
+
+ 4. [CKV_AWS_310] Ensure CloudFront distributions should have origin failover configured
+                  Recurso: CloudFront distribution
+
+ 5. [CKV_AWS_374] Ensure AWS CloudFront web distribution has geo restriction enabled
+                  Recurso: CloudFront distribution
+
+ 6. [CKV_AWS_174] Verify CloudFront Distribution Viewer Certificate is using TLS v1.2+
+                  Recurso: CloudFront viewer certificate
+
+ 7. [CKV2_AWS_42] Ensure AWS CloudFront distribution uses custom SSL certificate
+                  Recurso: CloudFront distribution
+
+ 8. [CKV2_AWS_32] Ensure CloudFront distribution has a response headers policy attached
+                  Recurso: CloudFront distribution
+
+ 9. [CKV2_AWS_47] Ensure CloudFront attached WAFv2 WebACL is configured with AMR for Log4j
+                  Recurso: WAF WebACL
+
+10. [CKV2_AWS_38] Ensure DNSSEC signing is enabled for Route 53 public hosted zones
+                  Recurso: Route 53
+
+11. [CKV2_AWS_39] Ensure DNS query logging is enabled for Route 53 hosted zones
+                  Recurso: Route 53
+
+12. [CKV2_AWS_31] Ensure WAF2 has a Logging Configuration
+                  Recurso: WAF WebACL
+
+--- CICD (1 failure) ---
+
+13. [CKV_AWS_158] Ensure that CloudWatch Log Group is encrypted by KMS
+                  Recurso: CloudWatch Log Group
+
+CÓMO CORREGIR:
+- CloudFront: configurar default_root_object, logging, origin failover, geo_restriction, TLS 1.2
+- WAF: agregar regla Log4j, configurar logging
+- Route 53: habilitar DNSSEC y query logging
+- CloudWatch: cifrar log group con KMS
+
+
+================================================================================
+  WILSON 3 — DATA (12 failures)
+  Archivo: iac/modules/data/main.tf
+================================================================================
+
+ 1. [CKV_AWS_313] Ensure RDS cluster configured to copy tags to snapshots
+                  Recurso: RDS cluster
+
+ 2. [CKV_AWS_162] Ensure RDS cluster has IAM authentication enabled
+                  Recurso: RDS cluster
+
+ 3. [CKV_AWS_324] Ensure that RDS Cluster log capture is enabled
+                  Recurso: RDS cluster
+
+ 4. [CKV_AWS_139] Ensure that RDS clusters have deletion protection enabled
+                  Recurso: RDS cluster
+
+ 5. [CKV_AWS_226] Ensure DB instance gets all minor upgrades automatically
+                  Recurso: RDS instances (2 ocurrencias)
+
+ 6. [CKV_AWS_118] Ensure that enhanced monitoring is enabled for RDS instances
+                  Recurso: RDS instances (2 ocurrencias)
+
+ 7. [CKV_AWS_353] Ensure that RDS instances have performance insights enabled
+                  Recurso: RDS instances (2 ocurrencias)
+
+ 8. [CKV2_AWS_64] Ensure KMS key Policy is defined
+                  Recurso: KMS key
+
+ 9. [CKV2_AWS_27] Ensure Postgres RDS has Query Logging enabled
+                  Recurso: RDS cluster parameter group
+
+10. [CKV2_AWS_57] Ensure Secrets Manager secrets have automatic rotation enabled
+                  Recurso: Secrets Manager
+
+CÓMO CORREGIR:
+- RDS Cluster: copy_tags_to_snapshot=true, iam_authentication=true, enabled_cloudwatch_logs_exports, deletion_protection=true
+- RDS Instances: auto_minor_version_upgrade=true, monitoring_interval>0, performance_insights_enabled=true
+- KMS: definir key policy explícita
+- RDS params: log_statement="all" en parameter group
+- Secrets Manager: configurar rotation con aws_secretsmanager_secret_rotation
+
+
+================================================================================
+  FRANK — COMPUTE + OBSERVABILITY + MESSAGING (10 failures)
+  Archivos: iac/modules/compute/main.tf, iac/modules/observability/main.tf,
+            iac/modules/messaging/main.tf
+================================================================================
+
+--- COMPUTE (2 failures) ---
+
+ 1. [CKV_AWS_91]  Ensure the ELBv2 (Application/Network) has access logging enabled
+                  Recurso: ALB
+
+ 2. [CKV_AWS_158] Ensure that CloudWatch Log Group is encrypted by KMS
+                  Recurso: CloudWatch Log Group
+
+--- OBSERVABILITY (4 failures) ---
+
+ 3. [CKV_AWS_158] Ensure that CloudWatch Log Group is encrypted by KMS
+                  Recurso: CloudWatch Log Groups (2 ocurrencias)
+
+ 4. [CKV_AWS_338] Ensure CloudWatch log groups retains logs for at least 1 year
+                  Recurso: CloudWatch Log Groups (2 ocurrencias)
+
+--- MESSAGING (1 failure) ---
+
+ 5. [CKV_AWS_31]  Ensure ElastiCache Replication Group is encrypted at transit with auth token
+                  Recurso: ElastiCache Replication Group
+
+CÓMO CORREGIR:
+- ALB: agregar access_logs { bucket = "..." enabled = true }
+- CloudWatch: kms_key_id en todos los log groups, retention_in_days >= 365
+- ElastiCache: transit_encryption_enabled=true, auth_token="..."
+
+
+================================================================================
+  RESUMEN
+================================================================================
+
+  Integrante 1 (Network):                    14 failures
+  Integrante 2 (Edge + CICD):                14 failures
+  Integrante 3 (Data):                       12 failures
+  Integrante 4 (Compute + Observ + Messag):  10 failures
+                                              ──────────
+  TOTAL:                                      50 failures
+
+================================================================================
+  FLUJO DE TRABAJO PARA CADA INTEGRANTE
+================================================================================
+
+  1. git checkout develop
+  2. git pull origin develop
+  3. git checkout -b fix/checkov-<modulo>       (ej: fix/checkov-network)
+  4. Editar los archivos .tf correspondientes
+  5. Ejecutar checkov para verificar:
+     $env:PYTHONUTF8=1; python -m checkov.main -d iac/ --check <CKV_ID>
+  6. git add -A
+  7. git commit -m "fix(infra): resolve checkov failures in <modulo>"
+  8. git push origin fix/checkov-<modulo>
+  9. Abrir PR → develop en GitHub
+
+================================================================================

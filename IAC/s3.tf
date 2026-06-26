@@ -31,14 +31,14 @@ resource "aws_s3_bucket_versioning" "frontend" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
-  for_each = aws_s3_bucket.frontend
-  bucket   = each.value.id
+  for_each = local.frontend_buckets
+  bucket   = aws_s3_bucket.frontend[each.key].id
   rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.this.arn
-    }
-  }
+     apply_server_side_encryption_by_default {
+       kms_master_key_id = aws_kms_key.this.arn
+       sse_algorithm     = "aws:kms"
+     }
+ }
 }
 
 data "aws_iam_policy_document" "frontend_oac" {
