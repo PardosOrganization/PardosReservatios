@@ -25,12 +25,13 @@ resource "aws_lb_target_group" "this" {
   for_each    = toset(var.microservices)
   name        = "${local.name}-tg-${each.key}"
   port        = var.container_port
-  protocol    = "HTTP"
+  protocol    = "HTTPS" # CKV_AWS_378: CIFRADO EXTREMO A EXTREMO ALB -> TAREA ECS
   vpc_id      = aws_vpc.this.id
   target_type = "ip"
 
   health_check {
     path                = "/health"
+    protocol            = "HTTPS"
     matcher             = "200"
     healthy_threshold   = 2
     unhealthy_threshold = 3
