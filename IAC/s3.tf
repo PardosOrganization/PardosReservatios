@@ -14,8 +14,9 @@ resource "aws_s3_bucket" "frontend" {
 
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
-  for_each                = aws_s3_bucket.frontend
-  bucket                  = each.value.id
+  for_each                = local.frontend_buckets                 # ← mapa literal
+  bucket                  = aws_s3_bucket.frontend[each.key].id    
+
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
