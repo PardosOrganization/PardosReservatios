@@ -66,11 +66,94 @@ resource "aws_s3_bucket_policy" "frontend" {
   policy   = data.aws_iam_policy_document.frontend_oac[each.key].json
 }
 
+resource "aws_s3_bucket" "frontend_logs" {
+  #checkov:skip=CKV_AWS_18:El bucket de logs de frontend no se loggea a si mismo.
+  #checkov:skip=CKV_AWS_144:No se requiere replicacion para logs.
+  #checkov:skip=CKV2_AWS_62:Bucket de solo escritura de logs, sin consumidor downstream.
+  bucket        = "${local.name}-frontend-logs-${data.aws_caller_identity.current.account_id}"
+  force_destroy = false
+  tags = {
+    Name        = "${local.name}-frontend-logs"
+    Environment = terraform.workspace
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "frontend_logs" {
+  bucket                  = aws_s3_bucket.frontend_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "frontend_logs" {
+  bucket = aws_s3_bucket.frontend_logs.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend_logs" {
+  bucket = aws_s3_bucket.frontend_logs.id
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.this.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "frontend_logs" {
+  bucket = aws_s3_bucket.frontend_logs.id
+  rule {
+    id     = "expire-frontend-logs"
+    status = "Enabled"
+    filter {}
+    expiration {
+      days = 365
+    }
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "frontend_logs" {
+  bucket = aws_s3_bucket.frontend_logs.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_policy" "frontend_logs" {
+  bucket = aws_s3_bucket.frontend_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowS3ServerAccessLogging"
+        Effect    = "Allow"
+        Principal = { Service = "logging.s3.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.frontend_logs.arn}/*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
 resource "aws_s3_bucket_logging" "frontend" {
   for_each      = aws_s3_bucket.frontend
   bucket        = each.value.id
-  target_bucket = each.value.id
-  target_prefix = "access-logs/"
+  target_bucket = aws_s3_bucket.frontend_logs.id
+  target_prefix = "access-logs/${each.key}/"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
