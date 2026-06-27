@@ -24,12 +24,15 @@ resource "aws_rds_cluster_parameter_group" "this" {
 }
 
 resource "aws_rds_cluster" "this" {
-  cluster_identifier                  = "${local.name}-aurora"
-  engine                              = "aurora-postgresql"
-  engine_version                      = var.engine_version
-  database_name                       = "pardos"
-  master_username                     = "pardos_app"
-  master_password                     = random_password.db.result
+  cluster_identifier = "${local.name}-aurora"
+  engine             = "aurora-postgresql"
+  engine_version     = var.engine_version
+  database_name      = "pardos"
+  master_username    = "pardos_app"
+  master_password    = random_password.db.result
+  # Une el cluster primario al Aurora Global Database para la replica de
+  # DR en us-west-2 (dr_rds.tf). null cuando enable_dr_region = false.
+  global_cluster_identifier           = var.enable_dr_region ? aws_rds_global_cluster.this[0].id : null
   db_subnet_group_name                = aws_db_subnet_group.this.name
   vpc_security_group_ids              = [aws_security_group.aurora.id]
   storage_encrypted                   = true

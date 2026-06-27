@@ -19,4 +19,9 @@ locals {
     frontend  = "${var.project}-frontend-${terraform.workspace}"
     empleados = "${var.project}-empleados-${terraform.workspace}"
   }
+
+  # Región secundaria de DR (warm standby) para el failover de Route 53.
+  dr_region = "us-west-2"
+
+  dr_microservices_map = { for m in var.microservices : m => m }
 }

@@ -30,9 +30,13 @@ data "aws_iam_policy_document" "ecs_execution" {
   }
 
   statement {
-    sid       = "CloudWatchLogsContenedor"
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = ["arn:aws:logs:${var.region}:${var.account_id}:log-group:/${local.name}/ecs/*:*"]
+    sid     = "CloudWatchLogsContenedor"
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = [
+      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/${local.name}/ecs/*:*",
+      # Tareas DR en us-west-2 (dr_ecs.tf); ARN inerte si enable_dr_region=false.
+      "arn:aws:logs:${local.dr_region}:${var.account_id}:log-group:/${local.name}/dr/ecs/*:*",
+    ]
   }
 
   statement {
@@ -51,6 +55,9 @@ data "aws_iam_policy_document" "ecs_execution" {
     resources = [
       "arn:aws:secretsmanager:${var.region}:${var.account_id}:secret:${local.name}/*",
       "arn:aws:kms:${var.region}:${var.account_id}:key/*",
+      # Secrets/KMS replicados o propios de la region DR (us-west-2).
+      "arn:aws:secretsmanager:${local.dr_region}:${var.account_id}:secret:${local.name}/*",
+      "arn:aws:kms:${local.dr_region}:${var.account_id}:key/*",
     ]
   }
 }
@@ -297,8 +304,11 @@ resource "aws_iam_role" "flow" {
 
 data "aws_iam_policy_document" "flow" {
   statement {
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"]
-    resources = ["${aws_cloudwatch_log_group.flow.arn}:*"]
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"]
+    resources = concat(
+      ["${aws_cloudwatch_log_group.flow.arn}:*"],
+      var.enable_dr_region ? ["${aws_cloudwatch_log_group.dr_flow[0].arn}:*"] : []
+    )
   }
 }
 

@@ -5,6 +5,12 @@
 directory:
   - IAC
 
+# Se escanea contra prod.tfvars: es el entorno donde todas las protecciones
+# (replicacion cross-region, etc.) deben estar activas. dev/qa las desactivan
+# intencionalmente por costo y tienen sus propios checkov:skip documentados.
+var-file:
+  - IAC/prod.tfvars
+
 # Genera SIEMPRE los dos formatos: texto en consola + XML para el reporte
 output:
   - cli

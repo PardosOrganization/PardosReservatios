@@ -137,3 +137,27 @@ variable "geo_restriction_locations" {
   description = "Lista de países permitidos (whitelist) en CloudFront."
   type        = list(string)
 }
+
+variable "enable_dr_region" {
+  description = "Activa el stack de Disaster Recovery (warm standby) en us-west-2 y el failover de Route 53."
+  type        = bool
+  default     = false
+}
+
+variable "vpc_cidr_dr" {
+  description = "Bloque CIDR de la VPC secundaria de DR en us-west-2 (debe no solaparse con vpc_cidr)."
+  type        = string
+  default     = "10.99.0.0/16"
+}
+
+variable "azs_dr" {
+  description = "Availability Zones de la región DR (us-west-2)."
+  type        = list(string)
+  default     = ["us-west-2a", "us-west-2b"]
+}
+
+variable "ecs_dr_desired_count" {
+  description = "Tareas deseadas por servicio ECS en la región DR (warm standby: capacidad minima, no la misma que produccion)."
+  type        = number
+  default     = 1
+}

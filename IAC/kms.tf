@@ -127,6 +127,15 @@ resource "aws_kms_key" "replica" {
         Principal = { AWS = aws_iam_role.s3_replication.arn }
         Action    = ["kms:Encrypt", "kms:GenerateDataKey*"]
         Resource  = "*"
+      },
+      {
+        # Reutilizada para cifrar el log group y el Aurora secundario del
+        # stack DR en us-west-2 (warm standby de failover).
+        Sid       = "AllowCloudWatchLogsDR"
+        Effect    = "Allow"
+        Principal = { Service = "logs.us-west-2.amazonaws.com" }
+        Action    = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:Describe*"]
+        Resource  = "*"
       }
     ]
   })

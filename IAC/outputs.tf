@@ -42,3 +42,18 @@ output "runtime_role_arns" {
     s3_replication = aws_iam_role.s3_replication.arn
   }
 }
+
+output "dr_alb_dns_name" {
+  description = "DNS del ALB de failover en us-west-2 (null si enable_dr_region=false)."
+  value       = var.enable_dr_region ? aws_lb.dr[0].dns_name : null
+}
+
+output "dr_health_check_id" {
+  description = "ID del health check de Route 53 que dispara el failover (null si enable_dr_region=false)."
+  value       = var.enable_dr_region ? aws_route53_health_check.primary[0].id : null
+}
+
+output "dr_aurora_global_cluster_id" {
+  description = "ID del Aurora Global Database (null si enable_dr_region=false)."
+  value       = var.enable_dr_region ? aws_rds_global_cluster.this[0].id : null
+}

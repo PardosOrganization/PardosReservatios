@@ -5,3 +5,7 @@ data "aws_region" "current" {}
 data "aws_region" "us_east_1" {
   provider = aws.us_east_1
 }
+
+data "aws_region" "us_west_2" {
+  provider = aws.us_west_2
+}

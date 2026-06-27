@@ -26,4 +26,5 @@ ecs_max_capacity  = 6
 log_retention_days        = 90
 waf_rate_limit            = 1000
 enable_s3_replication     = false
+enable_dr_region          = false
 geo_restriction_locations = ["PE"]
