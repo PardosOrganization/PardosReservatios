@@ -47,3 +47,17 @@ provider "aws" {
     }
   }
 }
+
+provider "aws" {
+  # Región secundaria de failover de Route 53 (ver Informe_Avance_IaC_Pardos).
+  alias  = "us_west_2"
+  region = "us-west-2"
+
+  default_tags {
+    tags = {
+      Project     = var.project
+      Environment = terraform.workspace
+      ManagedBy   = "Terraform"
+    }
+  }
+}

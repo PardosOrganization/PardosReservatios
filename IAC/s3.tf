@@ -8,8 +8,8 @@ resource "aws_s3_bucket" "frontend" {
 }
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
-  for_each                = local.frontend_buckets                 # ← mapa literal
-  bucket                  = aws_s3_bucket.frontend[each.key].id    
+  for_each = local.frontend_buckets # ← mapa literal
+  bucket   = aws_s3_bucket.frontend[each.key].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -182,20 +182,119 @@ resource "aws_s3_bucket_notification" "frontend" {
   depends_on = [aws_sns_topic_policy.notificaciones]
 }
 
-resource "aws_s3_bucket_replication_configuration" "frontend_web" {
-  bucket = aws_s3_bucket.frontend["frontend"].id
-  role   = aws_iam_role.s3_replication.arn
+#####################################################################
+# BUCKETS RÉPLICA EN US-WEST-2 (DR DEL FRONTEND, SEGÚN INFORME DE ARQUITECTURA)
+#####################################################################
+
+resource "aws_s3_bucket" "frontend_replica" {
+  #checkov:skip=CKV_AWS_144:Es el destino de la replicacion, no la fuente.
+  #checkov:skip=CKV_AWS_18:Bucket de solo escritura via replicacion, no requiere loguearse a si mismo.
+  #checkov:skip=CKV2_AWS_62:Bucket de DR sin consumidor downstream, sin notificaciones requeridas.
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider = aws.us_west_2
+  bucket   = "${each.value}-replica"
+  tags = {
+    Name        = "${each.value}-replica"
+    Environment = terraform.workspace
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "frontend_replica" {
+  for_each                = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider                = aws.us_west_2
+  bucket                  = aws_s3_bucket.frontend_replica[each.key].id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "frontend_replica" {
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider = aws.us_west_2
+  bucket   = aws_s3_bucket.frontend_replica[each.key].id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend_replica" {
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider = aws.us_west_2
+  bucket   = aws_s3_bucket.frontend_replica[each.key].id
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.replica.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "frontend_replica" {
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider = aws.us_west_2
+  bucket   = aws_s3_bucket.frontend_replica[each.key].id
 
   rule {
-    id     = "replicar-frontend-web"
+    id     = "expire-versiones-antiguas"
     status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "frontend_replica" {
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  provider = aws.us_west_2
+  bucket   = aws_s3_bucket.frontend_replica[each.key].id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+#####################################################################
+# CONFIGURACIÓN DE REPLICACIÓN CROSS-REGION (us-east-1 -> us-west-2)
+#####################################################################
+
+resource "aws_s3_bucket_replication_configuration" "frontend" {
+  for_each = var.enable_s3_replication ? local.frontend_buckets : {}
+  bucket   = aws_s3_bucket.frontend[each.key].id
+  role     = aws_iam_role.s3_replication.arn
+
+  rule {
+    id     = "replicar-todo"
+    status = "Enabled"
+
+    filter {}
+
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
+
     destination {
-      bucket        = "arn:aws:s3:::${aws_s3_bucket.frontend["frontend"].bucket}-replica"
+      bucket        = aws_s3_bucket.frontend_replica[each.key].arn
       storage_class = "STANDARD"
+
+      encryption_configuration {
+        replica_kms_key_id = aws_kms_key.replica.arn
+      }
     }
   }
 
-  depends_on = [aws_s3_bucket_versioning.frontend]
+  depends_on = [
+    aws_s3_bucket_versioning.frontend,
+    aws_s3_bucket_versioning.frontend_replica,
+  ]
 }
 
 resource "aws_s3_bucket" "alb_logs" {

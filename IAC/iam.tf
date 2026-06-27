@@ -201,14 +201,36 @@ data "aws_iam_policy_document" "s3_replication" {
     ]
     resources = [for b in aws_s3_bucket.frontend : "${b.arn}/*"]
   }
-  statement {
-    sid = "DestinationWrite"
-    actions = [
-      "s3:ReplicateObject",
-      "s3:ReplicateDelete",
-      "s3:ReplicateTags",
-    ]
-    resources = [for b in aws_s3_bucket.frontend : "arn:aws:s3:::${b.bucket}-replica/*"]
+  dynamic "statement" {
+    # Solo se agregan estos permisos cuando la replicacion esta activa: con
+    # var.enable_s3_replication=false no existen buckets/CMK destino y un
+    # statement con "resources" vacio es rechazado por la API de IAM.
+    for_each = var.enable_s3_replication ? [1] : []
+    content {
+      sid = "DestinationWrite"
+      actions = [
+        "s3:ReplicateObject",
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags",
+      ]
+      resources = [for b in aws_s3_bucket.frontend_replica : "${b.arn}/*"]
+    }
+  }
+  dynamic "statement" {
+    for_each = var.enable_s3_replication ? [1] : []
+    content {
+      sid       = "SourceKmsDecrypt"
+      actions   = ["kms:Decrypt"]
+      resources = [aws_kms_key.this.arn]
+    }
+  }
+  dynamic "statement" {
+    for_each = var.enable_s3_replication ? [1] : []
+    content {
+      sid       = "DestinationKmsEncrypt"
+      actions   = ["kms:Encrypt", "kms:GenerateDataKey*"]
+      resources = [aws_kms_key.replica.arn]
+    }
   }
 }
 

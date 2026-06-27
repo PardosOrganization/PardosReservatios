@@ -102,6 +102,47 @@ resource "aws_kms_key" "logs" {
   }
 }
 
+resource "aws_kms_key" "replica" {
+  # KMS es un servicio regional: se necesita una CMK propia en la región destino (us-west-2)
+  # para cifrar los buckets réplica de la replicación cross-region de S3.
+  provider                = aws.us_west_2
+  description             = "CMK para buckets replica (us-west-2) de ${local.name}"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "default"
+    Statement = [
+      {
+        Sid       = "DefaultAllow"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowS3ReplicationRole"
+        Effect    = "Allow"
+        Principal = { AWS = aws_iam_role.s3_replication.arn }
+        Action    = ["kms:Encrypt", "kms:GenerateDataKey*"]
+        Resource  = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${local.name}-replica-kms"
+    Environment = terraform.workspace
+  }
+}
+
+resource "aws_kms_alias" "replica" {
+  provider      = aws.us_west_2
+  name          = "alias/${local.name}-replica-key"
+  target_key_id = aws_kms_key.replica.key_id
+}
+
 resource "aws_kms_key" "dnssec" {
   provider = aws.us_east_1
   #checkov:skip=CKV_AWS_7:Las CMK asimetricas (ECC) para DNSSEC no soportan rotacion automatica
