@@ -1,7 +1,3 @@
-#####################################################################
-# BUCKETS DE FRONTEND (LANDING + RESERVAS + EMPLEADOS)
-#####################################################################
-
 resource "aws_s3_bucket" "frontend" {
   for_each = local.frontend_buckets
   bucket   = each.value
@@ -10,8 +6,6 @@ resource "aws_s3_bucket" "frontend" {
     Environment = terraform.workspace
   }
 }
-
-
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
   for_each                = local.frontend_buckets                 # ← mapa literal
@@ -188,18 +182,15 @@ resource "aws_s3_bucket_notification" "frontend" {
   depends_on = [aws_sns_topic_policy.notificaciones]
 }
 
-# CRÍTICO: LA REPLICACIÓN REQUIERE QUE LOS BUCKETS DESTINO "<bucket>-replica" YA EXISTAN.
-resource "aws_s3_bucket_replication_configuration" "frontend" {
-  for_each = var.enable_s3_replication ? aws_s3_bucket.frontend : {}
-  bucket   = each.value.id
-  role     = aws_iam_role.s3_replication.arn
+resource "aws_s3_bucket_replication_configuration" "frontend_web" {
+  bucket = aws_s3_bucket.frontend["frontend"].id
+  role   = aws_iam_role.s3_replication.arn
 
   rule {
-    id     = "replicar-todo"
+    id     = "replicar-frontend-web"
     status = "Enabled"
-
     destination {
-      bucket        = "arn:aws:s3:::${each.value.bucket}-replica"
+      bucket        = "arn:aws:s3:::${aws_s3_bucket.frontend["frontend"].bucket}-replica"
       storage_class = "STANDARD"
     }
   }
@@ -207,9 +198,6 @@ resource "aws_s3_bucket_replication_configuration" "frontend" {
   depends_on = [aws_s3_bucket_versioning.frontend]
 }
 
-#####################################################################
-# BUCKET DE ACCESS LOGS DEL ALB
-#####################################################################
 resource "aws_s3_bucket" "alb_logs" {
   #checkov:skip=CKV_AWS_18:El bucket de logs del ALB no puede loggearse a si mismo (loop).
   #checkov:skip=CKV_AWS_144:Replicacion cross-region no requerida para logs efimeros.
@@ -282,9 +270,6 @@ resource "aws_s3_bucket_policy" "alb_logs" {
   })
 }
 
-#####################################################################
-# BUCKETS DE CLOUDFRONT (LOGS + FAILOVER)
-#####################################################################
 resource "aws_s3_bucket" "cf_logs" {
   #checkov:skip=CKV_AWS_18:El bucket de logs de CloudFront no se loggea a si mismo.
   #checkov:skip=CKV_AWS_144:No se requiere replicacion para logs.
