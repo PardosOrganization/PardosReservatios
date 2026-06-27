@@ -150,8 +150,8 @@ resource "aws_s3_bucket_policy" "frontend_logs" {
 }
 
 resource "aws_s3_bucket_logging" "frontend" {
-  for_each      = aws_s3_bucket.frontend
-  bucket        = each.value.id
+  for_each      = local.frontend_buckets
+  bucket        = aws_s3_bucket.frontend[each.key].id
   target_bucket = aws_s3_bucket.frontend_logs.id
   target_prefix = "access-logs/${each.key}/"
 }
