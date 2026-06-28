@@ -2,6 +2,9 @@
 - name: Build y push de imagenes a AWS ECR (Pardos)
   hosts: local
   gather_facts: false
+  vars_files:
+    - "group_vars/all.yml"
+    - "group_vars/{{ env | default('prod') }}.yml"
   vars:
     image_tag: "{{ lookup('pipe', 'git rev-parse --short HEAD') }}"
   tasks:
@@ -27,7 +30,7 @@
       ansible.builtin.command: >
         docker build
         -t {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
-        {{ playbook_dir }}/docker/{{ item }}
+        {{ playbook_dir }}/../apps/backend/{{ item }}
       loop: "{{ microservices }}"
 
     - name: Push de la imagen a ECR
@@ -36,18 +39,14 @@
       loop: "{{ microservices }}"
 
     # --- Actualizacion de ECS ---
-    - name: Registrar nueva revision de la task definition con la nueva imagen
+    - name: Generar definicion de tarea (Task Definition) desde plantilla Jinja2
+      ansible.builtin.template:
+        src: task-definition.json.j2
+        dest: "/tmp/td-new-{{ item }}.json"
+      loop: "{{ microservices }}"
+
+    - name: Registrar nueva revision de la task definition
       ansible.builtin.shell: |
-        set -o pipefail
-        IMAGE="{{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}"
-        aws ecs describe-task-definition \
-          --task-definition {{ project }}-svc-{{ item }} \
-          --query taskDefinition > /tmp/td-{{ item }}.json
-        jq --arg IMG "$IMAGE" '
-          .containerDefinitions[0].image = $IMG
-          | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
-                .compatibilities, .registeredAt, .registeredBy)
-        ' /tmp/td-{{ item }}.json > /tmp/td-new-{{ item }}.json
         aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item }}.json
       args:
         executable: /bin/bash
