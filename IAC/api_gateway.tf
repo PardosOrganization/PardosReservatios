@@ -22,7 +22,7 @@ resource "aws_apigatewayv2_route" "this" {
   api_id             = aws_apigatewayv2_api.this.id
   route_key          = "ANY /{proxy+}"
   target             = "integrations/${aws_apigatewayv2_integration.this.id}"
-  authorization_type = "AWS_IAM"
+  authorization_type = "NONE"
 }
 
 resource "aws_apigatewayv2_stage" "this" {

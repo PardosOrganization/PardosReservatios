@@ -1,7 +1,7 @@
 # ENTORNO DEV — Recursos pequeños y de bajo costo.
 # Usar con: terraform workspace select dev && terraform plan -var-file=dev.tfvars
 
-account_id          = "111111111111"
+account_id          = "181777503681" #CUENTA DE WILSON
 domain              = "dev.pardos.com.pe"
 vpc_cidr            = "10.10.0.0/16"
 certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/dev-alb-cert-0000-0000"

@@ -14,8 +14,9 @@ terraform {
 
   # CRÍTICO: EL BUCKET Y LA TABLA DE LOCK DEBEN EXISTIR ANTES DEL PRIMER `terraform init`.
   # EL ESTADO SE SEPARA POR WORKSPACE AUTOMÁTICAMENTE BAJO env:/<workspace>/<key>.
+  
   backend "s3" {
-    bucket         = "pardos-tfstate"
+    bucket         = "pardos-tfstate-181777503681"
     key            = "pardos/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "pardos-tflock"
