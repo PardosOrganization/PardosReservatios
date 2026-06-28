@@ -38,7 +38,6 @@ resource "aws_cloudfront_distribution" "this" {
   comment             = "${local.name} CDN"
   web_acl_id          = aws_wafv2_web_acl.this.arn
   default_root_object = "index.html"
-  aliases             = [var.domain]
 
   logging_config {
     bucket          = aws_s3_bucket.cf_logs.bucket_domain_name
@@ -102,9 +101,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = var.acm_certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = true
   }
 
   tags = {
