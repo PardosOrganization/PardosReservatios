@@ -57,3 +57,4 @@ resource "aws_apigatewayv2_stage" "this" {
     })
   }
 }
+
