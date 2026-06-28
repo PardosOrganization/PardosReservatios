@@ -55,7 +55,7 @@
     - name: Forzar nuevo despliegue del servicio ECS
       ansible.builtin.command: >
         aws ecs update-service
-        --cluster {{ project }}-cluster-{{ env }}
+        --cluster {{ project }}-{{ env }}-cluster
         --service svc-{{ item }}
         --task-definition {{ project }}-svc-{{ item }}
         --force-new-deployment
