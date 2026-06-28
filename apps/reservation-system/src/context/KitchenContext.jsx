@@ -102,20 +102,31 @@ export function KitchenProvider({ children }) {
   const [tickets,  setTickets]  = useState([])
   const [isLoading, setLoading] = useState(true)
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('pardos_kitchen')
-      setTickets(saved ? JSON.parse(saved) : SAMPLE_TICKETS)
-    } catch {
-      setTickets(SAMPLE_TICKETS)
-    } finally {
-      setLoading(false)
-    }
+  const API_URL = 'http://localhost:4004/api'
+
+  const refreshTickets = useCallback(() => {
+    fetch(`${API_URL}/tickets`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.value)) {
+          setTickets(data.value)
+        } else if (Array.isArray(data)) {
+          setTickets(data)
+        }
+      })
+      .catch(err => {
+        console.error("Error loading tickets", err)
+        setTickets(SAMPLE_TICKETS)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [])
 
+  // Cargar desde la API al montar
   useEffect(() => {
-    if (!isLoading) localStorage.setItem('pardos_kitchen', JSON.stringify(tickets))
-  }, [tickets, isLoading])
+    refreshTickets()
+  }, [refreshTickets])
 
   const generateId = () => `TK${Date.now().toString().slice(-4)}`
 
@@ -131,8 +142,17 @@ export function KitchenProvider({ children }) {
       createdAt: new Date().toISOString(),
     }
     setTickets(prev => [ticket, ...prev])
+
+    fetch(`${API_URL}/tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ticket)
+    })
+      .then(() => refreshTickets())
+      .catch(err => console.error("Error adding ticket", err))
+
     return ticket
-  }, [])
+  }, [refreshTickets])
 
   /**
    * updateTicketStatus — Avanza el estado de un ticket.
@@ -145,14 +165,30 @@ export function KitchenProvider({ children }) {
         t.id === id ? { ...t, status: newStatus, updatedAt: new Date().toISOString() } : t
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/tickets/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then(() => refreshTickets())
+      .catch(err => console.error("Error updating ticket status", err))
+  }, [refreshTickets])
 
   /**
    * updateTicket — Actualiza items o notas de un ticket pendiente.
    */
   const updateTicket = useCallback((id, updates) => {
     setTickets(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
-  }, [])
+
+    fetch(`${API_URL}/tickets/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+      .then(() => refreshTickets())
+      .catch(err => console.error("Error updating ticket", err))
+  }, [refreshTickets])
 
   // Tickets activos (no servidos)
   const activeTickets = tickets.filter(t => t.status !== TICKET_STATUS.SERVED)

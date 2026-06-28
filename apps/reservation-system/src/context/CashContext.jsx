@@ -64,30 +64,44 @@ export function CashProvider({ children }) {
   const [shift,      setShift]      = useState(null)   // turno activo
   const [isLoading,  setLoading]    = useState(true)
 
-  // Cargar desde localStorage
-  useEffect(() => {
-    try {
-      const savedPay   = localStorage.getItem('pardos_payments')
-      const savedShift = localStorage.getItem('pardos_shift')
-      setPayments(savedPay   ? JSON.parse(savedPay)   : SAMPLE_PAYMENTS)
-      setShift   (savedShift ? JSON.parse(savedShift) : null)
-    } catch {
-      setPayments(SAMPLE_PAYMENTS)
-    } finally {
-      setLoading(false)
-    }
+  const API_URL = 'http://localhost:4003/api'
+
+  const refreshPayments = useCallback(() => {
+    fetch(`${API_URL}/payments`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.value)) {
+          setPayments(data.value)
+        } else if (Array.isArray(data)) {
+          setPayments(data)
+        }
+      })
+      .catch(err => {
+        console.error("Error loading payments", err)
+        setPayments(SAMPLE_PAYMENTS)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+
+    fetch(`${API_URL}/shift`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status === 'open') {
+          setShift(data)
+        } else {
+          setShift(null)
+        }
+      })
+      .catch(() => {
+        setShift(null)
+      })
   }, [])
 
+  // Cargar desde la API al montar
   useEffect(() => {
-    if (!isLoading) localStorage.setItem('pardos_payments', JSON.stringify(payments))
-  }, [payments, isLoading])
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (shift) localStorage.setItem('pardos_shift', JSON.stringify(shift))
-      else localStorage.removeItem('pardos_shift')
-    }
-  }, [shift, isLoading])
+    refreshPayments()
+  }, [refreshPayments])
 
   /** Genera ID único de pago */
   const generateId = () => `P${Date.now().toString().slice(-6)}`
@@ -108,8 +122,17 @@ export function CashProvider({ children }) {
       status:      'open',
     }
     setShift(newShift)
+
+    fetch(`${API_URL}/shift/open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newShift)
+    })
+      .then(() => refreshPayments())
+      .catch(err => console.error("Error opening shift", err))
+
     return newShift
-  }, [])
+  }, [refreshPayments])
 
   /**
    * closeShift — Cierra el turno actual y genera resumen.
@@ -133,8 +156,17 @@ export function CashProvider({ children }) {
       }, {}),
     }
     setShift(null)
+
+    fetch(`${API_URL}/shift/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(summary)
+    })
+      .then(() => refreshPayments())
+      .catch(err => console.error("Error closing shift", err))
+
     return summary
-  }, [shift, payments])
+  }, [shift, payments, refreshPayments])
 
   /**
    * addPayment — Registra un nuevo cobro.
@@ -150,8 +182,17 @@ export function CashProvider({ children }) {
       status: 'paid',
     }
     setPayments(prev => [newPayment, ...prev])
+
+    fetch(`${API_URL}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newPayment)
+    })
+      .then(() => refreshPayments())
+      .catch(err => console.error("Error adding payment", err))
+
     return newPayment
-  }, [])
+  }, [refreshPayments])
 
   // Pagos de hoy
   const todayStr = format(new Date(), 'yyyy-MM-dd')
