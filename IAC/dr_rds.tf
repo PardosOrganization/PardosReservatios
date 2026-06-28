@@ -26,17 +26,36 @@ resource "aws_db_subnet_group" "dr" {
   }
 }
 
+resource "aws_rds_cluster_parameter_group" "dr" {
+  provider    = aws.us_west_2
+  name        = "${local.name}-dr-aurora-pg"
+  family      = "aurora-postgresql16"
+  description = "Grupo de parametros para habilitar log de consultas en DR"
+
+  parameter {
+    name  = "log_statement"
+    value = "all"
+  }
+
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "1"
+  }
+}
+
 resource "aws_rds_cluster" "dr" {
-  count                     = var.enable_dr_region ? 1 : 0
-  provider                  = aws.us_west_2
-  cluster_identifier        = "${local.name}-dr-aurora"
-  engine                    = "aurora-postgresql"
-  engine_version            = var.engine_version
-  global_cluster_identifier = aws_rds_global_cluster.this[0].id
-  db_subnet_group_name      = aws_db_subnet_group.dr[0].name
-  vpc_security_group_ids    = [aws_security_group.dr_aurora[0].id]
-  skip_final_snapshot       = true
-  deletion_protection       = var.deletion_protection
+  count                           = var.enable_dr_region ? 1 : 0
+  provider                        = aws.us_west_2
+  cluster_identifier              = "${local.name}-dr-aurora"
+  engine                          = "aurora-postgresql"
+  engine_version                  = var.engine_version
+  global_cluster_identifier       = aws_rds_global_cluster.this[0].id
+  db_subnet_group_name            = aws_db_subnet_group.dr[0].name
+  vpc_security_group_ids          = [aws_security_group.dr_aurora[0].id]
+  skip_final_snapshot             = true
+  deletion_protection             = var.deletion_protection
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.dr.name
+  enabled_cloudwatch_logs_exports = ["postgresql"]
 
   lifecycle {
     ignore_changes = [master_username, master_password]
