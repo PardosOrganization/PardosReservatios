@@ -1,0 +1,161 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — Pardos Chicken (Desarrollo Local)
+# ─────────────────────────────────────────────────────────────────────────────
+# Levanta los 4 microservicios backend en puertos diferentes para que el
+# frontend los pueda consumir localmente.
+#
+# Uso:
+#   docker compose up --build        → Construir y levantar todo
+#   docker compose up -d             → Levantar en segundo plano
+#   docker compose down              → Detener todo
+#   docker compose logs svc-cocina   → Ver logs de un servicio
+#
+# Mapeo de puertos (local → contenedor):
+#   svc-anfitriona  →  4001:8080
+#   svc-mozo        →  4002:8080
+#   svc-caja        →  4003:8080
+#   svc-cocina      →  4004:8080
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Microservicio Anfitriona ──────────────────────────────────────────────
+  svc-anfitriona:
+    build:
+      context: ./apps/backend/anfitriona
+      dockerfile: Dockerfile
+    container_name: pardos-svc-anfitriona
+    ports:
+      - "4001:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=pardos_user
+      - DB_PASS=pardos_pass
+      - DB_NAME=pardos
+      - REDIS_HOST=redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  # ── Microservicio Mozo ────────────────────────────────────────────────────
+  svc-mozo:
+    build:
+      context: ./apps/backend/mozo
+      dockerfile: Dockerfile
+    container_name: pardos-svc-mozo
+    ports:
+      - "4002:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=pardos_user
+      - DB_PASS=pardos_pass
+      - DB_NAME=pardos
+      - REDIS_HOST=redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  # ── Microservicio Caja ────────────────────────────────────────────────────
+  svc-caja:
+    build:
+      context: ./apps/backend/caja
+      dockerfile: Dockerfile
+    container_name: pardos-svc-caja
+    ports:
+      - "4003:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=pardos_user
+      - DB_PASS=pardos_pass
+      - DB_NAME=pardos
+      - REDIS_HOST=redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  # ── Microservicio Cocina ──────────────────────────────────────────────────
+  svc-cocina:
+    build:
+      context: ./apps/backend/cocina
+      dockerfile: Dockerfile
+    container_name: pardos-svc-cocina
+    ports:
+      - "4004:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_USER=pardos_user
+      - DB_PASS=pardos_pass
+      - DB_NAME=pardos
+      - REDIS_HOST=redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  # ── Frontend: Landing Page ────────────────────────────────────────────────
+  landing-page:
+    build:
+      context: ./apps/landing-page
+      dockerfile: Dockerfile
+    container_name: pardos-landing-page
+    ports:
+      - "4005:80"
+    restart: unless-stopped
+
+  # ── Frontend: Sistema de Reservas ─────────────────────────────────────────
+  reservation-system:
+    build:
+      context: ./apps/reservation-system
+      dockerfile: Dockerfile
+    container_name: pardos-reservation-system
+    ports:
+      - "4006:80"
+    restart: unless-stopped
+
+  # ── Base de Datos (PostgreSQL) ────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: pardos-db
+    environment:
+      - POSTGRES_USER=pardos_user
+      - POSTGRES_PASSWORD=pardos_pass
+      - POSTGRES_DB=pardos
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pardos_user -d pardos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Servidor de Caché (Redis) ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: pardos-cache
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
