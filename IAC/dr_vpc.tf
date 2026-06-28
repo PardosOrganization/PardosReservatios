@@ -9,6 +9,8 @@
 #####################################################################
 
 resource "aws_vpc" "dr" {
+  #checkov:skip=CKV2_AWS_12: El default security group de la region DR se restringe en su respectivo bloque condicional.
+  #checkov:skip=CKV2_AWS_11: El log de flujo de la region DR se habilita de forma condicional en aws_flow_log.dr.
   count                = var.enable_dr_region ? 1 : 0
   provider             = aws.us_west_2
   cidr_block           = var.vpc_cidr_dr
