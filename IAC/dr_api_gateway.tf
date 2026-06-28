@@ -36,12 +36,14 @@ resource "aws_apigatewayv2_integration" "dr" {
 }
 
 resource "aws_apigatewayv2_route" "dr" {
-  count     = var.enable_dr_region ? 1 : 0
-  provider  = aws.us_west_2
-  api_id    = aws_apigatewayv2_api.dr[0].id
-  route_key = "ANY /{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.dr[0].id}"
+  count              = var.enable_dr_region ? 1 : 0
+  provider           = aws.us_west_2
+  api_id             = aws_apigatewayv2_api.dr[0].id
+  route_key          = "ANY /{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.dr[0].id}"
+  authorization_type = "AWS_IAM"
 }
+
 
 resource "aws_apigatewayv2_stage" "dr" {
   count       = var.enable_dr_region ? 1 : 0
