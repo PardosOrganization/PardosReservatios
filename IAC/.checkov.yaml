@@ -1,0 +1,6 @@
+# Config local para cuando Checkov se corre con --directory /tf
+# montando unicamente la carpeta IAC (ej: docker run -v ./iac:/tf ...).
+# Sin esto, el var-file no se aplica y enable_dr_region queda en false,
+# ocultando los 30 failures del stack DR.
+var-file:
+  - prod.tfvars
