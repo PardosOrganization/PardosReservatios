@@ -1,0 +1,6 @@
+---
+db_host: prod-database.cluster-xxx.us-east-1.rds.amazonaws.com
+db_user: pardos_user
+db_pass: "{{ lookup('env', 'DB_PASSWORD') | default('pardos_prod_pass', true) }}"
+db_name: pardos
+redis_host: prod-redis.xxx.us-east-1.cache.amazonaws.com

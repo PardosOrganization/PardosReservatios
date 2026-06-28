@@ -1,11 +1,28 @@
-# Imagen placeholder: sirve /health en 8080 (compatible con el Target Group de ECS).
-# Reemplazar por el build real del microservicio cuando exista el código.
-FROM nginx:alpine
+# ─────────────────────────────────────────────────────────────────────────────
+# Dockerfile — svc-anfitriona (Build para pipeline Ansible → ECR → ECS)
+# Referencia el código real desde apps/backend/anfitriona
+# ─────────────────────────────────────────────────────────────────────────────
 
-RUN printf 'server {\n\
-  listen 8080;\n\
-  location = /health { return 200 "ok"; add_header Content-Type text/plain; }\n\
-  location / { return 200 "svc-cocina up"; add_header Content-Type text/plain; }\n\
-}\n' > /etc/nginx/conf.d/default.conf
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev && npm cache clean --force
 
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+RUN addgroup -g 1001 -S pardos && \
+    adduser -S pardos -u 1001 -G pardos
+
+COPY --from=deps --chown=pardos:pardos /app/node_modules ./node_modules
+COPY --chown=pardos:pardos . .
+
+USER pardos
 EXPOSE 8080
+ENV PORT=8080
+ENV NODE_ENV=production
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO- http://localhost:8080/health || exit 1
+
+CMD ["node", "src/server.js"]
