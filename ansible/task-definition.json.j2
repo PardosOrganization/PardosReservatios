@@ -1,5 +1,5 @@
 {
-  "family": "{{ project }}-svc-{{ item }}",
+  "family": "{{ project }}-{{ env }}-svc-{{ item }}",
   "networkMode": "awsvpc",
   "executionRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-execution",
   "taskRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-task",
@@ -9,7 +9,7 @@
   "containerDefinitions": [
     {
       "name": "svc-{{ item }}",
-      "image": "{{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}",
+      "image": "{{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}",
       "essential": true,
       "portMappings": [
         {

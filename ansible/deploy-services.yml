@@ -29,13 +29,13 @@
     - name: Build de la imagen por microservicio
       ansible.builtin.command: >
         docker build
-        -t {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+        -t {{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}
         {{ playbook_dir }}/../apps/backend/{{ item }}
       loop: "{{ microservices }}"
 
     - name: Push de la imagen a ECR
       ansible.builtin.command: >
-        docker push {{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}
+        docker push {{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}
       loop: "{{ microservices }}"
 
     # --- Actualizacion de ECS ---
@@ -57,6 +57,6 @@
         aws ecs update-service
         --cluster {{ project }}-{{ env }}-cluster
         --service svc-{{ item }}
-        --task-definition {{ project }}-svc-{{ item }}
+        --task-definition {{ project }}-{{ env }}-svc-{{ item }}
         --force-new-deployment
       loop: "{{ microservices }}"
