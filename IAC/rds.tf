@@ -61,7 +61,7 @@ resource "aws_rds_cluster_instance" "this" {
   engine_version                  = aws_rds_cluster.this.engine_version
   db_subnet_group_name            = aws_db_subnet_group.this.name
   auto_minor_version_upgrade      = true
-  monitoring_interval             = 5
+  monitoring_interval             = 0
   performance_insights_enabled    = true
   performance_insights_kms_key_id = aws_kms_key.this.arn
 
