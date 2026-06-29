@@ -40,13 +40,14 @@ Accede a la carpeta de infraestructura y ejecuta el aprovisionamiento. Esto crea
 ```bash
 cd iac
 
-# Inicializar proveedores y backend remoto
 terraform init
-
-# Seleccionar o crear el espacio de trabajo (workspace)
+```
+- Seleccionar o crear el espacio de trabajo (workspace)
+```bash
 terraform workspace select dev || terraform workspace new dev
-
-# Planificar y aplicar los cambios
+```
+- Planificar y aplicar los cambios
+```bash
 terraform plan -var-file="dev.tfvars"
 terraform apply -var-file="dev.tfvars" -auto-approve
 ```
@@ -151,11 +152,11 @@ Para consultar los enlaces de acceso generados de forma dinámica por AWS, revis
 ---
 
 ## 8. Destrucción de la Infraestructura
-Para eliminar por completo todos los recursos aprovisionados en AWS y detener los cobros de facturación, sitúate en la carpeta `iac` y ejecuta:
+Para eliminar por completo todos los recursos aprovisionados en AWS y detener los cobros de facturación, sitúate en la carpeta iac y ejecuta:
 
-```bash
+bash
 cd iac
 terraform destroy -var-file="dev.tfvars" -auto-approve
-```
 
-*Nota: Este comando destruirá bases de datos, redes, balanceadores y contenedores. El bucket de estado remoto de S3 y la tabla de DynamoDB creados en el Paso 2 deben eliminarse manualmente desde la consola de AWS si se desea borrar todo por completo.*
+
+Nota: Este comando destruirá bases de datos, redes, balanceadores y contenedores. El bucket de estado remoto de S3 y la tabla de DynamoDB creados en el Paso 2 deben eliminarse manualmente desde la consola de AWS si se desea borrar todo por completo.
