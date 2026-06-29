@@ -24,6 +24,25 @@ resource "aws_kms_key" "this" {
         Condition = {
           StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
         }
+      },
+      {
+        Sid       = "AllowCloudWatchLogs"
+        Effect    = "Allow"
+        Principal = { Service = "logs.${var.region}.amazonaws.com" }
+        Action    = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:Describe*"]
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowCloudFrontDecrypt"
+        Effect    = "Allow"
+        Principal = { Service = "cloudfront.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey*"]
+        Resource  = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
       }
     ]
   })
