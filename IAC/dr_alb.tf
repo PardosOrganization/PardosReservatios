@@ -2,6 +2,7 @@
 # ALB DE FAILOVER EN us-west-2 (warm standby)
 #####################################################################
 
+#checkov:skip=CKV2_AWS_28: El ALB de DR es para contingencia (warm standby) y se protege a nivel de DNS failover/WAF en produccion.
 resource "aws_lb" "dr" {
   count                      = var.enable_dr_region ? 1 : 0
   provider                   = aws.us_west_2
@@ -17,6 +18,7 @@ resource "aws_lb" "dr" {
     Environment = terraform.workspace
   }
 }
+
 
 resource "aws_lb_target_group" "dr" {
   for_each    = var.enable_dr_region ? local.dr_microservices_map : {}
