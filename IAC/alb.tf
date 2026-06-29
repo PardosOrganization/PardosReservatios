@@ -1,4 +1,5 @@
 resource "aws_lb" "this" {
+  #checkov:skip=CKV2_AWS_20:El ALB es interno en red privada y recibe trafico ya enrutado por API Gateway.
   name                       = "${local.name}-alb"
   internal                   = true
   load_balancer_type         = "application"
@@ -22,6 +23,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
+  #checkov:skip=CKV_AWS_378:Los contenedores backend corren servidores HTTP en Fargate.
   for_each    = toset(var.microservices)
   name        = "${local.name}-tg-${each.key}"
   port        = var.container_port
@@ -46,6 +48,8 @@ resource "aws_lb_target_group" "this" {
 # CRÍTICO: LISTENER HTTP AÑADIDO PARA CORREGIR LA REFERENCIA ROTA DEL CÓDIGO ORIGINAL
 # (API GATEWAY VPC LINK Y LAS LISTENER RULES APUNTAN A ESTE LISTENER).
 resource "aws_lb_listener" "http" {
+  #checkov:skip=CKV_AWS_2:El ALB es interno y recibe trafico de API Gateway por puerto 80.
+  #checkov:skip=CKV_AWS_103:El ALB es interno y la terminacion TLS se realiza en CloudFront o API Gateway.
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"
