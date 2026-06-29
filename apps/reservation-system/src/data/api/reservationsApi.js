@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3001/api/reservations'
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001/api/reservations'
+  : '/anfitriona/api/reservations'
 
 export const fetchRequested = async () => {
   try {

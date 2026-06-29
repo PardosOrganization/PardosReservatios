@@ -7,7 +7,9 @@
  * ──────────────────────────────────────────────────────────────────────
  */
 
-const API_URL = 'http://localhost:3001/api'
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001/api'
+  : '/anfitriona/api'
 
 /**
  * submitReservation — Envía una nueva solicitud de reserva a la API.

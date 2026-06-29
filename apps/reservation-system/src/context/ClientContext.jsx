@@ -221,28 +221,33 @@ export function ClientProvider({ children }) {
   const [clients, setClients] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Cargar clientes desde localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('pardos_clients')
-      if (saved) {
-        setClients(JSON.parse(saved))
-      } else {
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4001/api/clients'
+    : '/anfitriona/api/clients'
+
+  const refreshClients = useCallback(() => {
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.value)) {
+          setClients(data.value)
+        } else if (Array.isArray(data)) {
+          setClients(data)
+        }
+      })
+      .catch(err => {
+        console.error("Error loading clients", err)
         setClients(SAMPLE_CLIENTS)
-      }
-    } catch {
-      setClients(SAMPLE_CLIENTS)
-    } finally {
-      setIsLoading(false)
-    }
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }, [])
 
-  // Persistir en localStorage
+  // Cargar clientes desde la API al montar
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('pardos_clients', JSON.stringify(clients))
-    }
-  }, [clients, isLoading])
+    refreshClients()
+  }, [refreshClients])
 
   /** Genera ID único de cliente */
   const generateId = () => `C${Date.now().toString().slice(-6)}`
@@ -259,15 +264,32 @@ export function ClientProvider({ children }) {
       vip: false,
     }
     setClients(prev => [newClient, ...prev])
+
+    fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newClient)
+    })
+      .then(() => refreshClients())
+      .catch(err => console.error("Error adding client", err))
+
     return newClient
-  }, [])
+  }, [refreshClients])
 
   /** updateClient — Actualiza datos de un cliente. */
   const updateClient = useCallback((id, updates) => {
     setClients(prev =>
       prev.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c)
     )
-  }, [])
+
+    fetch(`${API_URL}/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+      .then(() => refreshClients())
+      .catch(err => console.error("Error updating client", err))
+  }, [refreshClients])
 
   /** searchClients — Búsqueda de clientes por nombre, teléfono o email. */
   const searchClients = useCallback((query) => {
@@ -288,18 +310,16 @@ export function ClientProvider({ children }) {
 
   /** incrementVisits — Incrementa el contador de visitas de un cliente. */
   const incrementVisits = useCallback((id) => {
-    setClients(prev =>
-      prev.map(c =>
-        c.id === id
-          ? {
-              ...c,
-              totalVisits: (c.totalVisits || 0) + 1,
-              lastVisit: new Date().toISOString().split('T')[0],
-            }
-          : c
-      )
-    )
-  }, [])
+    const client = clients.find(c => c.id === id)
+    if (!client) return
+    
+    const updates = {
+      totalVisits: (client.totalVisits || 0) + 1,
+      lastVisit: new Date().toISOString().split('T')[0]
+    }
+    
+    updateClient(id, updates)
+  }, [clients, updateClient])
 
   /** findByPhone — Busca un cliente por número de teléfono exacto. */
   const findByPhone = useCallback((phone) => {

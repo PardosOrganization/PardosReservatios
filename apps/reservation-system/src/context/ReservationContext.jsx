@@ -293,28 +293,44 @@ export function ReservationProvider({ children }) {
   const [tables, setTables] = useState(INITIAL_TABLES)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Cargar datos desde localStorage al montar
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('pardos_reservations')
-      if (saved) {
-        setReservations(JSON.parse(saved))
-      } else {
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4001/api'
+    : '/anfitriona/api'
+
+  // Fetch reservations and tables from API
+  const refreshData = useCallback(() => {
+    fetch(`${API_URL}/reservations`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.value)) {
+          setReservations(data.value)
+        } else if (Array.isArray(data)) {
+          setReservations(data)
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching reservations", err)
         setReservations(SAMPLE_RESERVATIONS)
-      }
-    } catch {
-      setReservations(SAMPLE_RESERVATIONS)
-    } finally {
-      setIsLoading(false)
-    }
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+
+    fetch(`${API_URL}/tables`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.value)) {
+          setTables(data.value)
+        } else if (Array.isArray(data)) {
+          setTables(data)
+        }
+      })
+      .catch(() => {})
   }, [])
 
-  // Persistir reservas en localStorage cada vez que cambian
   useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('pardos_reservations', JSON.stringify(reservations))
-    }
-  }, [reservations, isLoading])
+    refreshData()
+  }, [refreshData])
 
   /** Genera un ID único para una reserva */
   const generateId = () => `R${Date.now().toString().slice(-6)}`
@@ -328,15 +344,32 @@ export function ReservationProvider({ children }) {
       createdAt: new Date().toISOString(),
     }
     setReservations(prev => [newReservation, ...prev])
+    
+    fetch(`${API_URL}/reservations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newReservation)
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error creating reservation", err))
+
     return newReservation
-  }, [])
+  }, [refreshData])
 
   /** updateReservation — Actualiza una reserva existente por su id. */
   const updateReservation = useCallback((id, updates) => {
     setReservations(prev =>
       prev.map(r => r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r)
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error updating reservation", err))
+  }, [refreshData])
 
   /** cancelReservation — Cambia el estado a 'cancelled'. */
   const cancelReservation = useCallback((id, reason = '') => {
@@ -347,7 +380,15 @@ export function ReservationProvider({ children }) {
           : r
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: RESERVATION_STATUS.CANCELLED, cancelReason: reason })
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error cancelling reservation", err))
+  }, [refreshData])
 
   /** completeReservation — Marca una reserva como completada. */
   const completeReservation = useCallback((id) => {
@@ -358,7 +399,15 @@ export function ReservationProvider({ children }) {
           : r
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: RESERVATION_STATUS.COMPLETED })
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error completing reservation", err))
+  }, [refreshData])
 
   /** seatReservation — Marca al cliente como sentado. */
   const seatReservation = useCallback((id) => {
@@ -369,7 +418,15 @@ export function ReservationProvider({ children }) {
           : r
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: RESERVATION_STATUS.SEATED, seatedAt: new Date().toISOString() })
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error seating reservation", err))
+  }, [refreshData])
 
   /**
    * requestReservation — Crea una reserva en estado REQUESTED (pública).
@@ -381,11 +438,20 @@ export function ReservationProvider({ children }) {
       id:        `R${Date.now().toString().slice(-6)}`,
       status:    RESERVATION_STATUS.REQUESTED,
       createdAt: new Date().toISOString(),
-      source:    'public', // indica que vino del formulario público
+      source:    'public',
     }
     setReservations(prev => [newReservation, ...prev])
+
+    fetch(`${API_URL}/reservations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newReservation)
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error requesting reservation", err))
+
     return newReservation
-  }, [])
+  }, [refreshData])
 
   /**
    * approveReservation — Aprueba una solicitud (REQUESTED → PENDING).
@@ -401,7 +467,15 @@ export function ReservationProvider({ children }) {
           : r
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: RESERVATION_STATUS.PENDING, tableId, approvedBy, approvedAt: new Date().toISOString() })
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error approving reservation", err))
+  }, [refreshData])
 
   /**
    * rejectReservation — Rechaza una solicitud (REQUESTED → REJECTED).
@@ -416,7 +490,15 @@ export function ReservationProvider({ children }) {
           : r
       )
     )
-  }, [])
+
+    fetch(`${API_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: RESERVATION_STATUS.REJECTED, rejectReason: reason })
+    })
+      .then(() => refreshData())
+      .catch(err => console.error("Error rejecting reservation", err))
+  }, [refreshData])
 
   // Reservas de hoy (activas)
   const todayStr = format(new Date(), 'yyyy-MM-dd')

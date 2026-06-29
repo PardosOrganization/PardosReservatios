@@ -1,15 +1,15 @@
 {
-  "family": "{{ project }}-svc-{{ item }}",
+  "family": "{{ project }}-{{ env }}-svc-{{ item }}",
   "networkMode": "awsvpc",
-  "executionRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-ecs-task-execution-role",
-  "taskRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-ecs-task-role",
+  "executionRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-execution",
+  "taskRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-task",
   "cpu": "256",
   "memory": "512",
   "requiresCompatibilities": ["FARGATE"],
   "containerDefinitions": [
     {
       "name": "svc-{{ item }}",
-      "image": "{{ ecr_registry }}/{{ project }}-svc-{{ item }}:{{ image_tag }}",
+      "image": "{{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}",
       "essential": true,
       "portMappings": [
         {
@@ -30,7 +30,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/{{ project }}-svc-{{ item }}",
+          "awslogs-group": "/{{ project }}-{{ env }}/ecs/{{ item }}",
           "awslogs-region": "{{ aws_region }}",
           "awslogs-stream-prefix": "ecs"
         }

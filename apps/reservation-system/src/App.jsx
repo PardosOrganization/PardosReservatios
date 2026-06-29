@@ -89,8 +89,9 @@ function UnauthorizedPage() {
 }
 
 export default function App() {
+  const basename = window.location.hostname === 'localhost' ? '' : '/empleados'
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <ReservationProvider>
           <ClientProvider>
