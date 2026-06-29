@@ -338,8 +338,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.this.arn
+      sse_algorithm     = "AES256"
     }
     bucket_key_enabled = true
   }
@@ -363,7 +362,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Effect    = "Allow"
         Principal = { AWS = "arn:aws:iam::${local.elb_account_id}:root" }
         Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.alb_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       }
     ]
   })
@@ -426,7 +425,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "cf_logs" {
 resource "aws_s3_bucket_ownership_controls" "cf_logs" {
   bucket = aws_s3_bucket.cf_logs.id
   rule {
-    object_ownership = "BucketOwnerEnforced"
+    object_ownership = "ObjectWriter"
   }
 }
 
