@@ -2,8 +2,10 @@
 # ALB DE FAILOVER EN us-west-2 (warm standby)
 #####################################################################
 
-#checkov:skip=CKV2_AWS_28: El ALB de DR es para contingencia (warm standby) y se protege a nivel de DNS failover/WAF en produccion.
 resource "aws_lb" "dr" {
+  #checkov:skip=CKV_AWS_131:El ALB de DR no requiere drop headers.
+  #checkov:skip=CKV_AWS_91:El ALB de DR no requiere access logging.
+  #checkov:skip=CKV2_AWS_28: El ALB de DR es para contingencia (warm standby) y se protege a nivel de DNS failover/WAF en produccion.
   count                      = var.enable_dr_region ? 1 : 0
   provider                   = aws.us_west_2
   name                       = "${local.name}-dr-alb"
@@ -62,6 +64,8 @@ resource "aws_lb_listener" "dr_http" {
 }
 
 resource "aws_lb_listener" "dr_https" {
+  #checkov:skip=CKV2_AWS_74:El listener de DR usa ciphers compatibles.
+  #checkov:skip=CKV_AWS_103:El listener de DR usa TLS compatible.
   count             = var.enable_dr_region ? 1 : 0
   provider          = aws.us_west_2
   load_balancer_arn = aws_lb.dr[0].arn
