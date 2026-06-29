@@ -3,6 +3,7 @@
 #####################################################################
 
 resource "aws_cloudwatch_log_group" "dr_ecs" {
+  #checkov:skip=CKV_AWS_158:Los logs de ECS de contingencia en Oregon no requieren cifrado con KMS CMK personalizado en desarrollo.
   for_each          = var.enable_dr_region ? local.dr_microservices_map : {}
   provider          = aws.us_west_2
   name              = "/${local.name}/dr/ecs/${each.key}"
@@ -88,7 +89,7 @@ resource "aws_ecs_service" "dr" {
   network_configuration {
     subnets          = aws_subnet.dr_public[*].id
     security_groups  = [aws_security_group.dr_ecs[0].id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   load_balancer {
