@@ -14,8 +14,9 @@ resource "aws_secretsmanager_secret" "db" {
 
 # CRÍTICO: rotation_lambda_arn DEBE APUNTAR A UNA LAMBDA DE ROTACIÓN REAL Y EXISTENTE.
 resource "aws_secretsmanager_secret_rotation" "this" {
+  count               = 1
   secret_id           = aws_secretsmanager_secret.db.id
-  rotation_lambda_arn = "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.name}-rotacion-db"
+  rotation_lambda_arn = aws_lambda_function.db_rotation[0].arn
   rotation_rules {
     automatically_after_days = 30
   }
