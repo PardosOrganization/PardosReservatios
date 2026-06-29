@@ -89,11 +89,11 @@ resource "aws_security_group" "ecs" {
     security_groups = [aws_security_group.alb.id]
   }
   egress {
-    description = "Salida permitida hacia la VPC"
+    description = "Salida permitida hacia Internet (ECR, Secrets Manager, etc)"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
     Name        = "${local.name}-ecs-sg"
@@ -196,4 +196,10 @@ resource "aws_flow_log" "this" {
     Name        = "${local.name}-vpc-flow-log"
     Environment = terraform.workspace
   }
+}
+
+resource "aws_route" "internet" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.this.id
 }
