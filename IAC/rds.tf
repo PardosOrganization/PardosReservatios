@@ -38,7 +38,7 @@ resource "aws_rds_cluster" "this" {
   storage_encrypted                   = true
   kms_key_id                          = aws_kms_key.this.arn
   backup_retention_period             = var.aurora_backup_retention
-  skip_final_snapshot                 = false
+  skip_final_snapshot                 = true
   final_snapshot_identifier           = "${local.name}-aurora-final"
   copy_tags_to_snapshot               = true
   iam_database_authentication_enabled = true
