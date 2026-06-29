@@ -26,6 +26,18 @@ const PORT = process.env.PORT || 8080
 app.use(cors())
 app.use(express.json())
 
+// Middleware para soportar prefijos de enrutamiento del ALB en AWS
+app.use((req, res, next) => {
+  const prefixes = ['/anfitriona', '/mozo', '/caja', '/cocina']
+  for (const p of prefixes) {
+    if (req.url.startsWith(p)) {
+      req.url = req.url.slice(p.length)
+      break
+    }
+  }
+  next()
+})
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0]
 

@@ -293,7 +293,9 @@ export function ReservationProvider({ children }) {
   const [tables, setTables] = useState(INITIAL_TABLES)
   const [isLoading, setIsLoading] = useState(true)
 
-  const API_URL = 'http://localhost:4001/api'
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4001/api'
+    : '/anfitriona/api'
 
   // Fetch reservations and tables from API
   const refreshData = useCallback(() => {

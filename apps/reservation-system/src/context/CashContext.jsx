@@ -64,7 +64,9 @@ export function CashProvider({ children }) {
   const [shift,      setShift]      = useState(null)   // turno activo
   const [isLoading,  setLoading]    = useState(true)
 
-  const API_URL = 'http://localhost:4003/api'
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4003/api'
+    : '/caja/api'
 
   const refreshPayments = useCallback(() => {
     fetch(`${API_URL}/payments`)

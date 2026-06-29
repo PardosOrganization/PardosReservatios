@@ -102,7 +102,9 @@ export function KitchenProvider({ children }) {
   const [tickets,  setTickets]  = useState([])
   const [isLoading, setLoading] = useState(true)
 
-  const API_URL = 'http://localhost:4004/api'
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4004/api'
+    : '/cocina/api'
 
   const refreshTickets = useCallback(() => {
     fetch(`${API_URL}/tickets`)

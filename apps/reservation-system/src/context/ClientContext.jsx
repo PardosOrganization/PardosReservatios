@@ -221,7 +221,9 @@ export function ClientProvider({ children }) {
   const [clients, setClients] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const API_URL = 'http://localhost:4001/api/clients'
+  const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:4001/api/clients'
+    : '/anfitriona/api/clients'
 
   const refreshClients = useCallback(() => {
     fetch(API_URL)
