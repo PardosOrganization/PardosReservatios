@@ -7,7 +7,7 @@ vpc_cidr            = "10.10.0.0/16"
 certificate_arn     = "arn:aws:acm:us-east-1:111111111111:certificate/dev-alb-cert-0000-0000"
 acm_certificate_arn = "arn:aws:acm:us-east-1:111111111111:certificate/dev-cf-cert-0000-0000"
 
-engine_version          = "16.1"
+engine_version          = "16.4"
 aurora_instance_class   = "db.t4g.medium"
 aurora_instance_count   = 1
 aurora_backup_retention = 1
