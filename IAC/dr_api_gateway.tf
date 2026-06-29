@@ -3,6 +3,7 @@
 #####################################################################
 
 resource "aws_cloudwatch_log_group" "dr_api_gw" {
+  #checkov:skip=CKV_AWS_158:Los logs de API Gateway de contingencia en Oregon no requieren cifrado con KMS CMK personalizado en desarrollo.
   count             = var.enable_dr_region ? 1 : 0
   provider          = aws.us_west_2
   name              = "/aws/vendedlogs/apigateway/${local.name}-dr-api-logs"
