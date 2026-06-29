@@ -72,6 +72,8 @@ resource "aws_route_table_association" "dr_public" {
 }
 
 resource "aws_security_group" "dr_alb" {
+  #checkov:skip=CKV_AWS_260:El ALB es publico para failover DNS y requiere ingress HTTP/HTTPS.
+  #checkov:skip=CKV2_AWS_5:El SG se asocia al ALB de contingencia en dr_alb.tf.
   count       = var.enable_dr_region ? 1 : 0
   provider    = aws.us_west_2
   name_prefix = "${local.name}-dr-alb-"
@@ -79,18 +81,21 @@ resource "aws_security_group" "dr_alb" {
   description = "ALB DR (us-west-2): endpoint publico del failover de Route 53"
 
   ingress {
+    description = "Permitir HTTPS publico"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    description = "Permitir HTTP publico para redireccion"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
+    description = "Salida permitida hacia la VPC de DR"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -103,6 +108,8 @@ resource "aws_security_group" "dr_alb" {
 }
 
 resource "aws_security_group" "dr_ecs" {
+  #checkov:skip=CKV_AWS_382:Los contenedores de ECS requieren salida total a internet para descargar imagenes y Secrets Manager.
+  #checkov:skip=CKV2_AWS_5:El SG se asocia a los servicios ECS de contingencia en dr_ecs.tf.
   count       = var.enable_dr_region ? 1 : 0
   provider    = aws.us_west_2
   name_prefix = "${local.name}-dr-ecs-"
@@ -110,12 +117,14 @@ resource "aws_security_group" "dr_ecs" {
   description = "ECS Fargate DR: recibe del ALB DR"
 
   ingress {
+    description     = "Permitir trafico HTTP de microservicios desde el ALB de DR"
     from_port       = var.container_port
     to_port         = var.container_port
     protocol        = "tcp"
     security_groups = [aws_security_group.dr_alb[0].id]
   }
   egress {
+    description = "Salida a internet para descargar imagenes de ECR y secretos"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -151,6 +160,7 @@ resource "aws_flow_log" "dr" {
 }
 
 resource "aws_cloudwatch_log_group" "dr_flow" {
+  #checkov:skip=CKV_AWS_158:Los logs de flujo de VPC de contingencia en Oregon no requieren cifrado con KMS CMK personalizado en desarrollo.
   count             = var.enable_dr_region ? 1 : 0
   provider          = aws.us_west_2
   name              = "/${local.name}/dr/vpc/flow-logs"
@@ -159,6 +169,7 @@ resource "aws_cloudwatch_log_group" "dr_flow" {
 }
 
 resource "aws_security_group" "dr_aurora" {
+  #checkov:skip=CKV2_AWS_5:El SG se asocia al cluster de base de datos de contingencia en dr_rds.tf.
   count       = var.enable_dr_region ? 1 : 0
   provider    = aws.us_west_2
   name_prefix = "${local.name}-dr-aurora-"
@@ -166,12 +177,14 @@ resource "aws_security_group" "dr_aurora" {
   description = "Aurora secundario (Global Database): solo desde ECS DR"
 
   ingress {
+    description     = "Permitir PostgreSQL desde contenedores de ECS en DR"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.dr_ecs[0].id]
   }
   egress {
+    description = "Salida permitida hacia la VPC de DR"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
