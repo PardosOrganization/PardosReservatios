@@ -31,6 +31,7 @@ resource "aws_apigatewayv2_authorizer" "cognito" {
 }
 
 resource "aws_apigatewayv2_route" "this" {
+  #checkov:skip=CKV_AWS_309:Ruta de proxy publica para enrutamiento a microservicios sin autenticacion API Gateway.
   api_id             = aws_apigatewayv2_api.this.id
   route_key          = "ANY /{proxy+}"
   target             = "integrations/${aws_apigatewayv2_integration.this.id}"
