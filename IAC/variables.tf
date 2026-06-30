@@ -46,13 +46,13 @@ variable "vpc_cidr" {
 variable "certificate_arn" {
   description = "ARN del certificado ACM (región principal) para el listener HTTPS del ALB."
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "acm_certificate_arn" {
   description = "ARN del certificado ACM en us-east-1 para CloudFront."
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "engine_version" {
