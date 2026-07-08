@@ -1,0 +1,97 @@
+name: CI — Lint, Validate & Build
+
+on:
+  push:
+     branches: [main, develop, "feat/*"]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  AWS_REGION: us-east-1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # JOB 1: Terraform lint + Checkov
+  lint-terraform:
+    name: Terraform Lint & Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">=1.6.0"
+
+      - name: Terraform fmt (verifica formato)
+        run: terraform fmt -check -recursive
+        working-directory: IAC
+
+      - name: Terraform init (sin backend remoto)
+        run: terraform init -backend=false
+        working-directory: IAC
+
+      - name: Terraform validate (valida sintaxis)
+        run: terraform validate
+        working-directory: IAC
+
+      - name: Checkov — Security Scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: IAC
+          config_file: IAC/.checkov.yaml
+          output_format: cli
+          soft_fail: true
+
+  # JOB 2: Build de los 4 microservicios backend
+  build-backend:
+    name: Build Backend — ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [anfitriona, mozo, caja, cocina]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build imagen — svc-${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/backend/${{ matrix.service }}
+          push: false
+          tags: pardos-svc-${{ matrix.service }}:ci-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # JOB 3: Build de los 2 frontends
+  build-frontend:
+    name: Build Frontend — ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [landing-page, reservation-system]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build imagen — ${{ matrix.app }}
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/${{ matrix.app }}
+          push: false
+          tags: pardos-${{ matrix.app }}:ci-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}

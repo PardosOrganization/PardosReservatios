@@ -165,7 +165,7 @@ resource "aws_cloudwatch_log_group" "dr_flow" {
   provider          = aws.us_west_2
   name              = "/${local.name}/dr/vpc/flow-logs"
   retention_in_days = var.log_retention_days
-  kms_key_id        = aws_kms_key.replica.arn   # CKV_AWS_158: CMK us-west-2, política AllowCloudWatchLogsDR
+  kms_key_id        = aws_kms_key.replica.arn # CKV_AWS_158: CMK us-west-2, política AllowCloudWatchLogsDR
 }
 
 resource "aws_security_group" "dr_aurora" {

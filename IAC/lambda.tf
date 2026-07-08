@@ -6,8 +6,8 @@ data "archive_file" "db_rotation_zip" {
 }
 
 resource "aws_iam_role" "db_rotation_lambda" {
-  count              = 1
-  name               = "${local.name}-db-rotation-role"
+  count = 1
+  name  = "${local.name}-db-rotation-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -29,13 +29,13 @@ resource "aws_iam_policy" "db_rotation_lambda" {
   count       = 1
   name        = "${local.name}-db-rotation-policy"
   description = "Permissions for database password rotation Lambda"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "SecretsManagerAccess"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "SecretsManagerAccess"
+        Effect = "Allow"
+        Action = [
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret",
           "secretsmanager:PutSecretValue",
@@ -50,18 +50,18 @@ resource "aws_iam_policy" "db_rotation_lambda" {
         Resource = ["*"]
       },
       {
-        Sid      = "KMSAccess"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "KMSAccess"
+        Effect = "Allow"
+        Action = [
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
         Resource = [aws_kms_key.this.arn]
       },
       {
-        Sid      = "LoggingAccess"
-        Effect   = "Allow"
-        Action   = [
+        Sid    = "LoggingAccess"
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]

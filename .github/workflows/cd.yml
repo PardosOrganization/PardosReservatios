@@ -1,0 +1,111 @@
+name: CD — Push to ECR & Deploy to ECS
+
+on:
+  push:
+    branches: [main, "feat/cicd"] 
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+
+  # JOB 1: Build, tag y push de microservicios a ECR
+  push-backend:
+    name: Push Backend — ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [anfitriona, mozo, caja, cocina]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login a Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build y Push a ECR — svc-${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/backend/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-svc-${{ matrix.service }}:${{ github.sha }}
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-svc-${{ matrix.service }}:latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # JOB 2: Build, tag y push de frontends a ECR
+  push-frontend:
+    name: Push Frontend — ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [landing-page, reservation-system]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login a Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build y Push — ${{ matrix.app }}
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/${{ matrix.app }}
+          push: true
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-${{ matrix.app }}:${{ github.sha }}
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-${{ matrix.app }}:latest
+
+  # JOB 3: Despliegue a ECS via Ansible
+  deploy-ecs:
+    name: Ansible — Deploy to ECS
+    runs-on: ubuntu-latest
+    needs: [push-backend, push-frontend]
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Instalar Python y Ansible
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-pip
+          pip install ansible boto3 botocore
+
+      - name: Ejecutar playbook de despliegue
+        run: |
+          ansible-playbook ansible/deploy-services.yml \
+            -e "env=prod" \
+            -e "image_tag=${{ github.sha }}"
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
