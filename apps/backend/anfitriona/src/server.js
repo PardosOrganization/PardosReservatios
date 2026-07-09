@@ -211,6 +211,8 @@ async function initDatabase() {
   }
 }
 
+initDatabase()
+
 // Endpoint de métricas de Prometheus
 app.get('/metrics', async (req, res) => {
   res.setHeader('Content-Type', client.register.contentType)
