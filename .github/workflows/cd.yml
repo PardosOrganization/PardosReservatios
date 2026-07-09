@@ -152,7 +152,7 @@ jobs:
 
       - name: Ejecutar playbook de despliegue
         run: |
-          ansible-playbook ansible/deploy-services.yml \
+          ansible-playbook -i ansible/hosts.ini ansible/deploy-services.yml \
             -e "env=${{ env.TARGET_ENV }}" \
             -e "image_tag=${{ github.sha }}" > ansible.log 2>&1 || (
               TIMESTAMP=$(date +%s%N)
