@@ -1,4 +1,5 @@
 name: CD — Push to ECR & Deploy to ECS
+# Trigger rebuild: repositorios ECR de dev creados exitosamente
 
 on:
   push:
