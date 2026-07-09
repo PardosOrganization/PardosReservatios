@@ -2,7 +2,7 @@ name: CD — Push to ECR & Deploy to ECS
 
 on:
   push:
-    branches: [main, "feat/cicd"] 
+    branches: [main, "feat/cicd", "feat/observabilidad-logs"] 
 
 env:
   AWS_REGION: us-east-1
