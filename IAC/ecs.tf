@@ -47,6 +47,52 @@ resource "aws_ecs_task_definition" "this" {
           "awslogs-stream-prefix" = "svc"
         }
       }
+    },
+    {
+      name      = "adot-collector"
+      image     = "public.ecr.aws/aws-observability/aws-otel-collector:v0.39.0"
+      essential = true
+      environment = [
+        {
+          name  = "AOT_CONFIG_CONTENT"
+          value = <<EOF
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'app-metrics'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['localhost:8080']
+          metrics_path: '/metrics'
+processors:
+  batch:
+exporters:
+  awsemf:
+    region: '${var.region}'
+    log_group_name: '/${local.name}/ecs/${each.key}'
+    log_stream_name: 'adot-metrics'
+    namespace: 'Pardos/ECS'
+    dimension_rollup_option: 'NoDimensionRollup'
+    resource_to_telemetry_conversion:
+      enabled: true
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [awsemf]
+EOF
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/${local.name}/ecs/adot"
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "adot"
+        }
+      }
     }
   ])
 
