@@ -21,12 +21,22 @@
 import express from 'express'
 import cors from 'cors'
 import { v4 as uuidv4 } from 'uuid'
+import client from 'prom-client'
 
 const app = express()
 const PORT = process.env.PORT || 8080
 
+// Habilitar recolección de métricas por defecto
+client.collectDefaultMetrics({ register: client.register })
+
 app.use(cors())
 app.use(express.json())
+
+// Endpoint de métricas de Prometheus
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType)
+  res.send(await client.register.metrics())
+})
 
 // Middleware para soportar prefijos de enrutamiento del ALB en AWS
 app.use((req, res, next) => {
