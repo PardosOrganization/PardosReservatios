@@ -1,4 +1,4 @@
-name: CD — Push to ECR & Deploy to ECS
+name: CD — Push to ECR & Deploy to ECS.
 
 on:
   push:
