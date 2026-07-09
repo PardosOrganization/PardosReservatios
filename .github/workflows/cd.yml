@@ -67,24 +67,44 @@ jobs:
           TIMESTAMP=$(date +%s%N)
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló la subida de backend ${{ matrix.service }} a ECR." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
-
-  # JOB 2: Build, tag y push de frontends a ECR
+  # JOB 2: Compilación y despliegue de frontends a S3
   push-frontend:
-    name: Push Frontend — ${{ matrix.app }}
+    name: Deploy Frontend — ${{ matrix.app }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        app: [landing-page, reservation-system]
+        include:
+          - app: landing-page
+            bucket_suffix: frontend
+            s3_path: /
+          - app: reservation-system
+            bucket_suffix: empleados
+            s3_path: /empleados/
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Notificar Inicio de Push Frontend a Loki
+      - name: Notificar Inicio de Despliegue Frontend a Loki
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [START] Iniciando push de frontend a ECR: ${{ matrix.app }}..." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "start", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [START] Iniciando despliegue de frontend: ${{ matrix.app }} a S3..." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "start", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+
+      - name: Instalar dependencias del Frontend
+        run: npm ci
+        working-directory: apps/${{ matrix.app }}
+
+      - name: Compilar Frontend
+        run: npm run build
+        working-directory: apps/${{ matrix.app }}
 
       - name: Configurar credenciales de AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -93,33 +113,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      - name: Login a Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Subir archivos a S3
+        run: |
+          BUCKET_NAME="pardos-${{ matrix.bucket_suffix }}-${{ env.TARGET_ENV }}"
+          aws s3 sync dist/ s3://$BUCKET_NAME${{ matrix.s3_path }} --delete
+        working-directory: apps/${{ matrix.app }}
 
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Invalidar caché de CloudFront
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='pardos-${{ env.TARGET_ENV }} CDN'].Id" --output text)
+          if [ "$DIST_ID" != "None" ] && [ -n "$DIST_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "${{ matrix.s3_path }}*"
+          fi
 
-      - name: Build y Push — ${{ matrix.app }}
-        uses: docker/build-push-action@v5
-        with:
-          context: apps/${{ matrix.app }}
-          push: true
-          tags: |
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-${{ env.TARGET_ENV }}-${{ matrix.app }}:${{ github.sha }}
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-${{ env.TARGET_ENV }}-${{ matrix.app }}:latest
-
-      - name: Notificar Exito de Push Frontend a Loki
+      - name: Notificar Exito de Despliegue Frontend a Loki
         if: success()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [SUCCESS] Frontend ${{ matrix.app }} subido con éxito a ECR." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "success", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [SUCCESS] Frontend ${{ matrix.app }} desplegado con éxito a S3 e invalidado en CloudFront." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "success", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
-      - name: Notificar Fallo de Push Frontend a Loki
+      - name: Notificar Fallo de Despliegue Frontend a Loki
         if: failure()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló la subida de frontend ${{ matrix.app }} a ECR." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló el despliegue del frontend ${{ matrix.app }} a S3." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
   # JOB 3: Despliegue a ECS via Ansible
