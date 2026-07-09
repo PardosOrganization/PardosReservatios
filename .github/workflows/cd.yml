@@ -21,6 +21,12 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
 
+      - name: Notificar Inicio de Push Backend a Loki
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [START] Iniciando push de backend a ECR: ${{ matrix.service }}..." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "start", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
       - name: Configurar credenciales de AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -46,6 +52,20 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
+      - name: Notificar Exito de Push Backend a Loki
+        if: success()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [SUCCESS] Backend ${{ matrix.service }} subido con éxito a ECR." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "success", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
+      - name: Notificar Fallo de Push Backend a Loki
+        if: failure()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló la subida de backend ${{ matrix.service }} a ECR." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "failure", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
   # JOB 2: Build, tag y push de frontends a ECR
   push-frontend:
     name: Push Frontend — ${{ matrix.app }}
@@ -57,6 +77,12 @@ jobs:
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
+
+      - name: Notificar Inicio de Push Frontend a Loki
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [START] Iniciando push de frontend a ECR: ${{ matrix.app }}..." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "start", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Configurar credenciales de AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -80,6 +106,20 @@ jobs:
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-${{ matrix.app }}:${{ github.sha }}
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/pardos-prod-${{ matrix.app }}:latest
 
+      - name: Notificar Exito de Push Frontend a Loki
+        if: success()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [SUCCESS] Frontend ${{ matrix.app }} subido con éxito a ECR." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "success", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
+      - name: Notificar Fallo de Push Frontend a Loki
+        if: failure()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló la subida de frontend ${{ matrix.app }} a ECR." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
   # JOB 3: Despliegue a ECS via Ansible
   deploy-ecs:
     name: Ansible — Deploy to ECS
@@ -88,6 +128,12 @@ jobs:
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
+
+      - name: Notificar Inicio de Despliegue a Loki
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [DEPLOY] Iniciando despliegue de servicios a ECS (Ansible)..." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "deploy_start"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Configurar credenciales de AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -106,6 +152,26 @@ jobs:
         run: |
           ansible-playbook ansible/deploy-services.yml \
             -e "env=prod" \
-            -e "image_tag=${{ github.sha }}"
+            -e "image_tag=${{ github.sha }}" > ansible.log 2>&1 || (
+              TIMESTAMP=$(date +%s%N)
+              ERR_TEXT=$(tail -n 20 ansible.log)
+              BODY=$(jq -n --arg ts "$TIMESTAMP" --arg err "[CD] [ERROR] Ansible deploy failed:\n$ERR_TEXT" '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "failure"}, "values": [[$ts, $err]]}]}')
+              curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+              exit 1
+            )
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      - name: Notificar Exito de Despliegue a Loki
+        if: success()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [SUCCESS] Despliegue completado con éxito a ECS (Versión: ${{ github.sha }})." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "success"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
+      - name: Notificar Fallo de Despliegue a Loki
+        if: failure()
+        run: |
+          TIMESTAMP=$(date +%s%N)
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Falló el despliegue a ECS (Ansible)." '{"streams": [{"stream": {"env": "prod", "service": "github-actions", "event": "failure"}, "values": [[$ts, $msg]]}]}')
+          curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
