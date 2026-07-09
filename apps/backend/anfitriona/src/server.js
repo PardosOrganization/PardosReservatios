@@ -238,6 +238,19 @@ const daysAgo  = (n) => {
   d.setDate(d.getDate() - n)
   return d.toISOString().split('T')[0]
 }
+const formatReservation = (row) => {
+  if (!row) return row
+  let formattedDate = row.date
+  if (row.date instanceof Date) {
+    formattedDate = row.date.toISOString().split('T')[0]
+  } else if (typeof row.date === 'string') {
+    formattedDate = row.date.split('T')[0]
+  }
+  return {
+    ...row,
+    date: formattedDate
+  }
+}
 
 // ── Datos en memoria (seed) ─────────────────────────────────────────────────
 
@@ -463,7 +476,7 @@ app.get('/health', (_req, res) => {
 app.get('/api/reservations', async (_req, res) => {
   try {
     const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations ORDER BY created_at DESC')
-    res.json(result.rows)
+    res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener reservas de la base de datos:', err)
     res.status(500).json({ error: 'Error al consultar reservas' })
@@ -474,7 +487,7 @@ app.get('/api/reservations', async (_req, res) => {
 app.get('/api/reservations/requested', async (_req, res) => {
   try {
     const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE status = \'requested\' ORDER BY created_at DESC')
-    res.json(result.rows)
+    res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener solicitudes:', err)
     res.status(500).json({ error: 'Error al consultar solicitudes' })
@@ -486,7 +499,7 @@ app.get('/api/reservations/today', async (_req, res) => {
   const today = todayStr()
   try {
     const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE date = $1 AND status NOT IN (\'cancelled\', \'rejected\') ORDER BY time ASC', [today])
-    res.json(result.rows)
+    res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener reservas de hoy:', err)
     res.status(500).json({ error: 'Error al consultar reservas de hoy' })
@@ -497,7 +510,7 @@ app.get('/api/reservations/today', async (_req, res) => {
 app.get('/api/reservations/history', async (_req, res) => {
   try {
     const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE status IN (\'completed\', \'cancelled\', \'no_show\', \'rejected\') ORDER BY date DESC, time DESC')
-    res.json(result.rows)
+    res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener historial de reservas:', err)
     res.status(500).json({ error: 'Error al consultar historial' })
@@ -530,7 +543,7 @@ app.post('/api/reservations', async (req, res) => {
     const newReservation = result.rows[0]
 
     console.log(`[INFO] Nueva reserva creada con éxito. ID: ${newReservation.id}, Estado: ${newReservation.status}, Cliente: ${newReservation.clientName}, Personas: ${newReservation.guests}, Mesa: ${newReservation.tableId || 'Pendiente'}`)
-    res.status(201).json(newReservation)
+    res.status(201).json(formatReservation(newReservation))
   } catch (err) {
     console.error('Error al insertar reserva en base de datos:', err)
     res.status(500).json({ error: 'Error al guardar la reserva en la base de datos' })
@@ -580,7 +593,7 @@ app.patch('/api/reservations/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Reserva no encontrada' })
     }
-    res.json(result.rows[0])
+    res.json(formatReservation(result.rows[0]))
   } catch (err) {
     console.error('Error al actualizar reserva:', err)
     res.status(500).json({ error: 'Error al actualizar reserva en base de datos' })
