@@ -35,6 +35,12 @@ jobs:
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Crear repositorio ECR si no existe — svc-${{ matrix.service }}
+        run: |
+          aws ecr create-repository \
+            --repository-name pardos-prod-svc-${{ matrix.service }} \
+            --region ${{ env.AWS_REGION }} || true
+
       - name: Build y Push a ECR — svc-${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
@@ -70,6 +76,12 @@ jobs:
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Crear repositorio ECR si no existe — ${{ matrix.app }}
+        run: |
+          aws ecr create-repository \
+            --repository-name pardos-prod-${{ matrix.app }} \
+            --region ${{ env.AWS_REGION }} || true
 
       - name: Build y Push — ${{ matrix.app }}
         uses: docker/build-push-action@v5
