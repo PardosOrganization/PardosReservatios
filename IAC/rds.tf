@@ -36,7 +36,7 @@ resource "aws_rds_cluster" "this" {
   db_subnet_group_name                = aws_db_subnet_group.this.name
   vpc_security_group_ids              = [aws_security_group.aurora.id]
   storage_encrypted                   = true
-  kms_key_id                          = aws_kms_key.this.arn
+  kms_key_id                          = aws_kms_key.rds.arn
   backup_retention_period             = var.aurora_backup_retention
   skip_final_snapshot                 = true
   final_snapshot_identifier           = "${local.name}-aurora-final"
@@ -63,7 +63,7 @@ resource "aws_rds_cluster_instance" "this" {
   auto_minor_version_upgrade      = true
   monitoring_interval             = 0
   performance_insights_enabled    = true
-  performance_insights_kms_key_id = aws_kms_key.this.arn
+  performance_insights_kms_key_id = aws_kms_key.rds.arn
 
   tags = {
     Name        = "${local.name}-aurora-${count.index}"

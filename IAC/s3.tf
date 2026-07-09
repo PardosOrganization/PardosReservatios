@@ -30,7 +30,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
   bucket   = aws_s3_bucket.frontend[each.key].id
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.this.arn
+      kms_master_key_id = aws_kms_key.s3.arn
       sse_algorithm     = "aws:kms"
     }
   }
@@ -91,7 +91,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend_logs" {
   bucket = aws_s3_bucket.frontend_logs.id
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.this.arn
+      kms_master_key_id = aws_kms_key.s3.arn
       sse_algorithm     = "aws:kms"
     }
   }

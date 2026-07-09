@@ -1,12 +1,46 @@
-resource "aws_kms_key" "this" {
-  description             = "Clave maestra del proyecto ${var.project}"
+resource "aws_kms_key" "rds" {
+  description             = "Clave KMS exclusiva para la base de datos RDS del proyecto ${var.project}"
   enable_key_rotation     = true
   deletion_window_in_days = 30
 
-  # CRÍTICO: POLÍTICA BASADA EN LA CUENTA REAL VIA DATA SOURCE (NO HARDCODEAR ACCOUNT ID).
   policy = jsonencode({
     Version = "2012-10-17"
-    Id      = "default"
+    Statement = [
+      {
+        Sid       = "DefaultAllow"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowRDS"
+        Effect    = "Allow"
+        Principal = { Service = "rds.amazonaws.com" }
+        Action    = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey"]
+        Resource  = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${local.name}-rds-kms"
+    Environment = terraform.workspace
+  }
+}
+
+resource "aws_kms_alias" "rds" {
+  name          = "alias/${local.name}-rds-key"
+  target_key_id = aws_kms_key.rds.key_id
+}
+
+resource "aws_kms_key" "s3" {
+  description             = "Clave KMS exclusiva para los buckets S3 y logs del proyecto ${var.project}"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+
+  policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [
       {
         Sid       = "DefaultAllow"
@@ -48,14 +82,50 @@ resource "aws_kms_key" "this" {
   })
 
   tags = {
-    Name        = "${local.name}-kms"
+    Name        = "${local.name}-s3-kms"
     Environment = terraform.workspace
   }
 }
 
-resource "aws_kms_alias" "this" {
-  name          = "alias/${local.name}-key"
-  target_key_id = aws_kms_key.this.key_id
+resource "aws_kms_alias" "s3" {
+  name          = "alias/${local.name}-s3-key"
+  target_key_id = aws_kms_key.s3.key_id
+}
+
+resource "aws_kms_key" "secrets" {
+  description             = "Clave KMS exclusiva para Secrets Manager del proyecto ${var.project}"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DefaultAllow"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowSecretsManager"
+        Effect    = "Allow"
+        Principal = { Service = "secretsmanager.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey*"]
+        Resource  = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${local.name}-secrets-kms"
+    Environment = terraform.workspace
+  }
+}
+
+resource "aws_kms_alias" "secrets" {
+  name          = "alias/${local.name}-secrets-key"
+  target_key_id = aws_kms_key.secrets.key_id
 }
 
 resource "aws_kms_key" "flow" {

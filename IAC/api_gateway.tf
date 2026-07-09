@@ -59,3 +59,15 @@ resource "aws_apigatewayv2_stage" "this" {
   }
 }
 
+resource "aws_apigatewayv2_route" "grafana" {
+  api_id    = aws_apigatewayv2_api.this.id
+  route_key = "ANY /grafana/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+}
+
+resource "aws_apigatewayv2_route" "loki" {
+  api_id    = aws_apigatewayv2_api.this.id
+  route_key = "ANY /loki/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+}
+

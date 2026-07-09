@@ -56,7 +56,7 @@ resource "aws_iam_policy" "db_rotation_lambda" {
           "kms:Decrypt",
           "kms:GenerateDataKey"
         ]
-        Resource = [aws_kms_key.this.arn]
+        Resource = [aws_kms_key.rds.arn, aws_kms_key.secrets.arn]
       },
       {
         Sid    = "LoggingAccess"
@@ -129,7 +129,7 @@ resource "aws_cloudwatch_log_group" "db_rotation" {
   count             = 1
   name              = "/aws/lambda/${local.name}-rotacion-db"
   retention_in_days = var.log_retention_days
-  kms_key_id        = aws_kms_key.this.arn
+  kms_key_id        = aws_kms_key.s3.arn
 }
 
 resource "aws_lambda_function" "db_rotation" {
@@ -144,7 +144,7 @@ resource "aws_lambda_function" "db_rotation" {
   source_code_hash = data.archive_file.db_rotation_zip[0].output_base64sha256
   runtime          = "python3.12"
   timeout          = 30
-  kms_key_arn      = aws_kms_key.this.arn
+  kms_key_arn      = aws_kms_key.secrets.arn
 
   vpc_config {
     subnet_ids         = aws_subnet.private[*].id
