@@ -25,7 +25,10 @@
         { "name": "DB_USER", "value": "{{ db_user }}" },
         { "name": "DB_PASS", "value": "{{ db_pass }}" },
         { "name": "DB_NAME", "value": "{{ db_name }}" },
-        { "name": "REDIS_HOST", "value": "{{ redis_host }}" }
+        { "name": "REDIS_HOST", "value": "{{ redis_host }}" },
+        { "name": "DB_PROXY_ENDPOINT", "value": "{{ db_proxy_endpoint | default('') }}" },
+        { "name": "SQS_QUEUE_ARN", "value": "arn:aws:sqs:{{ aws_region }}:{{ aws_account.stdout }}:{{ project }}-{{ env }}-reservas-fifo.fifo" },
+        { "name": "SNS_TOPIC_ARN", "value": "arn:aws:sns:{{ aws_region }}:{{ aws_account.stdout }}:{{ project }}-{{ env }}-notificaciones" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -34,7 +37,12 @@
           "awslogs-region": "{{ aws_region }}",
           "awslogs-stream-prefix": "ecs"
         }
-      }
+      },
+      "secrets": [
+        {% if db_credentials_arn is defined and db_credentials_arn %}
+        { "name": "DB_CREDENTIALS", "valueFrom": "{{ db_credentials_arn }}" }
+        {% endif %}
+      ]
     },
     {
       "name": "adot-collector",
