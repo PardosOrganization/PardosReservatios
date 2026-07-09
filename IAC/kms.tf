@@ -73,8 +73,8 @@ resource "aws_kms_key" "s3" {
         Action    = ["kms:Decrypt", "kms:GenerateDataKey*"]
         Resource  = "*"
         Condition = {
-          StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/*"
           }
         }
       }
