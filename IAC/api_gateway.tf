@@ -71,3 +71,9 @@ resource "aws_apigatewayv2_route" "loki" {
   target    = "integrations/${aws_apigatewayv2_integration.this.id}"
 }
 
+resource "aws_apigatewayv2_route" "reservations_public" {
+  api_id    = aws_apigatewayv2_api.this.id
+  route_key = "POST /anfitriona/api/reservations"
+  target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+}
+

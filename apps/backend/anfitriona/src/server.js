@@ -313,6 +313,7 @@ app.post('/api/reservations', (req, res) => {
     source: data.source || 'system',
   }
   reservations.unshift(newReservation)
+  console.log(`[INFO] Nueva reserva creada con éxito. ID: ${newReservation.id}, Cliente: ${newReservation.clientName}, Personas: ${newReservation.guests}, Mesa: ${newReservation.tableId || 'Pendiente'}`)
   res.status(201).json(newReservation)
 })
 
