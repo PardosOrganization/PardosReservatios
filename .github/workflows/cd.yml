@@ -2,8 +2,7 @@ name: CD — Push to ECR & Deploy to ECS
 # Trigger rebuild: repositorios ECR de dev creados exitosamente
 
 on:
-  push:
-    branches: [main, "feat/cicd", "feat/observabilidad-logs"] 
+  workflow_call:
 
 env:
   AWS_REGION: us-east-1
