@@ -9,7 +9,9 @@
       "pluginName": "CloudWatch"
     }
   ],
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -17,11 +19,19 @@
   "liveNow": false,
   "panels": [
     {
-      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "title": "Tasa de Éxito ALB (SLO ≥ 99.5%)",
       "type": "gauge",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -31,27 +41,49 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 99 },
-              { "color": "green", "value": 99.5 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 99
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
             ]
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_5XX_Count",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "id": "m1",
@@ -63,11 +95,18 @@
         },
         {
           "refId": "B",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "RequestCount",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "id": "m2",
@@ -79,10 +118,13 @@
         },
         {
           "refId": "C",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
           "id": "e1",
-          "expression": "100*(1-(FILL(m1,0)/m2))",
+          "expression": "100*(1-(SUM(FILL(m1,0))/SUM(m2)))",
           "label": "Tasa de éxito",
           "period": "",
           "metricQueryType": 0,
@@ -92,37 +134,67 @@
       ]
     },
     {
-      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 0 },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
       "id": 2,
       "title": "Hosts Sanos por Target Group",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "colorMode": "background",
         "graphMode": "none"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "HealthyHostCount",
           "statistic": "Minimum",
-          "dimensions": { "TargetGroup": ["*"], "LoadBalancer": ["*"] },
+          "dimensions": {
+            "TargetGroup": [
+              "*"
+            ],
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.TargetGroup')}",
@@ -134,37 +206,67 @@
       ]
     },
     {
-      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 0 },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
       "id": 3,
       "title": "Hosts NO Sanos (debe ser 0)",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
         "colorMode": "background",
         "graphMode": "none"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "UnHealthyHostCount",
           "statistic": "Maximum",
-          "dimensions": { "TargetGroup": ["*"], "LoadBalancer": ["*"] },
+          "dimensions": {
+            "TargetGroup": [
+              "*"
+            ],
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.TargetGroup')}",
@@ -176,20 +278,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
       "id": 4,
       "title": "Latencia ALB p50 / p95 / p99",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "TargetResponseTime",
           "statistic": "p50",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "p50",
@@ -200,11 +322,18 @@
         },
         {
           "refId": "B",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "TargetResponseTime",
           "statistic": "p95",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "p95",
@@ -215,11 +344,18 @@
         },
         {
           "refId": "C",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "TargetResponseTime",
           "statistic": "p99",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "p99",
@@ -231,20 +367,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
       "id": 5,
       "title": "Errores 5xx y 4xx del Target (ALB)",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_5XX_Count",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "5xx",
@@ -255,11 +411,18 @@
         },
         {
           "refId": "B",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_4XX_Count",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "4xx",
@@ -271,20 +434,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
       "id": 6,
       "title": "Peticiones Totales (ALB)",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "RequestCount",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "Peticiones",
@@ -296,23 +479,41 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
       "id": 7,
       "title": "Tasa de Éxito en el Tiempo",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "decimals": 2,
           "min": 95,
           "max": 100,
-          "custom": { "thresholdsStyle": { "mode": "line" } },
+          "custom": {
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "transparent", "value": null },
-              { "color": "red", "value": 99.5 }
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 99.5
+              }
             ]
           }
         },
@@ -321,11 +522,18 @@
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "HTTPCode_Target_5XX_Count",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "id": "m1",
@@ -337,11 +545,18 @@
         },
         {
           "refId": "B",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "AWS/ApplicationELB",
           "metricName": "RequestCount",
           "statistic": "Sum",
-          "dimensions": { "LoadBalancer": ["*"] },
+          "dimensions": {
+            "LoadBalancer": [
+              "app/pardos-dev-alb/ad8504d10eea1777"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "id": "m2",
@@ -353,10 +568,13 @@
         },
         {
           "refId": "C",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
           "id": "e1",
-          "expression": "100*(1-(FILL(m1,0)/m2))",
+          "expression": "100*(1-(SUM(FILL(m1,0))/SUM(m2)))",
           "label": "Tasa de éxito",
           "period": "",
           "metricQueryType": 0,
@@ -368,8 +586,15 @@
   ],
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pardos", "slo", "cloudwatch"],
-  "time": { "from": "now-6h", "to": "now" },
+  "tags": [
+    "pardos",
+    "slo",
+    "cloudwatch"
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Pardos AWS - SLO y Disponibilidad",
