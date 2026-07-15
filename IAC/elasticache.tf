@@ -23,7 +23,7 @@ resource "aws_elasticache_replication_group" "this" {
   transit_encryption_enabled = true
   transit_encryption_mode    = "required"
   auth_token                 = random_password.redis_auth.result
-  kms_key_id                 = aws_kms_key.this.arn
+  kms_key_id                 = aws_kms_key.rds.arn
   port                       = 6379
 
   tags = {

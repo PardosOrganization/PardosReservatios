@@ -5,7 +5,7 @@ resource "random_password" "db" {
 
 resource "aws_secretsmanager_secret" "db" {
   name       = "${local.name}/rds-credentials"
-  kms_key_id = aws_kms_key.this.arn
+  kms_key_id = aws_kms_key.secrets.arn
   tags = {
     Name        = "${local.name}-rds-credentials"
     Environment = terraform.workspace

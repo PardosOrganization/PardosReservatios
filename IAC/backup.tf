@@ -1,6 +1,6 @@
 resource "aws_backup_vault" "this" {
   name        = "${local.name}-vault"
-  kms_key_arn = aws_kms_key.this.arn
+  kms_key_arn = aws_kms_key.rds.arn
   tags = {
     Name        = "${local.name}-vault"
     Environment = terraform.workspace

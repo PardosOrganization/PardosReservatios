@@ -159,3 +159,55 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: pardos-prometheus
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    depends_on:
+      - svc-anfitriona
+      - svc-mozo
+      - svc-caja
+      - svc-cocina
+
+  # ── Loki ──────────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: pardos-loki
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: pardos-grafana
+    volumes:
+      - ./observability/grafana/provisioning/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./observability/grafana/provisioning/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./observability/grafana/provisioning/dashboards/pardos-overview.json:/var/lib/grafana/dashboards/pardos-overview.json
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  prometheus_data:
+  grafana_data:

@@ -106,6 +106,11 @@ data "aws_iam_policy_document" "ecs_task" {
     actions   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
     resources = ["*"]
   }
+  statement {
+    sid       = "ADOTCloudWatchMetrics"
+    actions   = ["cloudwatch:PutMetricData"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "ecs_task" {
@@ -228,7 +233,7 @@ data "aws_iam_policy_document" "s3_replication" {
     content {
       sid       = "SourceKmsDecrypt"
       actions   = ["kms:Decrypt"]
-      resources = [aws_kms_key.this.arn]
+      resources = [aws_kms_key.s3.arn]
     }
   }
   dynamic "statement" {
