@@ -199,8 +199,17 @@ app.patch('/api/tickets/:id', (req, res) => {
   res.json(tickets[idx])
 })
 
-// ── Arranque ─────────────────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🍗 svc-cocina escuchando en http://0.0.0.0:${PORT}`)
-  console.log(`   ${MENU_ITEMS.length} platos en menú · ${tickets.length} tickets cargados`)
-})
+const initialTickets = JSON.parse(JSON.stringify(tickets))
+
+// ── Exportacion ──────────────────────────────────────────────────────────────
+export function resetState() {
+  tickets = JSON.parse(JSON.stringify(initialTickets))
+}
+
+export {
+  TICKET_STATUS,
+  MENU_ITEMS,
+  tickets
+}
+
+export default app

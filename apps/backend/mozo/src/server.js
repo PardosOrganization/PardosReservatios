@@ -61,7 +61,7 @@ const TABLES = Array.from({ length: 20 }, (_, i) => ({
   isAvailable: true,
 }))
 
-const reservations = [
+let reservations = [
   {
     id: 'R001', clientName: 'María García', clientPhone: '987654321',
     date: todayStr(), time: '13:00', guests: 4, tableId: 'T03',
@@ -93,7 +93,7 @@ const reservations = [
 ]
 
 // Simulación de notificaciones de cocina
-const notifications = [
+let notifications = [
   {
     id: 'N001', type: 'ticket_ready', ticketId: 'TK001',
     tableId: 'T01', message: 'Pedido de Mesa 1 listo para servir',
@@ -154,8 +154,20 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   res.json(notifications[idx])
 })
 
-// ── Arranque ─────────────────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🍽️  svc-mozo escuchando en http://0.0.0.0:${PORT}`)
-  console.log(`   ${reservations.length} reservas de hoy · ${TABLES.length} mesas`)
-})
+const initialReservations = JSON.parse(JSON.stringify(reservations))
+const initialNotifications = JSON.parse(JSON.stringify(notifications))
+
+// ── Exportacion ──────────────────────────────────────────────────────────────
+export function resetState() {
+  reservations = JSON.parse(JSON.stringify(initialReservations))
+  notifications = JSON.parse(JSON.stringify(initialNotifications))
+}
+
+export {
+  todayStr,
+  TABLES,
+  reservations,
+  notifications
+}
+
+export default app

@@ -462,6 +462,7 @@ let clients = [
     notes: 'Hace cumpleaños aquí.', vip: false,
   },
 ]
+const initialClients = JSON.parse(JSON.stringify(clients))
 
 // ── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -713,14 +714,17 @@ app.get('/api/tables', async (_req, res) => {
   }
 })
 
-// ── Arranque ─────────────────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🏠 svc-anfitriona escuchando en http://0.0.0.0:${PORT}`)
-  try {
-    const countResult = await pool.query('SELECT COUNT(*) FROM reservations')
-    const count = countResult.rows[0].count
-    console.log(`   ${count} reservas cargadas desde PostgreSQL · ${clients.length} clientes · ${TABLES.length} mesas cargadas`)
-  } catch (err) {
-    console.error('Error al consultar conteo inicial de reservas:', err)
-  }
-})
+// ── Exportacion ──────────────────────────────────────────────────────────────
+export function resetState() {
+  clients = JSON.parse(JSON.stringify(initialClients))
+}
+
+export {
+  todayStr,
+  daysAgo,
+  formatReservation,
+  TABLES,
+  clients
+}
+
+export default app
