@@ -1,0 +1,96 @@
+# Propuestas de Nuevos Dashboards para PardosReservatios
+
+Basado en la arquitectura que tienes en tu `docker-compose.yml` (Microservicios en Node.js para Anfitriona, Mozo, Caja, Cocina; Bases de datos Postgres y Redis; stack de monitoreo con Prometheus, Loki y Grafana), aquí tienes propuestas de dashboards adicionales que puedes crear para tener una observabilidad completa de tu sistema.
+
+## Propuesta 1: Dashboard de Negocio y Operaciones (Pardos Business)
+
+Este dashboard está enfocado en medir qué está pasando con el restaurante a nivel operativo, no técnico.
+
+*   **Paneles propuestos:**
+    *   **Total de Reservas Creadas:** Métrica incremental de las reservas hechas por el servicio `anfitriona`.
+    *   **Pedidos en Preparación vs Listos:** Métricas del servicio `cocina`.
+    *   **Ventas/Transacciones por Hora:** Métricas procesadas por el servicio `caja`.
+    *   **Tasa de Error en Transacciones:** Porcentaje de fallos al procesar pagos.
+
+## Propuesta 2: Dashboard de Tráfico HTTP (API Gateway / Servicios)
+
+Enfocado en ver la salud de las peticiones que llegan a tus microservicios.
+
+*   **Paneles propuestos:**
+    *   **RPS (Request Per Second):** Cantidad de peticiones recibidas por cada servicio.
+    *   **Distribución de Códigos de Estado (HTTP 2xx, 4xx, 5xx):** Un gráfico de barras o pie para ver cuántos errores 500 o 400 están ocurriendo.
+    *   **Top 5 Endpoints más lentos:** Una tabla mostrando las rutas (ej. `/api/reservas`) que tardan más en responder.
+
+## Propuesta 3: Dashboard de Logs y Alertas (Loki)
+
+Aprovechando que tienes Loki configurado, puedes visualizar logs directamente en paneles.
+
+*   **Paneles propuestos:**
+    *   **Tasa de Logs de ERROR por Servicio:** Un gráfico de líneas mostrando cuántos errores tira la consola por minuto.
+    *   **Últimos Logs Críticos:** Una tabla en vivo mostrando las últimas 10 líneas de log que contengan la palabra "Exception" o "Error".
+
+## Propuesta 4: Dashboard de Base de Datos y Caché (Redis & Postgres)
+
+Para ver a detalle cómo se comportan tus almacenes de datos (actualmente tienes un panel de conexiones activas, pero se puede mejorar).
+
+*   **Paneles propuestos:**
+    *   **Caché Hit/Miss Ratio (Redis):** ¿Qué porcentaje de las peticiones están siendo resueltas por Redis vs Postgres?
+    *   **Uso de Memoria en Redis:** Para evitar que la caché llene el servidor.
+    *   **Tiempo Promedio de Queries (Postgres):** Qué tan rápido responde la base de datos a las consultas complejas.
+
+---
+
+## 🛠️ Plan de Acción: Pasos para que tú los construyas
+
+Aquí tienes la guía paso a paso para crear el **Dashboard de Tráfico HTTP** o el de **Logs (Loki)**, que son los más inmediatos de implementar.
+
+### Paso 1: Asegurar que las métricas existen (Instrumentación)
+
+Para poder graficar RPS o Códigos HTTP, tus microservicios en Node.js necesitan exponer esas métricas en su endpoint `/metrics`.
+1.  En tu código Node.js (ej. en `apps/backend/anfitriona/app.js`), asegúrate de usar la librería `prom-client` o un middleware como `express-prom-bundle`.
+2.  Levanta tu proyecto: `docker compose up -d`
+3.  Entra a `http://localhost:4001/metrics` y verifica que existan métricas como `http_requests_total` o similares.
+
+### Paso 2: Crear el Dashboard en Grafana
+
+1.  Abre Grafana (`http://localhost:3000`) e inicia sesión (usuario `admin`, password `admin`).
+2.  En el menú lateral izquierdo, ve al ícono de **Dashboards** y haz clic en **New Dashboard**.
+3.  Haz clic en **+ Add Visualization**.
+
+### Paso 3: Configurar el Panel de Códigos HTTP (Prometheus)
+
+1.  Selecciona tu Data Source: **Prometheus**.
+2.  En la caja de consulta (Query), escribe algo como esto (ajustado al nombre real de tu métrica):
+    ```promql
+    sum(rate(http_requests_total{status=~"5.."}[5m])) by (job)
+    ```
+    *(Esta query cuenta los errores 500 por cada microservicio en los últimos 5 minutos).*
+3.  En las opciones de la derecha (Panel Options):
+    *   **Title:** Ponle "Errores de Servidor (5xx)".
+    *   **Graph style:** Selecciona "Time series" o "Bar chart".
+4.  Haz clic en **Apply** (arriba a la derecha).
+
+### Paso 4: Configurar el Panel de Logs (Loki)
+
+1.  Haz clic nuevamente en **Add** -> **Visualization** en tu dashboard.
+2.  Esta vez selecciona el Data Source: **Loki**.
+3.  En la caja de query, escribe:
+    ```logql
+    count_over_time({container=~"pardos-svc-.*"} |= "error" [1m])
+    ```
+    *(Esto cuenta la palabra "error" en los logs de tus microservicios cada minuto).*
+4.  Ponle de título "Errores en Consola por Minuto", dale a **Apply**.
+
+### Paso 5: Guardar y Exportar como Código (Infraestructura como Código)
+
+Como estás usando la carpeta `observability/grafana/provisioning/dashboards` para proveer los dashboards por defecto:
+1.  Guarda tu dashboard en la UI de Grafana dándole al ícono de guardar.
+2.  Haz clic en el ícono de **Share** del dashboard, ve a la pestaña **Export**, y haz clic en **Save to file**.
+3.  Toma ese archivo JSON descargado y ponlo en tu proyecto: `c:\Users\anghe\OneDrive\Documentos\TAREAS\IAC\PardosReservatios\observability\grafana\provisioning\dashboards\nuevo-dashboard.json`.
+4.  Ya quedará guardado para siempre en tu código fuente.
+
+> [!TIP]
+> **Para las métricas de Redis/Postgres**, necesitarás agregar en tu `docker-compose.yml` contenedores adicionales llamados "Exporters" (ej. `bitnami/redis-exporter` y `prometheus-community/postgres-exporter`) para que Prometheus pueda raspar esos datos, ya que no los exponen nativamente en formato Prometheus.
+
+## User Review Required
+Por favor, revisa estas propuestas. ¿Te gustaría que te ayude modificando el `docker-compose.yml` para agregar los "Exporters" de Redis y Postgres, o prefieres enfocarte primero en los dashboards de métricas HTTP y Logs?
