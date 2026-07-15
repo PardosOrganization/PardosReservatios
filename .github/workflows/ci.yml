@@ -201,7 +201,6 @@ jobs:
     if: |
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' ||
-       github.ref == 'refs/heads/feat/cicd' ||
-       github.ref == 'refs/heads/feat/observabilidad-logs')
+       github.ref == 'refs/heads/develop')
     uses: ./.github/workflows/cd.yml
     secrets: inherit
