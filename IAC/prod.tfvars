@@ -1,7 +1,7 @@
 # ENTORNO PROD — Alta disponibilidad y protecciones activadas.
 # Usar con: terraform workspace select prod && terraform plan -var-file=prod.tfvars
 
-account_id          = "333333333333"
+account_id          = "181777503681" #CUENTA DE WILSON
 domain              = "pardos.com.pe"
 vpc_cidr            = "10.30.0.0/16"
 certificate_arn     = "arn:aws:acm:us-east-1:333333333333:certificate/prod-alb-cert-0000-0000"

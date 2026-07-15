@@ -1,7 +1,7 @@
 # ENTORNO QA — Recursos intermedios para pruebas de integración/carga.
 # Usar con: terraform workspace select qa && terraform plan -var-file=qa.tfvars
 
-account_id          = "222222222222"
+account_id          = "181777503681" #CUENTA DE WILSON
 domain              = "qa.pardos.com.pe"
 vpc_cidr            = "10.20.0.0/16"
 certificate_arn     = "arn:aws:acm:us-east-1:222222222222:certificate/qa-alb-cert-0000-0000"

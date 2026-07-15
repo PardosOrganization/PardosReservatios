@@ -6,7 +6,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  TARGET_ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+  TARGET_ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || (github.ref == 'refs/heads/qa' && 'qa' || 'dev') }}
 
 jobs:
 
