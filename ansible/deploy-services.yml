@@ -39,11 +39,27 @@
       loop: "{{ microservices }}"
 
     # --- Actualizacion de ECS ---
+    - name: Verificar si el cluster de ECS existe en AWS
+      ansible.builtin.command: >
+        aws ecs describe-clusters
+        --clusters {{ project }}-{{ env }}-cluster
+        --region {{ aws_region }}
+        --query "clusters[0].status"
+        --output text
+      register: ecs_cluster_status
+      changed_when: false
+      failed_when: false
+
+    - name: Definir si se debe desplegar a ECS
+      ansible.builtin.set_fact:
+        should_deploy_ecs: "{{ ecs_cluster_status.stdout | trim != 'None' and ecs_cluster_status.stdout | trim != '' }}"
+
     - name: Generar definicion de tarea (Task Definition) desde plantilla Jinja2
       ansible.builtin.template:
         src: task-definition.json.j2
         dest: "/tmp/td-new-{{ item }}.json"
       loop: "{{ microservices }}"
+      when: should_deploy_ecs
 
     - name: Registrar nueva revision de la task definition
       ansible.builtin.shell: |
@@ -51,6 +67,7 @@
       args:
         executable: /bin/bash
       loop: "{{ microservices }}"
+      when: should_deploy_ecs
 
     - name: Forzar nuevo despliegue del servicio ECS
       ansible.builtin.command: >
@@ -60,3 +77,4 @@
         --task-definition {{ project }}-{{ env }}-svc-{{ item }}
         --force-new-deployment
       loop: "{{ microservices }}"
+      when: should_deploy_ecs
