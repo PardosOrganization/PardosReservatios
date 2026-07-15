@@ -1,0 +1,21 @@
+{
+  "name": "svc-mozo",
+  "version": "1.0.0",
+  "description": "Microservicio Mozo — Vista de reservas del día y estado de mesas",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "prom-client": "^15.1.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0",
+    "vitest": "^2.0.0"
+  }
+}

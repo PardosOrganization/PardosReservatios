@@ -1,0 +1,55 @@
+---
+- name: Configurar Host y desplegar contenedores con Docker
+  hosts: host_servers  # Servidores destino (VMs/Instancias EC2) definidos en hosts.ini
+  become: true         # Requiere privilegios root (sudo) para instalar y administrar Docker
+  vars_files:
+    - "group_vars/all.yml"
+    - "group_vars/{{ env | default('prod') }}.yml"
+  tasks:
+    # ── 1. CONFIGURACIÓN DEL HOST/SERVIDOR ──────────────────────────────────
+    - name: Asegurar que Docker esté instalado (Ubuntu/Debian)
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Asegurar que el servicio de Docker esté activo y habilitado
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Crear red interna de Docker
+      community.docker.docker_network:
+        name: pardos-network
+        state: present
+
+    - name: Asegurar la existencia del directorio de configuraciones
+      ansible.builtin.file:
+        path: /etc/pardos
+        state: directory
+        mode: '0755'
+
+    # ── 2. GESTIÓN DE ENTORNOS DINÁMICOS (.ENV) ─────────────────────────────
+    - name: Generar archivos .env para cada microservicio usando la plantilla Jinja2
+      ansible.builtin.template:
+        src: env.j2
+        dest: "/etc/pardos/{{ item }}.env"
+        mode: '0600'
+      loop: "{{ microservices }}"
+
+    # ── 3. CICLO DE VIDA DE LOS CONTENEDORES ────────────────────────────────
+    - name: Levantar contenedores de los microservicios con políticas adecuadas
+      community.docker.docker_container:
+        name: "pardos-svc-{{ item }}"
+        image: "{{ ecr_registry | default('pardos') }}/pardos-svc-{{ item }}:latest"
+        state: started
+        restart_policy: unless-stopped
+        network_mode: pardos-network
+        env_file: "/etc/pardos/{{ item }}.env"
+        ports:
+          - "{{ 4001 + my_index }}:8080" # Mapeo dinámico: anfitriona (4001), mozo (4002), caja (4003), cocina (4004)
+      loop: "{{ microservices }}"
+      loop_control:
+        index_var: my_index

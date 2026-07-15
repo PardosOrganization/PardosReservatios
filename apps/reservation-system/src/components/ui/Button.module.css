@@ -1,0 +1,138 @@
+/**
+ * src/components/ui/Button.module.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos CSS Module del componente Button.
+ * Usa CSS Modules para evitar colisiones de nombres y mantener
+ * el estilo encapsulado al componente.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Base ────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Tamaños ─────────────── */
+.btn--sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  min-height: 32px;
+  border-radius: var(--radius-sm);
+}
+
+.btn--md {
+  padding: 10px 20px;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.btn--lg {
+  padding: 14px 28px;
+  font-size: 16px;
+  min-height: 50px;
+  border-radius: var(--radius-lg);
+}
+
+.btn--full { width: 100%; }
+
+/* ── Variantes ───────────── */
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(232, 69, 60, 0.30);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 16px rgba(232, 69, 60, 0.40);
+  transform: translateY(-1px);
+}
+.btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(232, 69, 60, 0.25);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-mid);
+  border: 1px solid var(--color-border);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-cream-dark);
+  color: var(--color-text-dark);
+}
+
+.btn--danger {
+  background: #c0392b;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(192, 57, 43, 0.25);
+}
+.btn--danger:hover:not(:disabled) {
+  background: #a93226;
+  transform: translateY(-1px);
+}
+
+.btn--success {
+  background: var(--color-success);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.25);
+}
+.btn--success:hover:not(:disabled) {
+  background: #229954;
+  transform: translateY(-1px);
+}
+
+/* ── Icono ───────────────── */
+.icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Spinner de carga ────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

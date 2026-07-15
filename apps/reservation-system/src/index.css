@@ -1,0 +1,215 @@
+/**
+ * index.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Estilos globales y sistema de diseño de Pardos Chicken.
+ * Define las variables CSS (design tokens), reset de estilos, tipografía
+ * y utilidades reutilizables en toda la aplicación.
+ *
+ * Paleta de colores principal:
+ *   - Blanco crema:  #fff8f0  /  #fef3e8
+ *   - Rojo Pardos:   #e8453c  /  #c0392b  /  #a93226
+ *   - Texto oscuro:  #3b1a1a  /  #6b3a3a
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Variables / Design Tokens ─────────────────────────────────────────────── */
+:root {
+  /* Colores primarios */
+  --color-cream:        #fff8f0;
+  --color-cream-dark:   #fef3e8;
+  --color-cream-border: #f0dcc8;
+
+  /* Rojo Pardos */
+  --color-primary:      #e8453c;
+  --color-primary-dark: #c0392b;
+  --color-primary-deep: #a93226;
+  --color-primary-soft: #f9e5e4;
+  --color-primary-glow: rgba(232, 69, 60, 0.15);
+
+  /* Texto */
+  --color-text-dark:    #3b1a1a;
+  --color-text-mid:     #6b3a3a;
+  --color-text-light:   #9b6b6b;
+  --color-text-muted:   #b89090;
+
+  /* Fondo */
+  --color-bg:           #fff8f0;
+  --color-bg-card:      #ffffff;
+  --color-bg-sidebar:   #3b1a1a;
+  --color-bg-sidebar2:  #4d2323;
+
+  /* Bordes */
+  --color-border:       #e8d5cc;
+  --color-border-light: #f3e6df;
+
+  /* Estado: success, warning, info */
+  --color-success:      #27ae60;
+  --color-success-soft: #eafaf1;
+  --color-warning:      #f39c12;
+  --color-warning-soft: #fef9e7;
+  --color-info:         #2980b9;
+  --color-info-soft:    #eaf4fb;
+
+  /* Sombras */
+  --shadow-xs:  0 1px 3px rgba(59,26,26,.06);
+  --shadow-sm:  0 2px 8px rgba(59,26,26,.09);
+  --shadow-md:  0 4px 16px rgba(59,26,26,.12);
+  --shadow-lg:  0 8px 32px rgba(59,26,26,.16);
+  --shadow-xl:  0 16px 48px rgba(59,26,26,.20);
+
+  /* Espaciado */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+  --spacing-2xl: 48px;
+
+  /* Bordes redondeados */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Tipografía */
+  --font-sans:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif:  'Playfair Display', Georgia, serif;
+
+  /* Transiciones */
+  --transition-fast: 150ms ease;
+  --transition-mid:  250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
+/* ── Reset y base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text-dark);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Tipografía ────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-dark);
+}
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.1rem; }
+
+p { margin-bottom: 0; }
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--color-primary-dark); }
+
+/* ── Scrollbar personalizado ───────────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 6px; height: 6px; }
+::-webkit-scrollbar-track   { background: var(--color-cream); }
+::-webkit-scrollbar-thumb   { background: var(--color-primary-soft); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+/* ── Selección de texto ────────────────────────────────────────────────────── */
+::selection { background: var(--color-primary-glow); color: var(--color-primary-dark); }
+
+/* ── Clases de utilidad globales ───────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+.flex-center   { display: flex; align-items: center; justify-content: center; }
+.flex-between  { display: flex; align-items: center; justify-content: space-between; }
+.flex-gap-sm   { display: flex; align-items: center; gap: var(--spacing-sm); }
+.flex-gap-md   { display: flex; align-items: center; gap: var(--spacing-md); }
+
+/* ── Animaciones globales ──────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-fadeIn      { animation: fadeIn var(--transition-slow) both; }
+.animate-slideLeft   { animation: slideInLeft var(--transition-slow) both; }
+.animate-slideRight  { animation: slideInRight var(--transition-slow) both; }
+.animate-spin        { animation: spin 1s linear infinite; }
+
+/* ── Badge de estado ───────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.badge--success  { background: var(--color-success-soft);  color: var(--color-success); }
+.badge--warning  { background: var(--color-warning-soft);  color: var(--color-warning); }
+.badge--info     { background: var(--color-info-soft);     color: var(--color-info); }
+.badge--error    { background: var(--color-primary-soft);  color: var(--color-primary-dark); }
+.badge--neutral  { background: var(--color-cream-dark);    color: var(--color-text-mid); }

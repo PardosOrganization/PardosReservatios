@@ -1,0 +1,9 @@
+---
+project: pardos
+env: prod
+aws_region: us-east-1
+microservices:
+  - anfitriona
+  - mozo
+  - caja
+  - cocina

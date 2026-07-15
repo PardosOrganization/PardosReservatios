@@ -1,0 +1,67 @@
+{
+  "family": "{{ project }}-{{ env }}-svc-{{ item }}",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-execution",
+  "taskRoleArn": "arn:aws:iam::{{ aws_account.stdout }}:role/{{ project }}-{{ env }}-ecs-task",
+  "cpu": "256",
+  "memory": "512",
+  "requiresCompatibilities": ["FARGATE"],
+  "containerDefinitions": [
+    {
+      "name": "svc-{{ item }}",
+      "image": "{{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "PORT", "value": "8080" },
+        { "name": "NODE_ENV", "value": "{{ env }}" },
+        { "name": "DB_HOST", "value": "{{ db_host }}" },
+        { "name": "DB_USER", "value": "{{ db_user }}" },
+        { "name": "DB_PASS", "value": "{{ db_pass }}" },
+        { "name": "DB_NAME", "value": "{{ db_name }}" },
+        { "name": "REDIS_HOST", "value": "{{ redis_host }}" },
+        { "name": "DB_PROXY_ENDPOINT", "value": "{{ db_proxy_endpoint | default('') }}" },
+        { "name": "SQS_QUEUE_ARN", "value": "arn:aws:sqs:{{ aws_region }}:{{ aws_account.stdout }}:{{ project }}-{{ env }}-reservas-fifo.fifo" },
+        { "name": "SNS_TOPIC_ARN", "value": "arn:aws:sns:{{ aws_region }}:{{ aws_account.stdout }}:{{ project }}-{{ env }}-notificaciones" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/{{ project }}-{{ env }}/ecs/{{ item }}",
+          "awslogs-region": "{{ aws_region }}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "secrets": [
+        {% if db_credentials_arn is defined and db_credentials_arn %}
+        { "name": "DB_CREDENTIALS", "valueFrom": "{{ db_credentials_arn }}" }
+        {% endif %}
+      ]
+    },
+    {
+      "name": "adot-collector",
+      "image": "public.ecr.aws/aws-observability/aws-otel-collector:v0.39.0",
+      "essential": true,
+      "environment": [
+        {
+          "name": "AOT_CONFIG_CONTENT",
+          "value": "receivers:\n  prometheus:\n    config:\n      scrape_configs:\n        - job_name: 'app-metrics'\n          scrape_interval: 15s\n          static_configs:\n            - targets: ['localhost:8080']\n          metrics_path: '/metrics'\nprocessors:\n  batch:\nexporters:\n  awsemf:\n    region: '{{ aws_region }}'\n    log_group_name: '/{{ project }}-{{ env }}/ecs/{{ item }}'\n    log_stream_name: 'adot-metrics'\n    namespace: 'Pardos/ECS'\n    dimension_rollup_option: 'NoDimensionRollup'\n    resource_to_telemetry_conversion:\n      enabled: true\nservice:\n  pipelines:\n    metrics:\n      receivers: [prometheus]\n      processors: [batch]\n      exporters: [awsemf]"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/{{ project }}-{{ env }}/ecs/adot",
+          "awslogs-region": "{{ aws_region }}",
+          "awslogs-stream-prefix": "adot"
+        }
+      }
+    }
+  ]
+}
