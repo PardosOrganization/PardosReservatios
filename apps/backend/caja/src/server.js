@@ -19,6 +19,7 @@ import express from 'express'
 import cors from 'cors'
 import { v4 as uuidv4 } from 'uuid'
 import client from 'prom-client'
+import { httpMetricsMiddleware, pagosRegistrados, pagosMontoSoles, turnosCaja } from './metrics.js'
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -46,6 +47,9 @@ app.use((req, res, next) => {
   }
   next()
 })
+
+// Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
+app.use(httpMetricsMiddleware)
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0]
@@ -147,6 +151,8 @@ app.post('/api/payments', (req, res) => {
     status: 'paid',
   }
   payments.unshift(newPayment)
+  pagosRegistrados.inc({ method: newPayment.method || 'desconocido' })
+  pagosMontoSoles.inc({ method: newPayment.method || 'desconocido' }, newPayment.amount)
   res.status(201).json(newPayment)
 })
 
@@ -174,6 +180,7 @@ app.post('/api/shift/open', (req, res) => {
     initialCash,
     status: 'open',
   }
+  turnosCaja.inc({ accion: 'abierto' })
   res.status(201).json(shift)
 })
 
@@ -201,6 +208,7 @@ app.post('/api/shift/close', (_req, res) => {
   }
 
   shift = null
+  turnosCaja.inc({ accion: 'cerrado' })
   res.json(summary)
 })
 
