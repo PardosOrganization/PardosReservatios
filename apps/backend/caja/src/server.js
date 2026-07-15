@@ -89,6 +89,7 @@ let payments = [
 ]
 
 let shift = null // Turno activo
+const initialPayments = JSON.parse(JSON.stringify(payments))
 
 // ── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -135,6 +136,9 @@ app.get('/api/payments/methods', (_req, res) => {
 /** POST /api/payments — Registrar nuevo cobro */
 app.post('/api/payments', (req, res) => {
   const data = req.body
+  if (!data.amount || data.amount <= 0 || !data.cashierId || !data.clientName) {
+    return res.status(400).json({ error: 'Faltan datos obligatorios o el monto es invalido' })
+  }
   const newPayment = {
     ...data,
     id: `P${uuidv4().slice(0, 6).toUpperCase()}`,
@@ -200,8 +204,18 @@ app.post('/api/shift/close', (_req, res) => {
   res.json(summary)
 })
 
-// ── Arranque ─────────────────────────────────────────────────────────────────
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`💰 svc-caja escuchando en http://0.0.0.0:${PORT}`)
-  console.log(`   ${payments.length} pagos cargados`)
-})
+// ── Exportacion ──────────────────────────────────────────────────────────────
+export function resetState() {
+  shift = null
+  payments = JSON.parse(JSON.stringify(initialPayments))
+}
+
+export {
+  todayStr,
+  daysAgo,
+  PAYMENT_METHODS,
+  payments,
+  shift
+}
+
+export default app

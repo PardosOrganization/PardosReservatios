@@ -117,6 +117,13 @@ jobs:
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando compilacion de backend para: ${{ matrix.service }}..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
+      - name: Instalar dependencias y ejecutar pruebas (Caja)
+        if: matrix.service == 'caja'
+        run: |
+          npm ci
+          npm run test
+        working-directory: apps/backend/caja
+
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -194,7 +201,6 @@ jobs:
     if: |
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' ||
-       github.ref == 'refs/heads/feat/cicd' ||
-       github.ref == 'refs/heads/feat/observabilidad-logs')
+       github.ref == 'refs/heads/develop')
     uses: ./.github/workflows/cd.yml
     secrets: inherit

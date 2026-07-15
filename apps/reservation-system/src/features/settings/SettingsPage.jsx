@@ -98,6 +98,74 @@ export default function SettingsPage() {
       </Card>
 
 
+      {/* Generador de Logs de Prueba */}
+      <Card title="Generador de Logs de Prueba" subtitle="Generar logs manuales para visualizarlos en Grafana y Loki">
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '8px 0' }}>
+          <button
+            onClick={async () => {
+              try {
+                const url = window.location.hostname === 'localhost'
+                  ? 'http://localhost:4001/api/debug/audit'
+                  : '/anfitriona/api/debug/audit'
+                const res = await fetch(url)
+                const data = await res.json()
+                alert('Log de Auditoría generado exitosamente en el servidor!')
+              } catch (err) {
+                console.error(err)
+                alert('Error al conectar con el servidor')
+              }
+            }}
+            style={{
+              padding: '12px 20px',
+              background: '#4f46e5',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            📝 Generar Log de Auditoría
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const url = window.location.hostname === 'localhost'
+                  ? 'http://localhost:4001/api/debug/error'
+                  : '/anfitriona/api/debug/error'
+                const res = await fetch(url)
+                if (res.status === 500) {
+                  alert('Log de Error Crítico generado exitosamente en el servidor!')
+                } else {
+                  alert('Error al provocar el log')
+                }
+              } catch (err) {
+                alert('Log de Error Crítico generado exitosamente en el servidor!')
+              }
+            }}
+            style={{
+              padding: '12px 20px',
+              background: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            ❌ Generar Log de Error Crítico
+          </button>
+        </div>
+      </Card>
+
+
       {/* Info del sistema */}
       <Card title="Información del sistema">
         <div className={styles.sysInfo}>
