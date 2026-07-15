@@ -2,7 +2,7 @@ name: CI Lint Validate and Build
 
 on:
   push:
-     branches: [main, develop, "feat/*"]
+     branches: [main, develop, qa, "feat/*"]
   pull_request:
     branches: [main, develop]
 
@@ -200,6 +200,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' ||
-       github.ref == 'refs/heads/develop')
+       github.ref == 'refs/heads/develop' ||
+       github.ref == 'refs/heads/qa')
     uses: ./.github/workflows/cd.yml
     secrets: inherit
