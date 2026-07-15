@@ -468,6 +468,18 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', service: 'svc-anfitriona', timestamp: new Date().toISOString() })
 })
 
+// ── DEBUG LOG GENERATORS ──────────────────────────────────────────────────────
+app.get('/api/debug/audit', (_req, res) => {
+  console.log('📝 [AUDIT] Evento de auditoría provocado manualmente: Usuario admin inició simulación de logs.')
+  res.json({ status: 'ok', message: 'Log de auditoria generado' })
+})
+
+app.get('/api/debug/error', (_req, res) => {
+  console.error('❌ [CRITICAL_ERROR] Error crítico provocado manualmente para pruebas de observabilidad en Loki: Fallo en consulta de base de datos simulado.')
+  res.status(500).json({ error: 'Error critico provocado manualmente' })
+})
+
+
 // ══════════════════════════════════════════════════════════════════════════════
 // RESERVAS
 // ══════════════════════════════════════════════════════════════════════════════
