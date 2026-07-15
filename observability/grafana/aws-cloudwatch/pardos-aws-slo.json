@@ -124,12 +124,18 @@
           },
           "region": "default",
           "id": "e1",
-          "expression": "100*(1-(SUM(FILL(m1,0))/SUM(m2)))",
+          "expression": "100*(1-(FILL(m1,0)/m2))",
           "label": "Tasa de éxito",
           "period": "",
           "metricQueryType": 0,
           "metricEditorMode": 1,
-          "queryMode": "Metrics"
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     },
@@ -574,12 +580,18 @@
           },
           "region": "default",
           "id": "e1",
-          "expression": "100*(1-(SUM(FILL(m1,0))/SUM(m2)))",
+          "expression": "100*(1-(FILL(m1,0)/m2))",
           "label": "Tasa de éxito",
           "period": "",
           "metricQueryType": 0,
           "metricEditorMode": 1,
-          "queryMode": "Metrics"
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     }
