@@ -1,4 +1,4 @@
-name: CI — Lint, Validate & Build
+name: CI Lint Validate and Build
 
 on:
   push:
@@ -17,16 +17,16 @@ jobs:
 
   # JOB 1: Terraform lint + Checkov
   lint-terraform:
-    name: Terraform Lint & Security Scan
+    name: Terraform Lint and Security Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
       - name: Notificar Inicio de Lint a Loki
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando Terraform Lint & Security Scan..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando Terraform Lint and Security Scan..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Instalar Terraform
@@ -60,7 +60,7 @@ jobs:
           )
         working-directory: IAC
 
-      - name: Checkov — Security Scan
+      - name: Checkov Security Scan
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: IAC
@@ -89,38 +89,38 @@ jobs:
         if: success()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Terraform Lint & Security Scan completado con éxito." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Terraform Lint and Security Scan completado con exito." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Notificar Fallo de Lint a Loki
         if: failure()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Terraform Lint & Security Scan falló. Revisa los logs en GitHub Actions." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Terraform Lint and Security Scan fallo. Revisa los logs en GitHub Actions." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
   # JOB 2: Build de los 4 microservicios backend
   build-backend:
-    name: Build Backend — ${{ matrix.service }}
+    name: Build Backend ${{ matrix.service }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         service: [anfitriona, mozo, caja, cocina]
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
       - name: Notificar Inicio de Build Backend a Loki
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando compilación de backend para: ${{ matrix.service }}..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando compilacion de backend para: ${{ matrix.service }}..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build imagen — svc-${{ matrix.service }}
+      - name: Build imagen svc-${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: apps/backend/${{ matrix.service }}
@@ -133,38 +133,38 @@ jobs:
         if: success()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Compilación exitosa para backend: ${{ matrix.service }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Compilacion exitosa para backend: ${{ matrix.service }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Notificar Fallo de Build Backend a Loki
         if: failure()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Falló la compilación del backend: ${{ matrix.service }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Fallo la compilacion del backend: ${{ matrix.service }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
   # JOB 3: Build de los 2 frontends
   build-frontend:
-    name: Build Frontend — ${{ matrix.app }}
+    name: Build Frontend ${{ matrix.app }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         app: [landing-page, reservation-system]
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
       - name: Notificar Inicio de Build Frontend a Loki
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando compilación de frontend para: ${{ matrix.app }}..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [START] Iniciando compilacion de frontend para: ${{ matrix.app }}..." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "start", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build imagen — ${{ matrix.app }}
+      - name: Build imagen ${{ matrix.app }}
         uses: docker/build-push-action@v5
         with:
           context: apps/${{ matrix.app }}
@@ -177,14 +177,14 @@ jobs:
         if: success()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Compilación exitosa para frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [SUCCESS] Compilacion exitosa para frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "success", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
       - name: Notificar Fallo de Build Frontend a Loki
         if: failure()
         run: |
           TIMESTAMP=$(date +%s%N)
-          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Falló la compilación del frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
+          BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Fallo la compilacion del frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
   # JOB 4: Despliegue en cadena (CD)
