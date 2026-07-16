@@ -265,17 +265,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_reservas_creadas_total",
           "statistic": "Sum",
-          "dimensions": {
-            "status": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.status')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_reservas_creadas_total) FROM \"Pardos/ECS\" GROUP BY \"status\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -310,17 +307,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_reservas_cambios_estado_total",
           "statistic": "Sum",
-          "dimensions": {
-            "status": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.status')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_reservas_cambios_estado_total) FROM \"Pardos/ECS\" GROUP BY \"status\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -355,17 +349,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_pagos_total",
           "statistic": "Sum",
-          "dimensions": {
-            "method": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.method')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_pagos_total) FROM \"Pardos/ECS\" GROUP BY \"method\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -401,17 +392,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_pagos_monto_soles_total",
           "statistic": "Sum",
-          "dimensions": {
-            "method": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.method')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_pagos_monto_soles_total) FROM \"Pardos/ECS\" GROUP BY \"method\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -446,17 +434,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_tickets_cambios_estado_total",
           "statistic": "Sum",
-          "dimensions": {
-            "status": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.status')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_tickets_cambios_estado_total) FROM \"Pardos/ECS\" GROUP BY \"status\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -491,17 +476,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "pardos_turnos_caja_total",
           "statistic": "Sum",
-          "dimensions": {
-            "accion": [
-              "*"
-            ]
-          },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "Turno ${PROP('Dim.accion')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(pardos_turnos_caja_total) FROM \"Pardos/ECS\" GROUP BY \"accion\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]

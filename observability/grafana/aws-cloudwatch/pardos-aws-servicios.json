@@ -30,13 +30,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "http_requests_total",
           "statistic": "Sum",
-          "dimensions": { "service": ["*"] },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.service')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(http_requests_total) FROM \"Pardos/ECS\" GROUP BY \"service\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -55,13 +56,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "http_requests_total",
           "statistic": "Sum",
-          "dimensions": { "service": ["*"], "status_code": ["500"] },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.service')} ${PROP('Dim.status_code')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(http_requests_total) FROM \"Pardos/ECS\" WHERE \"status_code\" = '500' GROUP BY \"service\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -80,13 +82,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "http_request_duration_seconds",
           "statistic": "Average",
-          "dimensions": { "service": ["*"] },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.service')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT AVG(http_request_duration_seconds) FROM \"Pardos/ECS\" GROUP BY \"service\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
@@ -105,13 +108,14 @@
           "namespace": "Pardos/ECS",
           "metricName": "http_requests_total",
           "statistic": "Sum",
-          "dimensions": { "service": ["*"], "route": ["*"] },
+          "dimensions": {},
           "matchExact": false,
           "region": "default",
-          "label": "${PROP('Dim.service')} ${PROP('Dim.route')}",
+          "label": "",
           "period": "",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
+          "sqlExpression": "SELECT SUM(http_requests_total) FROM \"Pardos/ECS\" GROUP BY \"service\", \"route\"",
+          "metricQueryType": 1,
+          "metricEditorMode": 1,
           "queryMode": "Metrics"
         }
       ]
