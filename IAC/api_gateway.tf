@@ -77,3 +77,13 @@ resource "aws_apigatewayv2_route" "reservations_public" {
   target    = "integrations/${aws_apigatewayv2_integration.this.id}"
 }
 
+# Rutas publicas de las APIs de los microservicios: los frontends no manejan
+# tokens de Cognito, por lo que la ruta catch-all con JWT respondia 401 a los
+# GET/PATCH y las reservas "desaparecian" al recargar la pagina.
+resource "aws_apigatewayv2_route" "microservices_api_public" {
+  for_each  = toset(["anfitriona", "mozo", "caja", "cocina"])
+  api_id    = aws_apigatewayv2_api.this.id
+  route_key = "ANY /${each.key}/api/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.this.id}"
+}
+
