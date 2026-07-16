@@ -156,6 +156,25 @@ app.post('/api/payments', (req, res) => {
   res.status(201).json(newPayment)
 })
 
+/** PATCH /api/payments/:id/void — Anular una cuenta (acción del Líder) */
+app.patch('/api/payments/:id/void', (req, res) => {
+  const idx = payments.findIndex(p => p.id === req.params.id)
+  if (idx === -1) return res.status(404).json({ error: 'Pago no encontrado' })
+  if (payments[idx].status === 'anulado') {
+    return res.status(409).json({ error: 'El pago ya está anulado' })
+  }
+  const { voidReason = '', voidedBy = '' } = req.body || {}
+  payments[idx] = {
+    ...payments[idx],
+    status: 'anulado',
+    voidReason,
+    voidedBy,
+    voidedAt: new Date().toISOString(),
+  }
+  console.log(`[INFO] Cuenta anulada. ID: ${payments[idx].id}, Por: ${voidedBy}, Motivo: ${voidReason || 'sin motivo'}`)
+  res.json(payments[idx])
+})
+
 // ══════════════════════════════════════════════════════════════════════════════
 // TURNOS DE CAJA
 // ══════════════════════════════════════════════════════════════════════════════
@@ -190,7 +209,7 @@ app.post('/api/shift/close', (_req, res) => {
 
   const today = todayStr()
   const shiftPayments = payments.filter(
-    p => p.cashierId === shift.cashierId && p.date === today
+    p => p.cashierId === shift.cashierId && p.date === today && p.status !== 'anulado'
   )
 
   const summary = {

@@ -132,13 +132,13 @@ export default function App() {
                       {/* Clientes */}
                       <Route path="/clientes"   element={<ClientsPage />} />
 
-                      {/* Caja — cajero y admin */}
-                      <Route element={<ProtectedRoute requiredPermission="canManageCash" />}>
+                      {/* Caja — cajero, líder y admin */}
+                      <Route element={<ProtectedRoute requiredPermission="canViewCash" />}>
                         <Route path="/caja"     element={<CashPage />} />
                       </Route>
 
-                      {/* Cocina — jefe_cocina y admin */}
-                      <Route element={<ProtectedRoute requiredPermission="canManageKitchenOrders" />}>
+                      {/* Cocina — jefe_cocina, mozo, líder y admin */}
+                      <Route element={<ProtectedRoute requiredPermission="canViewKitchen" />}>
                         <Route path="/cocina"   element={<KitchenPage />} />
                       </Route>
 

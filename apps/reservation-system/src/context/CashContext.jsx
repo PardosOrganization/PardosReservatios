@@ -89,7 +89,10 @@ export function CashProvider({ children }) {
     fetch(`${API_URL}/shift`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.status === 'open') {
+        // El backend responde { active, shift }; tambien se acepta el turno plano
+        if (data?.active && data.shift) {
+          setShift(data.shift)
+        } else if (data?.status === 'open') {
           setShift(data)
         } else {
           setShift(null)
@@ -144,7 +147,7 @@ export function CashProvider({ children }) {
     if (!shift) return null
     const today = format(new Date(), 'yyyy-MM-dd')
     const shiftPayments = payments.filter(
-      p => p.cashierId === shift.cashierId && p.date === today
+      p => p.cashierId === shift.cashierId && p.date === today && p.status !== 'anulado'
     )
     const summary = {
       ...shift,
@@ -196,14 +199,32 @@ export function CashProvider({ children }) {
     return newPayment
   }, [refreshPayments])
 
-  // Pagos de hoy
+  /**
+   * voidPayment — Anula una cuenta/boleta (acción exclusiva del Líder).
+   * El pago queda marcado como 'anulado' y se excluye de los totales.
+   */
+  const voidPayment = useCallback((id, reason = '', voidedBy = '') => {
+    const voidData = { status: 'anulado', voidReason: reason, voidedBy, voidedAt: new Date().toISOString() }
+    setPayments(prev => prev.map(p => p.id === id ? { ...p, ...voidData } : p))
+
+    fetch(`${API_URL}/payments/${id}/void`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(voidData)
+    })
+      .then(() => refreshPayments())
+      .catch(err => console.error("Error voiding payment", err))
+  }, [refreshPayments])
+
+  // Pagos de hoy (los anulados se muestran pero no suman)
   const todayStr = format(new Date(), 'yyyy-MM-dd')
   const todayPayments = payments.filter(p => p.date === todayStr)
-  const todayTotal    = todayPayments.reduce((s, p) => s + p.amount, 0)
+  const validTodayPayments = todayPayments.filter(p => p.status !== 'anulado')
+  const todayTotal    = validTodayPayments.reduce((s, p) => s + p.amount, 0)
 
   // Totales por método (hoy)
   const todayByMethod = PAYMENT_METHODS.reduce((acc, m) => {
-    acc[m.id] = todayPayments.filter(p => p.method === m.id).reduce((s, p) => s + p.amount, 0)
+    acc[m.id] = validTodayPayments.filter(p => p.method === m.id).reduce((s, p) => s + p.amount, 0)
     return acc
   }, {})
 
@@ -217,6 +238,7 @@ export function CashProvider({ children }) {
     openShift,
     closeShift,
     addPayment,
+    voidPayment,
   }
 
   return <CashContext.Provider value={value}>{children}</CashContext.Provider>

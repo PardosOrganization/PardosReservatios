@@ -324,3 +324,24 @@
   padding-top: 8px;
   border-top: 1px solid var(--color-border-light);
 }
+
+/* Botón para eliminar producto de una orden (solo Líder) */
+.removeItemBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.removeItemBtn:hover {
+  color: #e8453c;
+  background: rgba(232, 69, 60, 0.12);
+}

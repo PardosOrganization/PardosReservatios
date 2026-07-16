@@ -40,23 +40,35 @@ export const TICKET_STATUS_COLORS = {
   served:    '#95a5a6',
 }
 
-// ── Platos/ítems de ejemplo del menú de Pardos ────────────────────────────────
-export const MENU_ITEMS = [
-  { id: 'M01', name: 'Pollo a la Brasa 1/4',    category: 'Principal',       time: 20, price: 28.00 },
-  { id: 'M02', name: 'Pollo a la Brasa 1/2',    category: 'Principal',       time: 25, price: 48.00 },
-  { id: 'M03', name: 'Pollo a la Brasa Entero', category: 'Principal',       time: 35, price: 88.00 },
-  { id: 'M04', name: 'Papas fritas',             category: 'Acompañamiento',  time: 10, price:  9.00 },
-  { id: 'M05', name: 'Ensalada fresca',          category: 'Acompañamiento',  time:  5, price:  8.00 },
-  { id: 'M06', name: 'Cremas surtidas',          category: 'Acompañamiento',  time:  2, price:  4.00 },
-  { id: 'M07', name: 'Chicha morada jarra',      category: 'Bebida',          time:  3, price: 12.00 },
-  { id: 'M08', name: 'Gaseosa 1.5L',             category: 'Bebida',          time:  2, price:  9.00 },
-  { id: 'M09', name: 'Agua mineral 625ml',       category: 'Bebida',          time:  1, price:  4.50 },
-  { id: 'M10', name: 'Anticuchos (6 unid.)',     category: 'Entrada',         time: 15, price: 22.00 },
-  { id: 'M11', name: 'Choclo con queso',         category: 'Entrada',         time:  8, price: 10.00 },
-  { id: 'M12', name: 'Causa a la limeña',        category: 'Entrada',         time:  8, price: 14.00 },
-  { id: 'M13', name: 'Torta de chocolate',       category: 'Postre',          time:  5, price: 18.00 },
-  { id: 'M14', name: 'Helado 2 bolas',           category: 'Postre',          time:  3, price: 10.00 },
-]
+// ── Carta oficial de Pardos con tiempo estimado de preparación ────────────────
+import { MENU_ITEMS as CARTA_PARDOS } from '../domain/kitchen/menu'
+
+const PREP_TIME_BY_CATEGORY = {
+  'Aperitivos': 10,
+  'Especiales al Plato': 20,
+  'Especial del Mes': 15,
+  'Ensaladas para Compartir': 8,
+  'Ensaladas de Fondo': 10,
+  'Pardos Brasa': 20,
+  'Pardos Parrillero': 25,
+  'Para los Carnívoros': 25,
+  'Menú Kids': 15,
+  'Parrillas': 35,
+  'Pardos Brasa Familiar': 25,
+  'Guarniciones': 8,
+  'Adiciones': 5,
+  'Postres': 5,
+  'Bebidas': 3,
+  'Cócteles': 5,
+  'Cócteles Premium': 6,
+  'Cervezas y Vinos': 2,
+  'Infusiones': 3,
+}
+
+export const MENU_ITEMS = CARTA_PARDOS.map(item => ({
+  ...item,
+  time: PREP_TIME_BY_CATEGORY[item.category] ?? 10,
+}))
 
 // ── Tickets de ejemplo ────────────────────────────────────────────────────────
 const SAMPLE_TICKETS = [

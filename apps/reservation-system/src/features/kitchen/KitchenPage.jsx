@@ -19,7 +19,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { ChefHat, Plus, Clock, AlertTriangle, CheckCircle2, Flame } from 'lucide-react'
+import { ChefHat, Plus, Clock, AlertTriangle, CheckCircle2, Flame, Receipt, X, BadgePercent } from 'lucide-react'
 import {
   useKitchen,
   TICKET_STATUS,
@@ -27,6 +27,7 @@ import {
   TICKET_STATUS_COLORS,
   MENU_ITEMS,
 } from '../../context/KitchenContext'
+import { useAuth, ROLE_PERMISSIONS } from '../../context/AuthContext'
 import { Card, StatCard } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -63,11 +64,13 @@ const STATUS_ICON = {
 }
 
 // ── Ticket card ───────────────────────────────────────────────────────────────
-function TicketCard({ ticket, onAdvance, onBack }) {
+function TicketCard({ ticket, perms, onAdvance, onBack, onAddItems, onRemoveItem, onRequestBill, onDiscount }) {
   const currentIdx = STATUS_FLOW.indexOf(ticket.status)
   const nextStatus = STATUS_FLOW[currentIdx + 1]
   const prevStatus = STATUS_FLOW[currentIdx - 1]
   const color = TICKET_STATUS_COLORS[ticket.status]
+  const canBill = perms.canRequestBill && !ticket.billRequested &&
+    [TICKET_STATUS.READY, TICKET_STATUS.SERVED].includes(ticket.status)
 
   return (
     <article className={`${styles.ticket} ${ticket.priority === 'high' ? styles.ticketHigh : ''}`}
@@ -95,9 +98,31 @@ function TicketCard({ ticket, onAdvance, onBack }) {
             <span className={styles.itemQty}>{item.qty}×</span>
             <span className={styles.itemName}>{item.name}</span>
             {item.notes && <span className={styles.itemNote}>({item.notes})</span>}
+            {perms.canRemoveOrderItems && ticket.items.length > 1 && (
+              <button
+                type="button"
+                className={styles.removeItemBtn}
+                title="Eliminar producto (solo Líder)"
+                onClick={() => onRemoveItem(ticket, i)}
+              >
+                <X size={12} />
+              </button>
+            )}
           </li>
         ))}
       </ul>
+
+      {/* Badges de estado del pedido */}
+      {ticket.billRequested && (
+        <p className={styles.ticketNote} style={{ color: '#2c3e88' }}>
+          <Receipt size={12} /> Pre-cuenta solicitada
+        </p>
+      )}
+      {ticket.discount > 0 && (
+        <p className={styles.ticketNote} style={{ color: '#27ae60' }}>
+          <BadgePercent size={12} /> Descuento autorizado: S/ {Number(ticket.discount).toFixed(2)} ({ticket.discountBy})
+        </p>
+      )}
 
       {/* Notas especiales */}
       {ticket.notes && (
@@ -108,12 +133,12 @@ function TicketCard({ ticket, onAdvance, onBack }) {
 
       {/* Acciones */}
       <div className={styles.ticketActions}>
-        {prevStatus && prevStatus !== TICKET_STATUS.SERVED && (
+        {perms.canUpdateKitchenStatus && prevStatus && prevStatus !== TICKET_STATUS.SERVED && (
           <Button variant="ghost" size="sm" onClick={() => onBack(ticket.id, prevStatus)}>
             ← Atrás
           </Button>
         )}
-        {nextStatus && (
+        {perms.canUpdateKitchenStatus && nextStatus && (
           <Button
             variant={nextStatus === TICKET_STATUS.READY ? 'success' : 'primary'}
             size="sm"
@@ -121,6 +146,21 @@ function TicketCard({ ticket, onAdvance, onBack }) {
             onClick={() => onAdvance(ticket.id, nextStatus)}
           >
             {TICKET_STATUS_LABELS[nextStatus]}
+          </Button>
+        )}
+        {perms.canAddOrderItems && ticket.status !== TICKET_STATUS.SERVED && (
+          <Button variant="ghost" size="sm" icon={<Plus size={13} />} onClick={() => onAddItems(ticket)}>
+            Ítems
+          </Button>
+        )}
+        {canBill && (
+          <Button variant="secondary" size="sm" icon={<Receipt size={13} />} onClick={() => onRequestBill(ticket)}>
+            Pre-cuenta
+          </Button>
+        )}
+        {perms.canApplyDiscounts && !ticket.paid && (
+          <Button variant="ghost" size="sm" icon={<BadgePercent size={13} />} onClick={() => onDiscount(ticket)}>
+            Descuento
           </Button>
         )}
       </div>
@@ -131,7 +171,9 @@ function TicketCard({ ticket, onAdvance, onBack }) {
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function KitchenPage() {
   const { activeTickets, tickets, pendingCount, preparingCount, readyCount,
-          addTicket, updateTicketStatus, menuItems } = useKitchen()
+          addTicket, updateTicketStatus, updateTicket } = useKitchen()
+  const { user } = useAuth()
+  const perms = ROLE_PERMISSIONS[user?.role] || {}
 
   const [isOpen, setOpen] = useState(false)
   const [newTicket, setNewTicket] = useState({
@@ -139,6 +181,10 @@ export default function KitchenPage() {
     priority: 'normal', notes: '', items: [],
   })
   const [selectedItems, setSelected] = useState([])
+  const [addItemsTicket, setAddItemsTicket] = useState(null)   // ticket al que se agregan ítems
+  const [extraItems, setExtraItems] = useState([])
+  const [discountTicket, setDiscountTicket] = useState(null)
+  const [discountAmount, setDiscountAmount] = useState('')
 
   // Tickets por columna
   const pending   = activeTickets.filter(t => t.status === TICKET_STATUS.PENDING)
@@ -171,11 +217,54 @@ export default function KitchenPage() {
       toast.error('Agrega al menos un ítem al pedido')
       return
     }
-    addTicket({ ...newTicket, items: selectedItems })
-    toast.success('Ticket de cocina creado')
+    addTicket({ ...newTicket, items: selectedItems, createdBy: user?.name })
+    toast.success('Comanda enviada a cocina')
     setOpen(false)
     setNewTicket({ tableId: '', clientName: '', guests: 2, priority: 'normal', notes: '', items: [] })
     setSelected([])
+  }
+
+  // ── Agregar ítems a una orden existente (mozo / líder) ─────────────────────
+  const toggleExtraItem = (item) => {
+    setExtraItems(prev => {
+      const exists = prev.find(i => i.menuId === item.id)
+      if (exists) return prev.filter(i => i.menuId !== item.id)
+      return [...prev, { menuId: item.id, name: item.name, price: item.price, qty: 1, notes: '' }]
+    })
+  }
+
+  const handleAddItems = () => {
+    if (extraItems.length === 0) { toast.error('Selecciona al menos un ítem'); return }
+    updateTicket(addItemsTicket.id, { items: [...addItemsTicket.items, ...extraItems] })
+    toast.success(`${extraItems.length} ítem(s) agregado(s) a la orden de Mesa ${addItemsTicket.tableId}`)
+    setAddItemsTicket(null)
+    setExtraItems([])
+  }
+
+  // ── Eliminar producto de una orden (solo Líder) ─────────────────────────────
+  const handleRemoveItem = (ticket, index) => {
+    const removed = ticket.items[index]
+    updateTicket(ticket.id, {
+      items: ticket.items.filter((_, i) => i !== index),
+      removals: [...(ticket.removals || []), { name: removed.name, qty: removed.qty, by: user?.name, at: new Date().toISOString() }],
+    })
+    toast.success(`"${removed.name}" eliminado de la orden por ${user?.name}`)
+  }
+
+  // ── Pre-cuenta (mozo / líder) ───────────────────────────────────────────────
+  const handleRequestBill = (ticket) => {
+    updateTicket(ticket.id, { billRequested: true, billRequestedBy: user?.name })
+    toast.success(`Pre-cuenta solicitada para Mesa ${ticket.tableId} — visible en Caja`)
+  }
+
+  // ── Descuento autorizado (solo Líder) ───────────────────────────────────────
+  const handleApplyDiscount = () => {
+    const amount = Number(discountAmount)
+    if (!amount || amount <= 0) { toast.error('Ingresa un monto de descuento válido'); return }
+    updateTicket(discountTicket.id, { discount: amount, discountBy: user?.name })
+    toast.success(`Descuento de S/ ${amount.toFixed(2)} autorizado para Mesa ${discountTicket.tableId}`)
+    setDiscountTicket(null)
+    setDiscountAmount('')
   }
 
   // Categorías únicas
@@ -189,9 +278,11 @@ export default function KitchenPage() {
           <h1 className={styles.title}>Panel de Cocina</h1>
           <p className={styles.subtitle}>Gestión de pedidos en tiempo real</p>
         </div>
-        <Button variant="primary" icon={<Plus size={16} />} onClick={() => setOpen(true)} id="btn-nuevo-ticket">
-          Nuevo Ticket
-        </Button>
+        {perms.canCreateKitchenOrders && (
+          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setOpen(true)} id="btn-nuevo-ticket">
+            Nuevo Ticket
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -216,8 +307,10 @@ export default function KitchenPage() {
               <div className={styles.colEmpty}>Sin pedidos pendientes 🎉</div>
             ) : (
               pending.map(t => (
-                <TicketCard key={t.id} ticket={t}
-                  onAdvance={handleAdvance} onBack={handleBack} />
+                <TicketCard key={t.id} ticket={t} perms={perms}
+                  onAdvance={handleAdvance} onBack={handleBack}
+                  onAddItems={setAddItemsTicket} onRemoveItem={handleRemoveItem}
+                  onRequestBill={handleRequestBill} onDiscount={setDiscountTicket} />
               ))
             )}
           </div>
@@ -235,8 +328,10 @@ export default function KitchenPage() {
               <div className={styles.colEmpty}>Nada en preparación</div>
             ) : (
               preparing.map(t => (
-                <TicketCard key={t.id} ticket={t}
-                  onAdvance={handleAdvance} onBack={handleBack} />
+                <TicketCard key={t.id} ticket={t} perms={perms}
+                  onAdvance={handleAdvance} onBack={handleBack}
+                  onAddItems={setAddItemsTicket} onRemoveItem={handleRemoveItem}
+                  onRequestBill={handleRequestBill} onDiscount={setDiscountTicket} />
               ))
             )}
           </div>
@@ -254,8 +349,10 @@ export default function KitchenPage() {
               <div className={styles.colEmpty}>Nada listo aún</div>
             ) : (
               ready.map(t => (
-                <TicketCard key={t.id} ticket={t}
-                  onAdvance={handleAdvance} onBack={handleBack} />
+                <TicketCard key={t.id} ticket={t} perms={perms}
+                  onAdvance={handleAdvance} onBack={handleBack}
+                  onAddItems={setAddItemsTicket} onRemoveItem={handleRemoveItem}
+                  onRequestBill={handleRequestBill} onDiscount={setDiscountTicket} />
               ))
             )}
           </div>
@@ -310,6 +407,63 @@ export default function KitchenPage() {
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button variant="primary" icon={<ChefHat size={15} />} onClick={handleCreateTicket}>
               Crear ticket ({selectedItems.length} ítems)
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal: Agregar ítems a una orden existente ── */}
+      <Modal isOpen={!!addItemsTicket} onClose={() => { setAddItemsTicket(null); setExtraItems([]) }}
+        title={addItemsTicket ? `Agregar ítems — Mesa ${addItemsTicket.tableId}` : ''} size="lg">
+        <div className={styles.ticketForm}>
+          <div className={styles.menuSection}>
+            <p className={styles.menuTitle}>Selecciona los ítems a agregar a la orden:</p>
+            {categories.map(cat => (
+              <div key={cat} className={styles.menuCategory}>
+                <h4 className={styles.catName}>{cat}</h4>
+                <div className={styles.menuGrid}>
+                  {MENU_ITEMS.filter(m => m.category === cat).map(item => {
+                    const isSelected = extraItems.some(i => i.menuId === item.id)
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`${styles.menuBtn} ${isSelected ? styles.menuBtnSel : ''}`}
+                        onClick={() => toggleExtraItem(item)}
+                      >
+                        <span>{item.name}</span>
+                        <span className={styles.menuTime}>S/ {item.price.toFixed(2)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={styles.formActions}>
+            <Button variant="ghost" onClick={() => { setAddItemsTicket(null); setExtraItems([]) }}>Cancelar</Button>
+            <Button variant="primary" icon={<Plus size={15} />} onClick={handleAddItems}>
+              Agregar a la orden ({extraItems.length})
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal: Descuento autorizado (Líder) ── */}
+      <Modal isOpen={!!discountTicket} onClose={() => { setDiscountTicket(null); setDiscountAmount('') }}
+        title={discountTicket ? `Autorizar descuento — Mesa ${discountTicket.tableId}` : ''} size="sm">
+        <div className={styles.ticketForm}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+            El descuento quedará registrado a tu nombre y se aplicará automáticamente
+            cuando Caja cobre esta orden.
+          </p>
+          <Input label="Monto del descuento (S/)" id="disc-amount" type="number" min={0} step={0.1}
+            placeholder="0.00" value={discountAmount}
+            onChange={e => setDiscountAmount(e.target.value)} />
+          <div className={styles.formActions}>
+            <Button variant="ghost" onClick={() => { setDiscountTicket(null); setDiscountAmount('') }}>Cancelar</Button>
+            <Button variant="success" icon={<BadgePercent size={15} />} onClick={handleApplyDiscount}>
+              Autorizar descuento
             </Button>
           </div>
         </div>
