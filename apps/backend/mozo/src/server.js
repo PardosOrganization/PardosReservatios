@@ -22,6 +22,9 @@ import cors from 'cors'
 import client from 'prom-client'
 import { httpMetricsMiddleware, notificacionesLeidas } from './metrics.js'
 
+// Inicializar contadores en 0 para Prometheus
+notificacionesLeidas.inc(0)
+
 const app = express()
 const PORT = process.env.PORT || 8080
 
