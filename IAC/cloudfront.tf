@@ -153,6 +153,11 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
 
+    # Sin cache: son APIs dinamicas, las respuestas deben ser siempre frescas
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+
     forwarded_values {
       query_string = true
       cookies {
@@ -168,6 +173,11 @@ resource "aws_cloudfront_distribution" "this" {
     target_origin_id           = "alb-dinamico"
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
+
+    # Sin cache: son APIs dinamicas, las respuestas deben ser siempre frescas
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
 
     forwarded_values {
       query_string = true
@@ -185,6 +195,11 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
 
+    # Sin cache: son APIs dinamicas, las respuestas deben ser siempre frescas
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+
     forwarded_values {
       query_string = true
       cookies {
@@ -200,6 +215,11 @@ resource "aws_cloudfront_distribution" "this" {
     target_origin_id           = "alb-dinamico"
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
+
+    # Sin cache: son APIs dinamicas, las respuestas deben ser siempre frescas
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
 
     forwarded_values {
       query_string = true

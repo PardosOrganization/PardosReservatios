@@ -326,6 +326,11 @@ export function ClientProvider({ children }) {
     return clients.find(c => c.phone === phone.trim()) || null
   }, [clients])
 
+  /** findByDni — Busca un cliente por DNI exacto (identificador único). */
+  const findByDni = useCallback((dni) => {
+    return clients.find(c => c.dni === dni.trim()) || null
+  }, [clients])
+
   const value = {
     clients,
     isLoading,
@@ -337,6 +342,7 @@ export function ClientProvider({ children }) {
     getClientById,
     incrementVisits,
     findByPhone,
+    findByDni,
   }
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>
