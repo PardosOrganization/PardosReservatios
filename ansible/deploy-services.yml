@@ -55,29 +55,59 @@
 
     - name: Definir si se debe desplegar a ECS
       ansible.builtin.set_fact:
-        should_deploy_ecs: "{{ ecs_cluster_status.stdout | trim != 'None' and ecs_cluster_status.stdout | trim != '' }}"
+        should_deploy_ecs: "{{ ecs_cluster_status.stdout | default('') | trim != 'None' and ecs_cluster_status.stdout | default('') | trim != '' }}"
+
+    - name: Verificar la existencia de cada servicio ECS en el cluster
+      ansible.builtin.command: >
+        aws ecs describe-services
+        --cluster {{ project }}-{{ env }}-cluster
+        --services svc-{{ item }}
+        --region {{ aws_region }}
+        --query "services[0].status"
+        --output text
+      loop: "{{ microservices }}"
+      register: service_checks
+      changed_when: false
+      failed_when: false
+      when: should_deploy_ecs
 
     - name: Generar definicion de tarea (Task Definition) desde plantilla Jinja2
       ansible.builtin.template:
         src: task-definition.json.j2
-        dest: "/tmp/td-new-{{ item }}.json"
-      loop: "{{ microservices }}"
-      when: should_deploy_ecs
+        dest: "/tmp/td-new-{{ item.item }}.json"
+      loop: "{{ service_checks.results | default([]) }}"
+      when:
+        - should_deploy_ecs
+        - item.stdout is defined
+        - item.stdout | trim != 'None'
+        - item.stdout | trim != ''
+        - item.stdout | trim != 'MISSING'
 
     - name: Registrar nueva revision de la task definition
       ansible.builtin.shell: |
-        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item }}.json
+        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item.item }}.json --region {{ aws_region }}
       args:
         executable: /bin/bash
-      loop: "{{ microservices }}"
-      when: should_deploy_ecs
+      loop: "{{ service_checks.results | default([]) }}"
+      when:
+        - should_deploy_ecs
+        - item.stdout is defined
+        - item.stdout | trim != 'None'
+        - item.stdout | trim != ''
+        - item.stdout | trim != 'MISSING'
 
     - name: Forzar nuevo despliegue del servicio ECS
       ansible.builtin.command: >
         aws ecs update-service
         --cluster {{ project }}-{{ env }}-cluster
-        --service svc-{{ item }}
-        --task-definition {{ project }}-{{ env }}-svc-{{ item }}
+        --service svc-{{ item.item }}
+        --task-definition {{ project }}-{{ env }}-svc-{{ item.item }}
         --force-new-deployment
-      loop: "{{ microservices }}"
-      when: should_deploy_ecs
+        --region {{ aws_region }}
+      loop: "{{ service_checks.results | default([]) }}"
+      when:
+        - should_deploy_ecs
+        - item.stdout is defined
+        - item.stdout | trim != 'None'
+        - item.stdout | trim != ''
+        - item.stdout | trim != 'MISSING'
