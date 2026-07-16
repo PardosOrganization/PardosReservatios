@@ -30,6 +30,12 @@ client.collectDefaultMetrics({ register: client.register })
 app.use(cors())
 app.use(express.json())
 
+// Endpoint de métricas de Prometheus (antes del middleware ALB)
+app.get(['/metrics', '/caja/metrics'], async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType)
+  res.send(await client.register.metrics())
+})
+
 
 
 // Middleware para soportar prefijos de enrutamiento del ALB en AWS
@@ -44,11 +50,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// Endpoint de métricas de Prometheus
-app.get('/metrics', async (req, res) => {
-  res.setHeader('Content-Type', client.register.contentType)
-  res.send(await client.register.metrics())
-})
+  // Removed metrics endpoint from here as it was moved above ALB middleware
 
 // Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
 app.use(httpMetricsMiddleware)
