@@ -72,11 +72,21 @@ export function CashProvider({ children }) {
     fetch(`${API_URL}/payments`)
       .then(res => res.json())
       .then(data => {
+        let incoming = []
         if (data && Array.isArray(data.value)) {
-          setPayments(data.value)
+          incoming = data.value
         } else if (Array.isArray(data)) {
-          setPayments(data)
+          incoming = data
         }
+        setPayments(prev => {
+          const map = new Map()
+          // Conservar los locales primero
+          prev.forEach(p => map.set(p.id, p))
+          // Sobrescribir con los del backend
+          incoming.forEach(p => map.set(p.id, p))
+          // Ordenar (los más recientes arriba)
+          return Array.from(map.values()).sort((a, b) => b.id.localeCompare(a.id))
+        })
       })
       .catch(err => {
         console.error("Error loading payments", err)
@@ -95,7 +105,8 @@ export function CashProvider({ children }) {
         } else if (data?.status === 'open') {
           setShift(data)
         } else {
-          setShift(null)
+          // Mitigación ALB: Si ya tenemos un turno activo, no lo borres porque el backend respondió null
+          setShift(prev => prev ? prev : null)
         }
       })
       .catch(() => {

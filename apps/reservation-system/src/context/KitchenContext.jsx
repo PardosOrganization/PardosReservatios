@@ -122,11 +122,21 @@ export function KitchenProvider({ children }) {
     fetch(`${API_URL}/tickets`)
       .then(res => res.json())
       .then(data => {
+        let incoming = []
         if (data && Array.isArray(data.value)) {
-          setTickets(data.value)
+          incoming = data.value
         } else if (Array.isArray(data)) {
-          setTickets(data)
+          incoming = data
         }
+        setTickets(prev => {
+          const map = new Map()
+          // Conservar los locales primero
+          prev.forEach(t => map.set(t.id, t))
+          // Sobrescribir con los del backend
+          incoming.forEach(t => map.set(t.id, t))
+          // Ordenar por fecha de creación descendente
+          return Array.from(map.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        })
       })
       .catch(err => {
         console.error("Error loading tickets", err)
