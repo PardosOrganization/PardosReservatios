@@ -58,7 +58,45 @@ export const ROLE_PERMISSIONS = {
     canManageMenu: true,
   },
 
-
+  lider: {
+    label: 'Líder · Jefe de Salón',
+    color: '#2c3e88',
+    // Gestión general / sistema (igual al administrador)
+    canManageUsers: true,
+    canConfigureSystem: true,
+    canViewIncomesChart: true,
+    canViewAdminDashboard: true,
+    canManageAllUsers: true,
+    canExportData: true,
+    canViewReports: true,
+    canViewHistory: true,
+    // Reservas y clientes
+    canManageReservations: true,
+    canViewAllReservations: true,
+    canCancelAnyReservation: true,
+    canDeleteReservations: true,
+    canManageClients: true,
+    canDeleteClients: true,
+    // Mesas
+    canManageTables: true,
+    canSeatGuests: true,
+    // Caja
+    canViewCash: true,
+    canManageCash: true,
+    canProcessPayments: true,
+    canApplyDiscounts: true,
+    canVoidPayments: true,
+    // Cocina / órdenes
+    canViewKitchen: true,
+    canManageKitchenOrders: true,
+    canCreateKitchenOrders: true,
+    canAddOrderItems: true,
+    canRemoveOrderItems: true,
+    canUpdateKitchenStatus: true,
+    canRequestBill: true,
+    // Menú
+    canManageMenu: true,
+  },
 
   cajero: {
     label: 'Cajero/a',
