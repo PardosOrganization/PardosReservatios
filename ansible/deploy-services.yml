@@ -25,6 +25,7 @@
       args:
         executable: /bin/bash
       changed_when: true
+      when: false # Omitido en CI/CD (ya logueado por GHA)
 
     - name: Build de la imagen por microservicio
       ansible.builtin.command: >
