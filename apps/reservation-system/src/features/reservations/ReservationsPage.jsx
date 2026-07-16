@@ -164,7 +164,7 @@ export default function ReservationsPage() {
     seatReservation, completeReservation,
     approveReservation, rejectReservation,
   } = useReservations()
-  const { addTicket } = useKitchen()
+  const { addTicket, deleteTicketByReservation } = useKitchen()
   const { user, hasPermission } = useAuth()
 
   const [search,       setSearch]     = useState('')
@@ -310,7 +310,10 @@ export default function ReservationsPage() {
               onEdit={hasPermission('canManageReservations') ? () => handleEdit(r) : null}
               onSeat={() => handleSeat(r)}
               onComplete={() => completeReservation(r.id)}
-              onCancel={(reason) => cancelReservation(r.id, reason)}
+              onCancel={(reason) => {
+                cancelReservation(r.id, reason)
+                deleteTicketByReservation(r.id)
+              }}
               canCancel={hasPermission('canCancelAnyReservation')}
             />
           ))}
