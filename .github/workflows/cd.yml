@@ -59,7 +59,7 @@ jobs:
           cd IAC
           terraform init
           terraform workspace select $TARGET_ENV || terraform workspace new $TARGET_ENV
-          terraform apply -target=aws_s3_bucket.frontend -target=aws_ecr_repository.this -target=aws_ecr_repository.loki -target=aws_ecs_service.loki -target=aws_iam_role_policy_attachment.ecs_task -var-file=$TF_VARS_FILE -auto-approve
+          terraform apply -target=aws_s3_bucket.frontend -target=aws_ecr_repository.this -target=aws_ecr_repository.loki -target=aws_ecs_service.loki -target=aws_iam_role_policy_attachment.ecs_task -target=aws_cloudfront_function.spa_router -target=aws_cloudfront_distribution.this -var-file=$TF_VARS_FILE -auto-approve
 
   # JOB 3: Build, tag y push de microservicios a ECR
   push-backend:
