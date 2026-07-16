@@ -75,15 +75,41 @@ function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, on
 
   const handleItemClick = (item, idx) => {
     if (!perms.canUpdateKitchenStatus) return
-    const newStatus = item.status === 'pending' ? 'ready' : 'pending'
+
+    let newStatus = 'pending'
+    if (item.status === 'pending' || !item.status) newStatus = 'preparing'
+    else if (item.status === 'preparing') newStatus = 'ready'
+    else if (item.status === 'ready') newStatus = 'pending'
+
     updateItemStatus(ticket.id, item.menuId, newStatus)
     
-    // Auto-advance ticket status if all items are ready
-    if (newStatus === 'ready' && readyItemsCount + 1 === totalItemsCount && ticket.status !== TICKET_STATUS.READY) {
+    // Auto-advance ticket status based on all items
+    const allItems = [...ticket.items]
+    allItems[idx] = { ...item, status: newStatus }
+
+    const allReady = allItems.every(i => i.status === 'ready')
+    const anyPreparingOrReady = allItems.some(i => i.status === 'preparing' || i.status === 'ready')
+    const allPending = allItems.every(i => i.status === 'pending' || !i.status)
+
+    if (allReady && ticket.status !== TICKET_STATUS.READY) {
       updateTicketStatus(ticket.id, TICKET_STATUS.READY)
-    } else if (newStatus === 'pending' && ticket.status === TICKET_STATUS.READY) {
+    } else if (!allReady && anyPreparingOrReady && ticket.status !== TICKET_STATUS.PREPARING) {
+      updateTicketStatus(ticket.id, TICKET_STATUS.PREPARING)
+    } else if (allPending && ticket.status !== TICKET_STATUS.PENDING) {
       updateTicketStatus(ticket.id, TICKET_STATUS.PENDING)
     }
+  }
+
+  const getItemStatusLabel = (status) => {
+    if (status === 'ready') return 'Listo ✓'
+    if (status === 'preparing') return 'Preparando >'
+    return 'Pendiente >'
+  }
+
+  const getItemStatusClass = (status) => {
+    if (status === 'ready') return styles.itemStatusReady
+    if (status === 'preparing') return styles.itemStatusPreparing
+    return styles.itemStatusPending
   }
 
   return (
@@ -125,14 +151,14 @@ function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, on
             <div className={styles.itemActionsMockup}>
               {perms.canUpdateKitchenStatus ? (
                 <button 
-                  className={`${styles.itemStatusBtn} ${item.status === 'ready' ? styles.itemStatusReady : styles.itemStatusPending}`}
+                  className={`${styles.itemStatusBtn} ${getItemStatusClass(item.status)}`}
                   onClick={() => handleItemClick(item, i)}
                 >
-                  {item.status === 'ready' ? 'Listo ✓' : 'Pendiente >'}
+                  {getItemStatusLabel(item.status)}
                 </button>
               ) : (
-                <span className={`${styles.itemStatusBtn} ${item.status === 'ready' ? styles.itemStatusReady : styles.itemStatusPending} ${styles.itemStatusDisabled}`}>
-                   {item.status === 'ready' ? 'Listo ✓' : 'Pendiente'}
+                <span className={`${styles.itemStatusBtn} ${getItemStatusClass(item.status)} ${styles.itemStatusDisabled}`}>
+                   {getItemStatusLabel(item.status).replace(' >', '')}
                 </span>
               )}
               
