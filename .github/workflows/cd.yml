@@ -1,19 +1,78 @@
 name: CD Push to ECR and Deploy to ECS
-# Trigger rebuild: repositorios ECR de dev creados exitosamente
 
 on:
+  push:
+    branches:
+      - develop
+      - qa
+      - main
   workflow_call:
 
 env:
   AWS_REGION: us-east-1
-  TARGET_ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || (github.ref == 'refs/heads/qa' && 'qa' || 'dev') }}
 
 jobs:
+  # JOB 1: Detección dinámica de entorno
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      target_env: ${{ steps.set-env.outputs.target_env }}
+      tfvars_file: ${{ steps.set-env.outputs.tfvars_file }}
+    steps:
+      - name: Determine Environment
+        id: set-env
+        run: |
+          REF="${{ github.ref }}"
+          if [[ "$REF" == "refs/heads/main" ]]; then
+            echo "target_env=prod" >> $GITHUB_OUTPUT
+            echo "tfvars_file=prod.tfvars" >> $GITHUB_OUTPUT
+          elif [[ "$REF" == "refs/heads/qa" ]]; then
+            echo "target_env=qa" >> $GITHUB_OUTPUT
+            echo "tfvars_file=qa.tfvars" >> $GITHUB_OUTPUT
+          else
+            echo "target_env=dev" >> $GITHUB_OUTPUT
+            echo "tfvars_file=dev.tfvars" >> $GITHUB_OUTPUT
+          fi
 
-  # JOB 1: Build, tag y push de microservicios a ECR
+  # JOB 2: Despliegue de infraestructura con Terraform
+  deploy-infra:
+    name: Deploy Infrastructure (Terraform)
+    runs-on: ubuntu-latest
+    needs: setup
+    env:
+      TARGET_ENV: ${{ needs.setup.outputs.target_env }}
+      TF_VARS_FILE: ${{ needs.setup.outputs.tfvars_file }}
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">=1.6.0"
+
+      - name: Terraform Init y Apply
+        run: |
+          cd iac
+          terraform init
+          terraform workspace select $TARGET_ENV || terraform workspace new $TARGET_ENV
+          terraform apply -var-file=$TF_VARS_FILE -auto-approve
+
+  # JOB 3: Build, tag y push de microservicios a ECR
   push-backend:
     name: Push Backend ${{ matrix.service }}
     runs-on: ubuntu-latest
+    needs: [setup, deploy-infra]
+    env:
+      TARGET_ENV: ${{ needs.setup.outputs.target_env }}
     strategy:
       fail-fast: false
       matrix:
@@ -66,10 +125,14 @@ jobs:
           TIMESTAMP=$(date +%s%N)
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Fallo la subida de backend ${{ matrix.service }} a ECR." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure", "component": "backend", "microservice": "${{ matrix.service }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
-  # JOB 2: Compilación y despliegue de frontends a S3
+
+  # JOB 4: Compilación y despliegue de frontends a S3
   push-frontend:
     name: Deploy Frontend ${{ matrix.app }}
     runs-on: ubuntu-latest
+    needs: [setup, deploy-infra]
+    env:
+      TARGET_ENV: ${{ needs.setup.outputs.target_env }}
     strategy:
       fail-fast: false
       matrix:
@@ -139,11 +202,13 @@ jobs:
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Fallo el despliegue del frontend ${{ matrix.app }} a S3." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
-  # JOB 3: Despliegue a ECS via Ansible
+  # JOB 5: Despliegue a ECS via Ansible
   deploy-ecs:
     name: Ansible Deploy to ECS
     runs-on: ubuntu-latest
-    needs: [push-backend, push-frontend]
+    needs: [setup, push-backend, push-frontend]
+    env:
+      TARGET_ENV: ${{ needs.setup.outputs.target_env }}
     steps:
       - name: Checkout del codigo
         uses: actions/checkout@v4
@@ -170,11 +235,10 @@ jobs:
       - name: Ejecutar playbook de despliegue
         run: |
           ansible-playbook -i ansible/hosts.ini ansible/deploy-services.yml \
-            -e "env=${{ env.TARGET_ENV }}" \
-            -e "image_tag=${{ github.sha }}" > ansible.log 2>&1 || (
+            --extra-vars "env=$TARGET_ENV image_tag=${{ github.sha }}" > ansible.log 2>&1 || (
               TIMESTAMP=$(date +%s%N)
               ERR_TEXT=$(tail -n 20 ansible.log)
-              BODY=$(jq -n --arg ts "$TIMESTAMP" --arg err "[CD] [ERROR] Ansible deploy failed:\n$ERR_TEXT" '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure"}, "values": [[$ts, $err]]}]}')
+              BODY=$(jq -n --arg ts "$TIMESTAMP" --arg err "[CD] [ERROR] Ansible deploy failed:\n$ERR_TEXT" '{"streams": [{"stream": {"env": "'$TARGET_ENV'", "service": "github-actions", "event": "failure"}, "values": [[$ts, $err]]}]}')
               curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
               exit 1
             )
@@ -194,3 +258,39 @@ jobs:
           TIMESTAMP=$(date +%s%N)
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CD] [ERROR] Fallo el despliegue a ECS (Ansible)." '{"streams": [{"stream": {"env": "${{ env.TARGET_ENV }}", "service": "github-actions", "event": "failure"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
+
+  # JOB 6: Promoción automática en cascada
+  promote-branch:
+    name: Promote Branch in Cascade
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-ecs]
+    if: |
+      success() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/qa')
+    steps:
+      - name: Checkout target branch (qa or main)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_MERGE_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge and Promote
+        run: |
+          REF="${{ github.ref }}"
+          if [[ "$REF" == "refs/heads/develop" ]]; then
+            echo "Promoting develop to qa..."
+            git checkout qa
+            git merge ${{ github.sha }} -m "chore: auto-merge develop into qa [skip ci]"
+            git push origin qa
+          elif [[ "$REF" == "refs/heads/qa" ]]; then
+            echo "Promoting qa to main..."
+            git checkout main
+            git merge ${{ github.sha }} -m "chore: auto-merge qa into main [skip ci]"
+            git push origin main
+          fi

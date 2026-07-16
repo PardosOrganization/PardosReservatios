@@ -193,14 +193,4 @@ jobs:
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Fallo la compilacion del frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
-  # JOB 4: Despliegue en cadena (CD)
-  trigger-cd:
-    name: Trigger CD Deployment
-    needs: [lint-terraform, build-backend, build-frontend]
-    if: |
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' ||
-       github.ref == 'refs/heads/develop' ||
-       github.ref == 'refs/heads/qa')
-    uses: ./.github/workflows/cd.yml
-    secrets: inherit
+
