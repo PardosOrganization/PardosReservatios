@@ -22,6 +22,16 @@ import { v4 as uuidv4 } from 'uuid'
 import client from 'prom-client'
 import { httpMetricsMiddleware, ticketsCreados, ticketsCambiosEstado } from './metrics.js'
 
+// Inicializar contadores en 0 para Prometheus
+const STATUS_LIST = ['pending', 'preparing', 'ready', 'served', 'cancelled']
+const PRIORITY_LIST = ['high', 'normal']
+for (const s of STATUS_LIST) {
+  ticketsCambiosEstado.inc({ status: s }, 0)
+}
+for (const p of PRIORITY_LIST) {
+  ticketsCreados.inc({ priority: p }, 0)
+}
+
 const app = express()
 const PORT = process.env.PORT || 8080
 

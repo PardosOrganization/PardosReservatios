@@ -73,6 +73,12 @@ const PAYMENT_METHODS = [
   { id: 'transferencia', label: 'Transferencia', icon: '🏦' },
 ]
 
+// Inicializar contadores en 0 para evitar que el primer incremento (increase) sea ignorado por Prometheus
+for (const m of PAYMENT_METHODS) {
+  pagosRegistrados.inc({ method: m.id }, 0)
+  pagosMontoSoles.inc({ method: m.id }, 0)
+}
+
 // ── Datos en memoria (seed) ─────────────────────────────────────────────────
 
 let payments = [
