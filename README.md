@@ -159,4 +159,4 @@ cd iac
 terraform destroy -var-file="dev.tfvars" -auto-approve
 
 
-Nota: Este comando destruirá bases de datos, redes, balanceadores y contenedores. El bucket de estado remoto de S3 y la tabla de DynamoDB creados en el Paso 2 deben eliminarse manualmente desde la consola de AWS si se desea borrar todo por completo.<!-- CD cascade test: 2026-07-15T19:50 -->
+Nota: Este comando destruirá bases de datos, redes, balanceadores y contenedores. El bucket de estado remoto de S3 y la tabla de DynamoDB creados en el Paso 2 deben eliminarse manualmente desde la consola de AWS si se desea borrar todo por completo.<!-- CD cascade test: 2026-07-15T21:30 -->
