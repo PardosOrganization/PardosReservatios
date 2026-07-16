@@ -290,6 +290,8 @@ export default function CashPage() {
       e.items = canEditItems
         ? 'Agrega al menos un ítem al pedido'
         : 'Selecciona el ticket de cocina a cobrar'
+    } else if (orderTotal <= 0) {
+      e.items = 'El total del pedido es S/ 0.00: revisa los precios de los ítems'
     }
     return e
   }
@@ -586,7 +588,7 @@ export default function CashPage() {
           <div className={styles.formActions}>
             <Button type="button" variant="ghost" onClick={() => { setPaymentOpen(false); setOrderItems([]); setSelectedTicketId('') }}>Cancelar</Button>
             <Button type="submit" variant="success" icon={<Receipt size={15} />}
-              disabled={orderItems.length === 0}>
+              disabled={orderItems.length === 0 || orderTotal <= 0}>
               Confirmar Pago y Generar Boleta
             </Button>
           </div>
