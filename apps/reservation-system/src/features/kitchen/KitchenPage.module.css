@@ -345,3 +345,111 @@
   color: #e8453c;
   background: rgba(232, 69, 60, 0.12);
 }
+
+/* ── Mockup Ticket Styles ────────────────── */
+.ticketHeaderMockup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.ticketHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.ticketTableMockup {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-primary);
+  text-transform: uppercase;
+}
+.ticketTimerWrapper {
+  margin-left: auto;
+}
+.ticketClientMockup {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin: 0;
+}
+.ticketGuestsMockup {
+  font-size: 11px;
+  color: var(--color-text-mid);
+}
+.ticketProgress {
+  font-size: 11px;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  background: var(--color-cream-dark);
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.itemRowMockup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--color-border-light);
+}
+.itemRowMockup:last-child {
+  border-bottom: none;
+}
+.itemInfoMockup {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-dark);
+}
+.itemQtyMockup {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.itemNameMockup {
+  font-weight: 500;
+}
+.itemActionsMockup {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.itemStatusBtn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.itemStatusBtn:active {
+  transform: scale(0.96);
+}
+.itemStatusPending {
+  background: #fdf3e7;
+  color: #e67e22;
+  border-color: #fce2c4;
+}
+.itemStatusPending:hover {
+  background: #fce2c4;
+}
+.itemStatusReady {
+  background: #e9f7ef;
+  color: #27ae60;
+  border-color: #c3e6cb;
+}
+.itemStatusReady:hover {
+  background: #d4edd9;
+}
+.itemStatusDisabled {
+  opacity: 0.7;
+  cursor: default;
+}

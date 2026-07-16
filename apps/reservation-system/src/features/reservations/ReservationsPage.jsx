@@ -17,6 +17,7 @@
 import { useState } from 'react'
 import { Plus, Search, CalendarCheck, Bell, CheckCircle2, XCircle, Clock, Users, Phone } from 'lucide-react'
 import { useReservations, RESERVATION_STATUS, STATUS_LABELS, STATUS_COLORS } from '../../context/ReservationContext'
+import { useKitchen } from '../../context/KitchenContext'
 import { useAuth } from '../../context/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
@@ -163,6 +164,7 @@ export default function ReservationsPage() {
     seatReservation, completeReservation,
     approveReservation, rejectReservation,
   } = useReservations()
+  const { addTicket } = useKitchen()
   const { user, hasPermission } = useAuth()
 
   const [search,       setSearch]     = useState('')
@@ -205,6 +207,20 @@ export default function ReservationsPage() {
 
   const handleReject = (id, reason) => {
     rejectReservation(id, reason)
+  }
+
+  const handleSeat = (reservation) => {
+    seatReservation(reservation.id)
+    addTicket({
+      tableId: reservation.tableId || 'TXX',
+      clientName: reservation.clientName,
+      guests: reservation.guests,
+      priority: reservation.occasion ? 'high' : 'normal',
+      notes: reservation.notes,
+      items: [],
+      reservationId: reservation.id,
+      createdBy: user?.name || 'Sistema',
+    })
   }
 
   return (
@@ -283,7 +299,7 @@ export default function ReservationsPage() {
               key={r.id}
               reservation={r}
               onEdit={hasPermission('canManageReservations') ? () => handleEdit(r) : null}
-              onSeat={() => seatReservation(r.id)}
+              onSeat={() => handleSeat(r)}
               onComplete={() => completeReservation(r.id)}
               onCancel={(reason) => cancelReservation(r.id, reason)}
               canCancel={hasPermission('canCancelAnyReservation')}

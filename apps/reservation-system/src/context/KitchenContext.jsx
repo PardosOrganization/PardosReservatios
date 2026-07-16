@@ -78,10 +78,11 @@ const SAMPLE_TICKETS = [
     clientName: 'Roberto Silva',
     guests: 2,
     status: TICKET_STATUS.PREPARING,
+    reservationId: null,
     items: [
-      { menuId: 'M01', name: 'Pollo a la Brasa 1/4',  qty: 2, price: 28.00, notes: '' },
-      { menuId: 'M04', name: 'Papas fritas',           qty: 2, price:  9.00, notes: 'Extra crujiente' },
-      { menuId: 'M07', name: 'Chicha morada jarra',    qty: 1, price: 12.00, notes: '' },
+      { menuId: 'M01', name: 'Pollo a la Brasa 1/4',  qty: 2, price: 28.00, notes: '', status: 'ready' },
+      { menuId: 'M04', name: 'Papas fritas',           qty: 2, price:  9.00, notes: 'Extra crujiente', status: 'pending' },
+      { menuId: 'M07', name: 'Chicha morada jarra',    qty: 1, price: 12.00, notes: '', status: 'ready' },
     ],
     priority: 'normal',
     notes: '',
@@ -89,19 +90,18 @@ const SAMPLE_TICKETS = [
   },
   {
     id: 'TK002',
-    tableId: 'T03',
-    clientName: 'María García',
-    guests: 4,
+    tableId: 'T06', // Matching screenshot
+    clientName: 'Anghelo', // Matching screenshot
+    guests: 2,
     status: TICKET_STATUS.PENDING,
+    reservationId: 'R_MOCK_1', // Link for cash
     items: [
-      { menuId: 'M02', name: 'Pollo a la Brasa 1/2',  qty: 2, price: 48.00, notes: '' },
-      { menuId: 'M04', name: 'Papas fritas',           qty: 4, price:  9.00, notes: '' },
-      { menuId: 'M10', name: 'Anticuchos (6 unid.)',   qty: 1, price: 22.00, notes: '' },
-      { menuId: 'M08', name: 'Gaseosa 1.5L',           qty: 2, price:  9.00, notes: '' },
-      { menuId: 'M13', name: 'Torta de chocolate',     qty: 1, price: 18.00, notes: 'Con vela de cumpleaños' },
+      { menuId: 'M10', name: 'Anticucho (1)', qty: 1, price: 9.90, notes: '', status: 'pending' },
+      { menuId: 'M06', name: 'Lomo a la Parrilla (Grande)', qty: 1, price: 54.90, notes: '', status: 'pending' },
+      { menuId: 'M11', name: 'Chorizos Cocktail (4)', qty: 1, price: 9.90, notes: '', status: 'pending' },
     ],
     priority: 'high',
-    notes: 'Cliente cumpleañeros — mesa VIP',
+    notes: 'Cliente de prueba',
     createdAt: new Date(Date.now() - 3 * 60000).toISOString(),
   },
 ]
@@ -169,6 +169,31 @@ export function KitchenProvider({ children }) {
   }, [refreshTickets])
 
   /**
+   * updateItemStatus — Avanza el estado de un ítem individual en un ticket.
+   */
+  const updateItemStatus = useCallback((ticketId, menuId, newStatus) => {
+    setTickets(prev =>
+      prev.map(t => {
+        if (t.id !== ticketId) return t
+        const newItems = t.items.map(item =>
+          item.menuId === menuId ? { ...item, status: newStatus } : item
+        )
+        // Check if all items are ready, to automatically advance the ticket?
+        // Let's just update the items.
+        return { ...t, items: newItems, updatedAt: new Date().toISOString() }
+      })
+    )
+
+    fetch(`${API_URL}/tickets/${ticketId}/items/${menuId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then(() => refreshTickets())
+      .catch(err => console.error("Error updating item status", err))
+  }, [refreshTickets])
+
+  /**
    * updateTicketStatus — Avanza el estado de un ticket.
    * @param {string} id
    * @param {string} newStatus - TICKET_STATUS value
@@ -220,6 +245,7 @@ export function KitchenProvider({ children }) {
     addTicket,
     updateTicketStatus,
     updateTicket,
+    updateItemStatus,
     menuItems: MENU_ITEMS,
   }
 

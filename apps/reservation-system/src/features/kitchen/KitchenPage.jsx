@@ -64,13 +64,27 @@ const STATUS_ICON = {
 }
 
 // ── Ticket card ───────────────────────────────────────────────────────────────
-function TicketCard({ ticket, perms, onAdvance, onBack, onAddItems, onRemoveItem, onRequestBill, onDiscount }) {
-  const currentIdx = STATUS_FLOW.indexOf(ticket.status)
-  const nextStatus = STATUS_FLOW[currentIdx + 1]
-  const prevStatus = STATUS_FLOW[currentIdx - 1]
+function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, onDiscount }) {
+  const { updateItemStatus, updateTicketStatus } = useKitchen()
   const color = TICKET_STATUS_COLORS[ticket.status]
   const canBill = perms.canRequestBill && !ticket.billRequested &&
     [TICKET_STATUS.READY, TICKET_STATUS.SERVED].includes(ticket.status)
+
+  const readyItemsCount = ticket.items.filter(i => i.status === 'ready').length
+  const totalItemsCount = ticket.items.length
+
+  const handleItemClick = (item, idx) => {
+    if (!perms.canUpdateKitchenStatus) return
+    const newStatus = item.status === 'pending' ? 'ready' : 'pending'
+    updateItemStatus(ticket.id, item.menuId, newStatus)
+    
+    // Auto-advance ticket status if all items are ready
+    if (newStatus === 'ready' && readyItemsCount + 1 === totalItemsCount && ticket.status !== TICKET_STATUS.READY) {
+      updateTicketStatus(ticket.id, TICKET_STATUS.READY)
+    } else if (newStatus === 'pending' && ticket.status === TICKET_STATUS.READY) {
+      updateTicketStatus(ticket.id, TICKET_STATUS.PENDING)
+    }
+  }
 
   return (
     <article className={`${styles.ticket} ${ticket.priority === 'high' ? styles.ticketHigh : ''}`}
@@ -80,34 +94,59 @@ function TicketCard({ ticket, perms, onAdvance, onBack, onAddItems, onRemoveItem
           <AlertTriangle size={11} /> Alta prioridad
         </div>
       )}
-      <div className={styles.ticketHeader}>
-        <div>
-          <span className={styles.ticketTable}>Mesa {ticket.tableId}</span>
-          <h3 className={styles.ticketClient}>{ticket.clientName}</h3>
+      
+      {/* Nuevo Header idéntico al mockup */}
+      <div className={styles.ticketHeaderMockup}>
+        <div className={styles.ticketHeaderRow}>
+          <span className={styles.ticketTableMockup}>MESA {ticket.tableId}</span>
+          <div className={styles.ticketTimerWrapper}>
+            <ElapsedTimer createdAt={ticket.createdAt} />
+          </div>
         </div>
-        <div className={styles.ticketMeta}>
-          <ElapsedTimer createdAt={ticket.createdAt} />
-          <span className={styles.ticketGuests}>👥 {ticket.guests}</span>
+        <div className={styles.ticketHeaderRow}>
+          <h3 className={styles.ticketClientMockup}>{ticket.clientName}</h3>
+          <span className={styles.ticketGuestsMockup}>👥 {ticket.guests}</span>
+        </div>
+        <div className={styles.ticketProgress}>
+          {readyItemsCount}/{totalItemsCount} ítems listos
         </div>
       </div>
 
-      {/* Items */}
+      {/* Items con botones individuales */}
       <ul className={styles.itemList}>
         {ticket.items.map((item, i) => (
-          <li key={i} className={styles.item}>
-            <span className={styles.itemQty}>{item.qty}×</span>
-            <span className={styles.itemName}>{item.name}</span>
-            {item.notes && <span className={styles.itemNote}>({item.notes})</span>}
-            {perms.canRemoveOrderItems && ticket.items.length > 1 && (
-              <button
-                type="button"
-                className={styles.removeItemBtn}
-                title="Eliminar producto (solo Líder)"
-                onClick={() => onRemoveItem(ticket, i)}
-              >
-                <X size={12} />
-              </button>
-            )}
+          <li key={i} className={styles.itemRowMockup}>
+            <div className={styles.itemInfoMockup}>
+              <span className={styles.itemQtyMockup}>{item.qty}×</span>
+              <span className={styles.itemNameMockup}>{item.name}</span>
+              {item.notes && <span className={styles.itemNote}>({item.notes})</span>}
+            </div>
+            
+            <div className={styles.itemActionsMockup}>
+              {perms.canUpdateKitchenStatus ? (
+                <button 
+                  className={`${styles.itemStatusBtn} ${item.status === 'ready' ? styles.itemStatusReady : styles.itemStatusPending}`}
+                  onClick={() => handleItemClick(item, i)}
+                >
+                  {item.status === 'ready' ? 'Listo ✓' : 'Pendiente >'}
+                </button>
+              ) : (
+                <span className={`${styles.itemStatusBtn} ${item.status === 'ready' ? styles.itemStatusReady : styles.itemStatusPending} ${styles.itemStatusDisabled}`}>
+                   {item.status === 'ready' ? 'Listo ✓' : 'Pendiente'}
+                </span>
+              )}
+              
+              {perms.canRemoveOrderItems && ticket.items.length > 1 && (
+                <button
+                  type="button"
+                  className={styles.removeItemBtn}
+                  title="Eliminar producto"
+                  onClick={() => onRemoveItem(ticket, i)}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -133,21 +172,6 @@ function TicketCard({ ticket, perms, onAdvance, onBack, onAddItems, onRemoveItem
 
       {/* Acciones */}
       <div className={styles.ticketActions}>
-        {perms.canUpdateKitchenStatus && prevStatus && prevStatus !== TICKET_STATUS.SERVED && (
-          <Button variant="ghost" size="sm" onClick={() => onBack(ticket.id, prevStatus)}>
-            ← Atrás
-          </Button>
-        )}
-        {perms.canUpdateKitchenStatus && nextStatus && (
-          <Button
-            variant={nextStatus === TICKET_STATUS.READY ? 'success' : 'primary'}
-            size="sm"
-            icon={STATUS_ICON[nextStatus]}
-            onClick={() => onAdvance(ticket.id, nextStatus)}
-          >
-            {TICKET_STATUS_LABELS[nextStatus]}
-          </Button>
-        )}
         {perms.canAddOrderItems && ticket.status !== TICKET_STATUS.SERVED && (
           <Button variant="ghost" size="sm" icon={<Plus size={13} />} onClick={() => onAddItems(ticket)}>
             Ítems
