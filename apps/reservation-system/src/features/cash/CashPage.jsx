@@ -421,12 +421,12 @@ export default function CashPage() {
              reservations.filter(r => r.date === filterDate && r.status === 'seated').map(r => (
                <div key={r.id} className={styles.resRow}>
                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                   <span className={styles.resTable}>MESA {r.table}</span>
-                   <span className={styles.resClient}>{r.client.name}</span>
+                   <span className={styles.resTable}>MESA {r.tableId}</span>
+                   <span className={styles.resClient}>{r.clientName}</span>
                  </div>
                  <span className={styles.resStatus}>En mesa</span>
                  <Button size="sm" variant="success" onClick={() => {
-                     setForm(f => ({ ...f, clientName: r.client.name, guests: String(r.guests) }))
+                     setForm(f => ({ ...f, clientName: r.clientName, guests: String(r.guests) }))
                      setPaymentOpen(true)
                  }}>$ Cobrar</Button>
                </div>
