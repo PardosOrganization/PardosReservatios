@@ -288,7 +288,8 @@ export default function KitchenPage() {
     setSelected(prev => {
       const exists = prev.find(i => i.menuId === item.id)
       if (exists) return prev.filter(i => i.menuId !== item.id)
-      return [...prev, { menuId: item.id, name: item.name, qty: 1, notes: '' }]
+      // Incluir el precio: la caja lo necesita para calcular el total del cobro
+      return [...prev, { menuId: item.id, name: item.name, price: item.price, qty: 1, notes: '' }]
     })
   }
 
