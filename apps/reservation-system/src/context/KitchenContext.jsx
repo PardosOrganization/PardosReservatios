@@ -146,31 +146,39 @@ export function KitchenProvider({ children }) {
 
   /**
    * addTicket — Crea un nuevo ticket de cocina.
+   * Envía al backend y usa el ID que devuelve el servidor.
    * @param {Object} data - { tableId, clientName, guests, items, notes, priority }
    */
   const addTicket = useCallback((data) => {
-    const ticket = {
+    // Optimistic: add locally with temp ID
+    const tempId = `TK${Date.now().toString().slice(-4)}`
+    const optimistic = {
       ...data,
-      id:        generateId(),
+      id:        tempId,
       status:    TICKET_STATUS.PENDING,
       createdAt: new Date().toISOString(),
     }
-    setTickets(prev => [ticket, ...prev])
+    setTickets(prev => [optimistic, ...prev])
 
+    // Send to backend and refresh to get the real server-generated ID
     fetch(`${API_URL}/tickets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ticket)
+      body: JSON.stringify(data)
     })
-      .then(() => refreshTickets())
-      .catch(err => console.error("Error adding ticket", err))
+      .then(res => res.json())
+      .then(serverTicket => {
+        // Replace the optimistic ticket with the server one
+        setTickets(prev => prev.map(t => t.id === tempId ? serverTicket : t))
+      })
+      .catch(err => console.warn("Backend sync failed for addTicket:", err))
 
-    return ticket
-  }, [refreshTickets])
+    return optimistic
+  }, [API_URL])
 
   /**
    * updateItemStatus — Avanza el estado de un ítem individual en un ticket.
-   * Actualiza localmente y luego persiste el ticket completo.
+   * Persiste con PATCH /tickets/:id (items array completo).
    */
   const updateItemStatus = useCallback((ticketId, menuId, newStatus) => {
     setTickets(prev =>
@@ -181,12 +189,12 @@ export function KitchenProvider({ children }) {
         )
         const updated = { ...t, items: newItems, updatedAt: new Date().toISOString() }
 
-        // Persist full ticket via PATCH /tickets/{id}
+        // Persist via PATCH /tickets/:id with updated items
         fetch(`${API_URL}/tickets/${ticketId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: newItems, updatedAt: updated.updatedAt })
-        }).catch(err => console.warn("Sync item status failed (offline mode)", err))
+          body: JSON.stringify({ items: newItems })
+        }).catch(err => console.warn("Backend sync failed for updateItemStatus:", err))
 
         return updated
       })
@@ -195,6 +203,7 @@ export function KitchenProvider({ children }) {
 
   /**
    * updateTicketStatus — Avanza el estado de un ticket.
+   * Usa PATCH /tickets/:id/status (endpoint que existe en el backend).
    * @param {string} id
    * @param {string} newStatus - TICKET_STATUS value
    */
@@ -206,15 +215,16 @@ export function KitchenProvider({ children }) {
       )
     )
 
-    fetch(`${API_URL}/tickets/${id}`, {
+    fetch(`${API_URL}/tickets/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus, updatedAt })
-    }).catch(err => console.warn("Sync ticket status failed (offline mode)", err))
+      body: JSON.stringify({ status: newStatus })
+    }).catch(err => console.warn("Backend sync failed for updateTicketStatus:", err))
   }, [API_URL])
 
   /**
    * updateTicket — Actualiza items o notas de un ticket pendiente.
+   * Usa PATCH /tickets/:id (endpoint genérico del backend).
    */
   const updateTicket = useCallback((id, updates) => {
     setTickets(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
@@ -223,19 +233,22 @@ export function KitchenProvider({ children }) {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
-    }).catch(err => console.warn("Sync ticket update failed (offline mode)", err))
+    }).catch(err => console.warn("Backend sync failed for updateTicket:", err))
   }, [API_URL])
 
   /**
    * deleteTicketByReservation — Elimina un ticket asociado a una reserva cancelada.
+   * Usa PATCH para marcar como "served" (el backend no tiene DELETE).
    */
   const deleteTicketByReservation = useCallback((reservationId) => {
     setTickets(prev => {
       const toDelete = prev.filter(t => t.reservationId === reservationId)
-      // Attempt to delete from server too
       toDelete.forEach(t => {
-        fetch(`${API_URL}/tickets/${t.id}`, { method: 'DELETE' })
-          .catch(err => console.warn("Sync ticket delete failed (offline mode)", err))
+        fetch(`${API_URL}/tickets/${t.id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: TICKET_STATUS.SERVED })
+        }).catch(err => console.warn("Backend sync failed for deleteTicket:", err))
       })
       return prev.filter(t => t.reservationId !== reservationId)
     })
