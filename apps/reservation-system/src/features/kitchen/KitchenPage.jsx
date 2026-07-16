@@ -79,7 +79,7 @@ function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, on
     let newStatus = 'pending'
     if (item.status === 'pending' || !item.status) newStatus = 'preparing'
     else if (item.status === 'preparing') newStatus = 'ready'
-    else if (item.status === 'ready') newStatus = 'pending'
+    else return // Ya está listo, no retrocede
 
     updateItemStatus(ticket.id, item.menuId, newStatus)
     
