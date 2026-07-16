@@ -9,7 +9,9 @@
       "pluginName": "CloudWatch"
     }
   ],
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -17,136 +19,257 @@
   "liveNow": false,
   "panels": [
     {
-      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "title": "Reservas Creadas",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "options": {
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "graphMode": "area"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "namespace": "Pardos/ECS",
-          "metricName": "pardos_reservas_creadas_total",
-          "statistic": "Sum",
-          "dimensions": {},
-          "matchExact": false,
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
+          "id": "e1",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"pardos_reservas_creadas_total\"', 'Sum'))",
           "label": "Reservas",
           "period": "",
           "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "queryMode": "Metrics"
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     },
     {
-      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
       "id": 2,
       "title": "Pagos Registrados",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "options": {
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "graphMode": "area"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "namespace": "Pardos/ECS",
-          "metricName": "pardos_pagos_total",
-          "statistic": "Sum",
-          "dimensions": {},
-          "matchExact": false,
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
+          "id": "e1",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"pardos_pagos_total\"', 'Sum'))",
           "label": "Pagos",
           "period": "",
           "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "queryMode": "Metrics"
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     },
     {
-      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
       "id": 3,
       "title": "Monto Vendido (S/)",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2
+        },
+        "overrides": []
+      },
       "options": {
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "graphMode": "area"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "namespace": "Pardos/ECS",
-          "metricName": "pardos_pagos_monto_soles_total",
-          "statistic": "Sum",
-          "dimensions": {},
-          "matchExact": false,
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
+          "id": "e1",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"pardos_pagos_monto_soles_total\"', 'Sum'))",
           "label": "Soles",
           "period": "",
           "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "queryMode": "Metrics"
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     },
     {
-      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
       "id": 4,
       "title": "Tickets de Cocina",
       "type": "stat",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "options": {
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
         "graphMode": "area"
       },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "namespace": "Pardos/ECS",
-          "metricName": "pardos_tickets_creados_total",
-          "statistic": "Sum",
-          "dimensions": {},
-          "matchExact": false,
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "region": "default",
+          "id": "e1",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"pardos_tickets_creados_total\"', 'Sum'))",
           "label": "Tickets",
           "period": "",
           "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "queryMode": "Metrics"
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "statistic": "Average",
+          "matchExact": true,
+          "hide": false
         }
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
       "id": 5,
       "title": "Reservas Creadas por Estado",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_reservas_creadas_total",
           "statistic": "Sum",
-          "dimensions": { "status": ["*"] },
+          "dimensions": {
+            "status": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.status')}",
@@ -158,20 +281,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
       "id": 6,
       "title": "Cambios de Estado de Reservas",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_reservas_cambios_estado_total",
           "statistic": "Sum",
-          "dimensions": { "status": ["*"] },
+          "dimensions": {
+            "status": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.status')}",
@@ -183,20 +326,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
       "id": 7,
       "title": "Pagos por Método",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_pagos_total",
           "statistic": "Sum",
-          "dimensions": { "method": ["*"] },
+          "dimensions": {
+            "method": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.method')}",
@@ -208,20 +371,41 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
       "id": 8,
       "title": "Monto Vendido por Método (S/)",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short", "decimals": 2 }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_pagos_monto_soles_total",
           "statistic": "Sum",
-          "dimensions": { "method": ["*"] },
+          "dimensions": {
+            "method": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.method')}",
@@ -233,20 +417,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
       "id": 9,
       "title": "Tickets de Cocina por Estado",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_tickets_cambios_estado_total",
           "statistic": "Sum",
-          "dimensions": { "status": ["*"] },
+          "dimensions": {
+            "status": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "${PROP('Dim.status')}",
@@ -258,20 +462,40 @@
       ]
     },
     {
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
       "id": 10,
       "title": "Turnos de Caja (aperturas y cierres)",
       "type": "timeseries",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
           "namespace": "Pardos/ECS",
           "metricName": "pardos_turnos_caja_total",
           "statistic": "Sum",
-          "dimensions": { "accion": ["*"] },
+          "dimensions": {
+            "accion": [
+              "*"
+            ]
+          },
           "matchExact": false,
           "region": "default",
           "label": "Turno ${PROP('Dim.accion')}",
@@ -285,8 +509,15 @@
   ],
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["pardos", "negocio", "cloudwatch"],
-  "time": { "from": "now-24h", "to": "now" },
+  "tags": [
+    "pardos",
+    "negocio",
+    "cloudwatch"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Pardos AWS - Métricas de Negocio",
