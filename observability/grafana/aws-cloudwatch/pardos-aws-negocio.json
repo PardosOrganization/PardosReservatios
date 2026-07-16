@@ -514,8 +514,9 @@
     "negocio",
     "cloudwatch"
   ],
+  "refresh": "30s",
   "time": {
-    "from": "now-24h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
