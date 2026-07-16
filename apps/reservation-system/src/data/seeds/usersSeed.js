@@ -8,15 +8,7 @@ export const MOCK_USERS = [
     avatar: 'CM',
     sucursal: 'Miraflores',
   },
-  {
-    id: 'u006',
-    name: 'Renato Salas',
-    email: 'lider@pardos.com',
-    password: 'lider123',
-    role: 'lider',
-    avatar: 'RS',
-    sucursal: 'Miraflores',
-  },
+
   {
     id: 'u002',
     name: 'Lucia Torres',
