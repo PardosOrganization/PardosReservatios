@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pardos · Inyector de Datos para Grafana</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background: #0f1117; color: #d8dee9; }
+    .card { background: #161a23; border: 1px solid #262b36; }
+    .card-header { font-weight: 600; }
+    .console {
+      background: #0a0c11; border: 1px solid #262b36; border-radius: .5rem;
+      height: 340px; overflow-y: auto; font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px; padding: .75rem; white-space: pre-wrap;
+    }
+    .console .ok  { color: #6ee7a8; }
+    .console .err { color: #ff6b6b; }
+    .console .inf { color: #8ab4f8; }
+    .console .dim { color: #6b7280; }
+    .lvl-btn { min-width: 90px; }
+    .badge-count { font-variant-numeric: tabular-nums; }
+    .dash-icon { font-size: 1.1rem; margin-right: .35rem; }
+    h1 { font-size: 1.4rem; }
+    .form-control, .form-select { background:#0a0c11; color:#d8dee9; border-color:#262b36; }
+    .form-control:focus { background:#0a0c11; color:#fff; border-color:#3b82f6; box-shadow:none; }
+  </style>
+</head>
+<body>
+<div class="container-fluid py-4 px-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h1 class="mb-0">🍗 Pardos · Inyector de Datos para Grafana</h1>
+    <div class="d-flex gap-3">
+      <span>✔️ OK: <span class="badge text-bg-success badge-count" id="statOk">0</span></span>
+      <span>✖️ Errores: <span class="badge text-bg-danger badge-count" id="statErr">0</span></span>
+      <span id="statusPill" class="badge text-bg-secondary">Inactivo</span>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="card mb-3">
+    <div class="card-body row g-2 align-items-end">
+      <div class="col-md-7">
+        <label class="form-label small mb-1">URL base del API Gateway</label>
+        <input id="baseUrl" class="form-control form-control-sm"
+               value="https://efa5866d8i.execute-api.us-east-1.amazonaws.com" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small mb-1">Rol (x-user-role)</label>
+        <input id="role" class="form-control form-control-sm" value="admin" />
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button id="btnStop" class="btn btn-outline-warning btn-sm w-100" disabled>⏹️ Detener</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Panel de dashboards -->
+    <div class="col-lg-7">
+      <div class="text-secondary small text-uppercase fw-bold mb-2">📁 DASHBOARDS</div>
+      <div id="dashboards" class="row g-3"></div>
+
+      <!-- Limpiar -->
+      <div class="card mt-3 border-danger">
+        <div class="card-header text-bg-danger">🧹 Zona peligrosa</div>
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="small text-secondary">
+            Borra <b>todas</b> las reservas y tickets, y <b>anula</b> todos los pagos.
+            Deja el sistema en limpio. (Los datos semilla vuelven en el próximo redeploy.)
+          </div>
+          <button id="btnClear" class="btn btn-danger">🗑️ Borrar todos los registros</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consola -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>📟 Consola en vivo</span>
+          <button id="btnClearLog" class="btn btn-sm btn-outline-secondary">limpiar</button>
+        </div>
+        <div class="card-body">
+          <div id="console" class="console"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-secondary small mt-3 mb-0">
+    Tras generar, ve a Grafana y pon el rango en <b>Last 15 minutes</b> con refresco de 5–30s.
+    Los datos tardan ~1 min en llegar (ECS → CloudWatch/Loki).
+    Nota: los logs del panel <i>Pipeline CI/CD</i> provienen de GitHub Actions y no se pueden simular desde aquí.
+  </p>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Estado
+// ─────────────────────────────────────────────────────────────────────────────
+const state = { running: false, stop: false, ok: 0, err: 0, timers: [] };
+const el = (id) => document.getElementById(id);
+const base = () => el('baseUrl').value.replace(/\/+$/, '');
+const role = () => el('role').value.trim() || 'admin';
+
+function log(msg, cls = 'dim') {
+  const c = el('console');
+  const line = document.createElement('div');
+  line.className = cls;
+  const t = new Date().toLocaleTimeString();
+  line.textContent = `[${t}] ${msg}`;
+  c.appendChild(line);
+  c.scrollTop = c.scrollHeight;
+}
+function setStatus(running) {
+  const pill = el('statusPill');
+  pill.textContent = running ? 'Generando…' : 'Inactivo';
+  pill.className = 'badge ' + (running ? 'text-bg-primary' : 'text-bg-secondary');
+  el('btnStop').disabled = !running;
+  document.querySelectorAll('.lvl-btn').forEach(b => b.disabled = running);
+  el('btnClear').disabled = running;
+}
+function bumpOk() { state.ok++; el('statOk').textContent = state.ok; }
+function bumpErr() { state.err++; el('statErr').textContent = state.err; }
+const sleep = (ms) => new Promise(r => { const id = setTimeout(r, ms); state.timers.push(id); });
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cliente HTTP
+// ─────────────────────────────────────────────────────────────────────────────
+async function api(method, path, { body, useRole = true, quiet = false } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (useRole) headers['x-user-role'] = role();
+  try {
+    const res = await fetch(base() + path, {
+      method, headers, body: body ? JSON.stringify(body) : undefined,
+    });
+    if (res.ok) { bumpOk(); if (!quiet) log(`${method} ${path} → ${res.status} ✔️`, 'ok'); }
+    else { bumpErr(); if (!quiet) log(`${method} ${path} → ${res.status} ✖️`, 'err'); }
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    bumpErr(); if (!quiet) log(`${method} ${path} → red/CORS: ${e.message}`, 'err');
+    return { ok: false, status: 0, data: null };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Datos de muestra
+// ─────────────────────────────────────────────────────────────────────────────
+const NOMBRES = ['María García','Roberto Silva','Ana López','Jorge Castillo','Isabel Torres',
+  'Luis Rojas','Carla Díaz','Pedro Núñez','Sofía Ramos','Diego Vargas','Lucía Flores','Andrés Peña'];
+const METODOS = ['efectivo','tarjeta','yape','transferencia'];
+const ESTADOS = ['requested','pending','approved','seated','completed','cancelled','rejected'];
+const FUENTES = ['web','phone','system','walk-in'];
+const PRIORIDADES = ['low','normal','high'];
+const TICKET_ESTADOS = ['pending','preparing','ready','served'];
+const OCASIONES = ['','Cumpleaños','Aniversario','Reunión de trabajo','Familiar'];
+
+const hoy = () => new Date().toISOString().slice(0, 10);
+const horaRnd = () => `${String(rnd(12, 22)).padStart(2,'0')}:${pick(['00','15','30','45'])}`;
+
+// IDs creados en esta sesión (para encadenar acciones)
+const created = { reservas: [], tickets: [], pagos: [] };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Acciones atómicas
+// ─────────────────────────────────────────────────────────────────────────────
+async function crearReserva() {
+  const r = await api('POST', '/anfitriona/api/reservations', { body: {
+    clientName: pick(NOMBRES), clientPhone: '9' + rnd(10000000, 99999999),
+    clientEmail: 'cliente@pardos.pe', date: hoy(), time: horaRnd(),
+    guests: rnd(1, 8), status: pick(ESTADOS), source: pick(FUENTES),
+    occasion: pick(OCASIONES),
+  }});
+  if (r.ok && r.data?.id) created.reservas.push(r.data.id);
+}
+async function actualizarReserva() {
+  if (!created.reservas.length) return crearReserva();
+  const id = pick(created.reservas);
+  await api('PATCH', `/anfitriona/api/reservations/${id}`, { body: { status: pick(ESTADOS) } });
+}
+async function pagar() {
+  const r = await api('POST', '/caja/api/payments', { body: {
+    clientName: pick(NOMBRES), cashierId: 'u002', cashierName: 'Inyector',
+    amount: rnd(30, 250) + Math.round(Math.random() * 100) / 100,
+    method: pick(METODOS), guests: rnd(1, 6),
+  }});
+  if (r.ok && r.data?.id) created.pagos.push(r.data.id);
+}
+async function anularPago() {
+  if (!created.pagos.length) { await pagar(); if (!created.pagos.length) return; }
+  const id = created.pagos.pop();
+  await api('PATCH', `/caja/api/payments/${id}/void`, { body: {
+    voidReason: pick(['Error de cobro','Cliente se retiró','Cortesía','Duplicado']),
+    voidedBy: role(),
+  }});
+}
+async function crearTicket() {
+  const r = await api('POST', '/cocina/api/tickets', { useRole: false, body: {
+    table: 'Mesa ' + rnd(1, 20), waiter: pick(NOMBRES),
+    priority: pick(PRIORIDADES),
+    items: [{ name: 'Pollo a la Brasa', qty: rnd(1, 4) }],
+  }});
+  if (r.ok && r.data?.id) created.tickets.push(r.data.id);
+}
+async function avanzarTicket() {
+  if (!created.tickets.length) return crearTicket();
+  const id = pick(created.tickets);
+  await api('PATCH', `/cocina/api/tickets/${id}/status`, { useRole: false, body: { status: pick(TICKET_ESTADOS) } });
+}
+async function logAudit()   { await api('GET', '/anfitriona/api/debug/audit'); }
+async function logError()   { await api('GET', '/anfitriona/api/debug/error', { quiet: false }); }
+async function traficoLectura() {
+  await api('GET', pick([
+    '/anfitriona/api/reservations', '/caja/api/payments',
+    '/cocina/api/tickets', '/mozo/api/tables', '/cocina/api/tickets/stats',
+  ]), { useRole: false, quiet: true });
+}
+
+// Acciones por dashboard (con pesos: repetir la acción = más frecuente)
+const POOLS = {
+  logs:     [crearReserva, crearReserva, actualizarReserva, logAudit, logError],
+  negocio:  [crearReserva, actualizarReserva, pagar, pagar, crearTicket, avanzarTicket],
+  pipeline: [pagar, anularPago, anularPago, crearReserva],
+  salud:    [traficoLectura, traficoLectura, traficoLectura, crearReserva],
+  slo:      [traficoLectura, traficoLectura, traficoLectura, traficoLectura, logError],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Patrones de intensidad (tamaños de ráfaga por tick)
+// ─────────────────────────────────────────────────────────────────────────────
+const PATRONES = {
+  bajo:   { bursts: [1,1,1,1,1,1],            gap: 3000 },  // pocos puntos, parejos
+  normal: { bursts: [4,1,5,2,6,1,3,0,2,1],    gap: 2600 },  // mixto: sube y baja, termina bajo
+  alto:   { bursts: [8,7,9,8,10,9,8,7],       gap: 2000 },  // todo alto y denso
+};
+
+const NOMBRE_DASH = {
+  logs: 'Pardos AWS - Logs y Auditoría', negocio: 'Pardos AWS - Métricas de Negocio',
+  pipeline: 'Pardos AWS - Pipeline CI/CD y Operaciones', salud: 'Pardos AWS - Salud de Servicios',
+  slo: 'SLO y Disponibilidad',
+};
+
+async function generar(dashKey, nivel) {
+  if (state.running) return;
+  state.running = true; state.stop = false; setStatus(true);
+  const pool = POOLS[dashKey];
+  const { bursts, gap } = PATRONES[nivel];
+  log(`▶️ ${NOMBRE_DASH[dashKey]} · nivel ${nivel.toUpperCase()} — arrancando`, 'inf');
+
+  for (let i = 0; i < bursts.length && !state.stop; i++) {
+    const n = bursts[i];
+    if (n > 0) log(`  · ráfaga ${i + 1}/${bursts.length}: ${n} operación(es)`, 'dim');
+    const jobs = [];
+    for (let k = 0; k < n; k++) jobs.push(pick(pool)());
+    await Promise.all(jobs);
+    if (i < bursts.length - 1 && !state.stop) await sleep(gap);
+  }
+
+  log(state.stop ? '⏹️ Detenido por el usuario.' : `✅ ${NOMBRE_DASH[dashKey]} · nivel ${nivel} completado.`,
+      state.stop ? 'err' : 'ok');
+  state.running = false; setStatus(false);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Limpieza total
+// ─────────────────────────────────────────────────────────────────────────────
+async function limpiar() {
+  if (state.running) return;
+  if (!confirm('¿Seguro? Esto borra TODAS las reservas y tickets, y anula TODOS los pagos.')) return;
+  state.running = true; state.stop = false; setStatus(true);
+  log('🧹 Iniciando limpieza total…', 'inf');
+
+  // Reservas
+  let r = await api('GET', '/anfitriona/api/reservations', { useRole: false, quiet: true });
+  const reservas = Array.isArray(r.data) ? r.data : [];
+  log(`  · ${reservas.length} reservas a eliminar`, 'dim');
+  for (const x of reservas) { if (state.stop) break; await api('DELETE', `/anfitriona/api/reservations/${x.id}`, { quiet: true }); }
+
+  // Tickets
+  r = await api('GET', '/cocina/api/tickets', { useRole: false, quiet: true });
+  const tickets = Array.isArray(r.data) ? r.data : [];
+  log(`  · ${tickets.length} tickets a eliminar`, 'dim');
+  for (const x of tickets) { if (state.stop) break; await api('DELETE', `/cocina/api/tickets/${x.id}`, { useRole: false, quiet: true }); }
+
+  // Pagos (no hay DELETE → se anulan)
+  r = await api('GET', '/caja/api/payments', { useRole: false, quiet: true });
+  const pagos = (Array.isArray(r.data) ? r.data : []).filter(p => p.status !== 'anulado');
+  log(`  · ${pagos.length} pagos a anular`, 'dim');
+  for (const x of pagos) { if (state.stop) break; await api('PATCH', `/caja/api/payments/${x.id}/void`, { body: { voidReason: 'Limpieza', voidedBy: role() }, quiet: true }); }
+
+  created.reservas = []; created.tickets = []; created.pagos = [];
+  log(state.stop ? '⏹️ Limpieza detenida.' : '✅ Sistema limpio.', state.stop ? 'err' : 'ok');
+  state.running = false; setStatus(false);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI: tarjetas de dashboards
+// ─────────────────────────────────────────────────────────────────────────────
+const DASHBOARDS = [
+  { key: 'logs',     icon: '📝', nombre: 'Pardos AWS - Logs y Auditoría',             desc: 'Reservas (AUDIT) + errores críticos' },
+  { key: 'negocio',  icon: '📊', nombre: 'Pardos AWS - Métricas de Negocio',          desc: 'Reservas, pagos, montos, tickets' },
+  { key: 'pipeline', icon: '🚀', nombre: 'Pardos AWS - Pipeline CI/CD y Operaciones', desc: 'Pagos y anulaciones de caja' },
+  { key: 'salud',    icon: '💚', nombre: 'Pardos AWS - Salud de Servicios',           desc: 'Tráfico a los 4 microservicios' },
+  { key: 'slo',      icon: '🎯', nombre: 'SLO y Disponibilidad',                      desc: 'Éxitos + errores (ratio)' },
+];
+const NIVELES = [
+  { id: 'bajo',   label: 'Bajo',   cls: 'btn-outline-info' },
+  { id: 'normal', label: 'Normal', cls: 'btn-outline-warning' },
+  { id: 'alto',   label: 'Alto',   cls: 'btn-outline-danger' },
+];
+
+const cont = el('dashboards');
+for (const d of DASHBOARDS) {
+  const col = document.createElement('div');
+  col.className = 'col-12';
+  col.innerHTML = `
+    <div class="card">
+      <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <div><span class="dash-icon">${d.icon}</span><b>${d.nombre}</b></div>
+          <div class="small text-secondary">${d.desc}</div>
+        </div>
+        <div class="btn-group" role="group">
+          ${NIVELES.map(n => `<button class="btn btn-sm lvl-btn ${n.cls}" data-dash="${d.key}" data-lvl="${n.id}">${n.label}</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  cont.appendChild(col);
+}
+
+document.querySelectorAll('.lvl-btn').forEach(b => {
+  b.addEventListener('click', () => generar(b.dataset.dash, b.dataset.lvl));
+});
+el('btnStop').addEventListener('click', () => { state.stop = true; state.timers.forEach(clearTimeout); state.timers = []; });
+el('btnClear').addEventListener('click', limpiar);
+el('btnClearLog').addEventListener('click', () => { el('console').innerHTML = ''; });
+
+log('Listo. Elige un dashboard y un nivel (Bajo / Normal / Alto) para inyectar datos.', 'inf');
+</script>
+</body>
+</html>
