@@ -65,13 +65,32 @@ const STATUS_ICON = {
 
 // ── Ticket card ───────────────────────────────────────────────────────────────
 function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, onDiscount }) {
-  const { updateItemStatus, updateTicketStatus } = useKitchen()
+  const { updateItemStatus, updateTicketStatus, updateTicket } = useKitchen()
   const color = TICKET_STATUS_COLORS[ticket.status]
   const canBill = perms.canRequestBill && !ticket.billRequested &&
     [TICKET_STATUS.READY, TICKET_STATUS.SERVED].includes(ticket.status)
 
   const readyItemsCount = ticket.items.filter(i => i.status === 'ready').length
   const totalItemsCount = ticket.items.length
+
+  const handlePrepareAll = () => {
+    if (!perms.canUpdateKitchenStatus) return
+    const newItems = ticket.items.map(i => ({ ...i, status: i.status === 'ready' ? 'ready' : 'preparing' }))
+    updateTicket(ticket.id, { items: newItems })
+    updateTicketStatus(ticket.id, TICKET_STATUS.PREPARING)
+  }
+
+  const handleReadyAll = () => {
+    if (!perms.canUpdateKitchenStatus) return
+    const newItems = ticket.items.map(i => ({ ...i, status: 'ready' }))
+    updateTicket(ticket.id, { items: newItems })
+    updateTicketStatus(ticket.id, TICKET_STATUS.READY)
+  }
+
+  const handleServe = () => {
+    if (!perms.canUpdateKitchenStatus) return
+    updateTicketStatus(ticket.id, TICKET_STATUS.SERVED)
+  }
 
   const handleItemClick = (item, idx) => {
     if (!perms.canUpdateKitchenStatus) return
@@ -198,6 +217,21 @@ function TicketCard({ ticket, perms, onAddItems, onRemoveItem, onRequestBill, on
 
       {/* Acciones */}
       <div className={styles.ticketActions}>
+        {perms.canUpdateKitchenStatus && ticket.items.length > 1 && ticket.status === TICKET_STATUS.PENDING && (
+          <Button variant="primary" size="sm" icon={<Flame size={13} />} onClick={handlePrepareAll} style={{ backgroundColor: '#2b5c8f', color: 'white' }}>
+            Preparar todo
+          </Button>
+        )}
+        {perms.canUpdateKitchenStatus && ticket.items.length > 1 && ticket.status === TICKET_STATUS.PREPARING && (
+          <Button variant="success" size="sm" icon={<CheckCircle2 size={13} />} onClick={handleReadyAll}>
+            Todo listo
+          </Button>
+        )}
+        {perms.canUpdateKitchenStatus && ticket.status === TICKET_STATUS.READY && (
+          <Button variant="ghost" size="sm" icon={<CheckCircle2 size={13} />} onClick={handleServe} style={{ color: '#27ae60', border: '1px solid #27ae60' }}>
+            Despachar (Borrar)
+          </Button>
+        )}
         {perms.canAddOrderItems && ticket.status !== TICKET_STATUS.SERVED && (
           <Button variant="ghost" size="sm" icon={<Plus size={13} />} onClick={() => onAddItems(ticket)}>
             Ítems
