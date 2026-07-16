@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import styles from './Modal.module.css'
 
@@ -42,7 +43,10 @@ export function Modal({ isOpen, onClose, title, size = 'md', children }) {
     if (e.target === overlayRef.current) onClose()
   }
 
-  return (
+  // Portal a document.body: si el modal queda dentro de un ancestro con
+  // transform (animaciones del layout), position:fixed deja de anclarse al
+  // viewport y el dialogo se sale de la pantalla.
+  return createPortal(
     <div
       ref={overlayRef}
       className={styles.overlay}
@@ -75,6 +79,7 @@ export function Modal({ isOpen, onClose, title, size = 'md', children }) {
         {/* Body */}
         <div className={styles.body}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
