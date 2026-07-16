@@ -71,10 +71,13 @@
       failed_when: false
       when: should_deploy_ecs
 
-    - name: Generar definicion de tarea (Task Definition) desde plantilla Jinja2
-      ansible.builtin.template:
-        src: task-definition.json.j2
-        dest: "/tmp/td-new-{{ item.item }}.json"
+    - name: Inicializar lista de servicios activos
+      ansible.builtin.set_fact:
+        active_microservices: []
+
+    - name: Determinar servicios activos a desplegar
+      ansible.builtin.set_fact:
+        active_microservices: "{{ active_microservices + [item.item] }}"
       loop: "{{ service_checks.results | default([]) }}"
       when:
         - should_deploy_ecs
@@ -83,31 +86,28 @@
         - item.stdout | trim != ''
         - item.stdout | trim != 'MISSING'
 
+    - name: Generar definicion de tarea (Task Definition) desde plantilla Jinja2
+      ansible.builtin.template:
+        src: task-definition.json.j2
+        dest: "/tmp/td-new-{{ item }}.json"
+      loop: "{{ active_microservices }}"
+      when: should_deploy_ecs
+
     - name: Registrar nueva revision de la task definition
       ansible.builtin.shell: |
-        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item.item }}.json --region {{ aws_region }}
+        aws ecs register-task-definition --cli-input-json file:///tmp/td-new-{{ item }}.json --region {{ aws_region }}
       args:
         executable: /bin/bash
-      loop: "{{ service_checks.results | default([]) }}"
-      when:
-        - should_deploy_ecs
-        - item.stdout is defined
-        - item.stdout | trim != 'None'
-        - item.stdout | trim != ''
-        - item.stdout | trim != 'MISSING'
+      loop: "{{ active_microservices }}"
+      when: should_deploy_ecs
 
     - name: Forzar nuevo despliegue del servicio ECS
       ansible.builtin.command: >
         aws ecs update-service
         --cluster {{ project }}-{{ env }}-cluster
-        --service svc-{{ item.item }}
-        --task-definition {{ project }}-{{ env }}-svc-{{ item.item }}
+        --service svc-{{ item }}
+        --task-definition {{ project }}-{{ env }}-svc-{{ item }}
         --force-new-deployment
         --region {{ aws_region }}
-      loop: "{{ service_checks.results | default([]) }}"
-      when:
-        - should_deploy_ecs
-        - item.stdout is defined
-        - item.stdout | trim != 'None'
-        - item.stdout | trim != ''
-        - item.stdout | trim != 'MISSING'
+      loop: "{{ active_microservices }}"
+      when: should_deploy_ecs
