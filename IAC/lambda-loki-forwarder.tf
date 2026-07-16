@@ -43,6 +43,13 @@ resource "aws_security_group" "lambda_loki" {
   }
 }
 
+# Log group explícito para que los logs de la Lambda respeten la retención definida
+# (sin esto, AWS lo crea automáticamente con retención "nunca expira")
+resource "aws_cloudwatch_log_group" "loki_forwarder" {
+  name              = "/aws/lambda/${local.name}-loki-forwarder"
+  retention_in_days = var.log_retention_days
+}
+
 resource "aws_lambda_function" "loki_forwarder" {
   filename         = data.archive_file.loki_forwarder.output_path
   source_code_hash = data.archive_file.loki_forwarder.output_base64sha256
@@ -51,6 +58,8 @@ resource "aws_lambda_function" "loki_forwarder" {
   handler          = "index.lambda_handler"
   runtime          = "python3.11"
   timeout          = 30
+
+  depends_on = [aws_cloudwatch_log_group.loki_forwarder]
 
   environment {
     variables = {
