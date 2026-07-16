@@ -449,6 +449,14 @@
 .itemStatusReady:hover {
   background: #d4edd9;
 }
+.itemStatusPreparing {
+  background: #ebf5fb;
+  color: #2980b9;
+  border-color: #d6eaf8;
+}
+.itemStatusPreparing:hover {
+  background: #d6eaf8;
+}
 .itemStatusDisabled {
   opacity: 0.7;
   cursor: default;
