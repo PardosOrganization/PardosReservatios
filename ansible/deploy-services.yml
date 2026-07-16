@@ -32,11 +32,13 @@
         -t {{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}
         {{ playbook_dir }}/../apps/backend/{{ item }}
       loop: "{{ microservices }}"
+      when: false # Omitido en CI/CD (ya compilado y subido por GHA)
 
     - name: Push de la imagen a ECR
       ansible.builtin.command: >
         docker push {{ ecr_registry }}/{{ project }}-{{ env }}-svc-{{ item }}:{{ image_tag }}
       loop: "{{ microservices }}"
+      when: false # Omitido en CI/CD (ya subido por GHA)
 
     # --- Actualizacion de ECS ---
     - name: Verificar si el cluster de ECS existe en AWS
