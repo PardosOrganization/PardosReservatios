@@ -43,8 +43,7 @@
     <div class="card-body row g-2 align-items-end">
       <div class="col-md-5">
         <label class="form-label small mb-1">URL base del API Gateway</label>
-        <input id="baseUrl" class="form-control form-control-sm"
-               value="https://efa5866d8i.execute-api.us-east-1.amazonaws.com" />
+        <input id="baseUrl" class="form-control form-control-sm" placeholder="https://…" />
       </div>
       <div class="col-md-2">
         <label class="form-label small mb-1">Rol (x-user-role)</label>
@@ -108,8 +107,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const state = { running: false, stop: false, ok: 0, err: 0, timers: [] };
 const el = (id) => document.getElementById(id);
-const base = () => el('baseUrl').value.replace(/\/+$/, '');
+const base = () => el('baseUrl').value.trim().replace(/\/+$/, '');
 const role = () => el('role').value.trim() || 'admin';
+
+// URL base por defecto:
+// · Servido desde CloudFront (http/https) → mismo dominio (same-origin, sin CORS) → funciona en cualquier PC.
+// · Abierto como archivo local (file://)   → apunta al API Gateway conocido.
+const API_GW_FALLBACK = 'https://efa5866d8i.execute-api.us-east-1.amazonaws.com';
+function baseUrlPorDefecto() {
+  return location.protocol.startsWith('http') ? location.origin : API_GW_FALLBACK;
+}
 
 function log(msg, cls = 'dim') {
   const c = el('console');
@@ -355,7 +362,9 @@ el('btnStop').addEventListener('click', () => { state.stop = true; state.timers.
 el('btnClear').addEventListener('click', limpiar);
 el('btnClearLog').addEventListener('click', () => { el('console').innerHTML = ''; });
 
-log('Listo. Elige un dashboard y un nivel (Bajo / Normal / Alto) para inyectar datos.', 'inf');
+el('baseUrl').value = baseUrlPorDefecto();
+log('Listo. Elige un dashboard y un nivel (Bajo ↘ / Normal ∿ / Alto ↗) para inyectar datos.', 'inf');
+log(`URL base: ${base()} ${location.protocol.startsWith('http') ? '(mismo dominio, sin CORS)' : '(archivo local → API Gateway)'}`, 'dim');
 </script>
 </body>
 </html>
