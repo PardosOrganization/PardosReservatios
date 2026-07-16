@@ -78,3 +78,229 @@
   padding-top: 8px;
   border-top: 1px solid var(--color-border-light);
 }
+
+/* ── Selector de platos de la carta (pre-pedido) ─────────────────────────── */
+
+.menuPicker {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+@media (max-width: 700px) {
+  .menuPicker { grid-template-columns: 1fr; }
+}
+
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.menuFilters {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+}
+
+.menuItems {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.menuCategoryTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 8px 0 4px;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 3px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+
+.menuItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menuItemName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.menuItemPrice {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.menuAddBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.menuAddBtn:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.menuEmpty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 12px 0;
+}
+
+.preOrderPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-left: 1px solid var(--color-border-light);
+  padding-left: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .preOrderPanel { border-left: none; padding-left: 0; border-top: 1px solid var(--color-border-light); padding-top: 12px; }
+}
+
+.preOrderTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.preOrderEmpty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 24px 8px;
+}
+
+.preOrderItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.preOrderItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+}
+
+.preOrderItemInfo {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.preOrderItemName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.preOrderItemPrice {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.preOrderItemControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qtyBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-mid);
+}
+
+.qtyBtn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.qtyValue {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.removeBtn:hover { color: var(--color-error); }
+
+.preOrderTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding-top: 10px;
+  border-top: 2px solid var(--color-border-light);
+  color: var(--color-text-dark);
+}

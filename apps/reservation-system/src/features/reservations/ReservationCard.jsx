@@ -19,7 +19,7 @@
  */
 
 import { useState } from 'react'
-import { Edit2, CheckCircle, UserCheck, XCircle, Clock, Users, MapPin, Phone, Star } from 'lucide-react'
+import { Edit2, CheckCircle, UserCheck, XCircle, Clock, Users, MapPin, Phone, Star, UtensilsCrossed } from 'lucide-react'
 import { RESERVATION_STATUS, STATUS_LABELS, STATUS_COLORS } from '../../context/ReservationContext'
 import { Button } from '../../components/ui/Button'
 import styles from './ReservationCard.module.css'
@@ -91,6 +91,25 @@ export default function ReservationCard({ reservation: r, onEdit, onSeat, onComp
         {/* Notas */}
         {r.notes && (
           <p className={styles.notes}>{r.notes}</p>
+        )}
+
+        {/* Pre-pedido */}
+        {Array.isArray(r.preOrder) && r.preOrder.length > 0 && (
+          <div className={styles.preOrder}>
+            <span className={styles.preOrderLabel}>
+              <UtensilsCrossed size={12} /> Pre-pedido
+            </span>
+            <ul className={styles.preOrderList}>
+              {r.preOrder.map(p => (
+                <li key={p.id}>
+                  {p.qty}× {p.name} — S/ {(p.price * p.qty).toFixed(2)}
+                </li>
+              ))}
+            </ul>
+            <div className={styles.preOrderTotal}>
+              Total: S/ {r.preOrder.reduce((s, p) => s + p.price * p.qty, 0).toFixed(2)}
+            </div>
+          </div>
         )}
 
         {/* ID */}

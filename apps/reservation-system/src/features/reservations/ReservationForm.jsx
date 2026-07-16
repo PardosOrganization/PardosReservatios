@@ -18,9 +18,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Search, UserPlus } from 'lucide-react'
+import { Search, UserPlus, Plus, Minus, Trash2 } from 'lucide-react'
 import { useClients } from '../../context/ClientContext'
 import { useReservations } from '../../context/ReservationContext'
+import { MENU_ITEMS, MENU_CATEGORIES } from '../../domain/kitchen/menu'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import toast from 'react-hot-toast'
@@ -58,6 +59,9 @@ export default function ReservationForm({ initialData, onSubmit, onCancel }) {
   const [dniQuery,     setDni]       = useState(initialData?.clientDni || '')
   const [clientFound,  setFound]     = useState(!!initialData?.clientId)
   const [isSubmitting, setSubmit]    = useState(false)
+  const [preOrder,     setPreOrder]  = useState(initialData?.preOrder || [])
+  const [menuSearch,   setMenuSearch]   = useState('')
+  const [menuCategory, setMenuCategory] = useState('')
 
   // Buscar cliente al escribir el DNI (identificador único)
   useEffect(() => {
@@ -124,10 +128,39 @@ export default function ReservationForm({ initialData, onSubmit, onCancel }) {
       toast.success('Nuevo cliente registrado automáticamente')
     }
 
-    onSubmit({ ...form, clientId })
+    onSubmit({ ...form, clientId, preOrder })
     setSubmit(false)
     toast.success(initialData ? 'Reserva actualizada' : 'Reserva creada correctamente')
   }
+
+  // ── Pre-pedido: agregar/quitar platos de la carta ──────────────────────────
+  const addDish = (item) => {
+    setPreOrder(prev => {
+      const existing = prev.find(p => p.id === item.id)
+      if (existing) {
+        return prev.map(p => p.id === item.id ? { ...p, qty: p.qty + 1 } : p)
+      }
+      return [...prev, { id: item.id, name: item.name, price: item.price, qty: 1 }]
+    })
+  }
+
+  const changeQty = (id, delta) => {
+    setPreOrder(prev =>
+      prev
+        .map(p => p.id === id ? { ...p, qty: p.qty + delta } : p)
+        .filter(p => p.qty > 0)
+    )
+  }
+
+  const removeDish = (id) => setPreOrder(prev => prev.filter(p => p.id !== id))
+
+  const preOrderTotal = preOrder.reduce((sum, p) => sum + p.price * p.qty, 0)
+
+  const filteredMenu = MENU_ITEMS.filter(m =>
+    (!menuCategory || m.category === menuCategory) &&
+    (!menuSearch || m.name.toLowerCase().includes(menuSearch.toLowerCase()))
+  )
+  const visibleCategories = [...new Set(filteredMenu.map(m => m.category))]
 
   // Mesas disponibles según capacidad seleccionada
   const availableTables = tables.filter(t => t.capacity >= form.guests)
@@ -284,6 +317,101 @@ export default function ReservationForm({ initialData, onSubmit, onCancel }) {
           value={form.notes}
           onChange={handleChange}
         />
+      </div>
+
+      {/* Pre-pedido de platos de la carta */}
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>Añadir platos al pedido (opcional)</h3>
+
+        <div className={styles.menuPicker}>
+          <div className={styles.menuList}>
+            <div className={styles.menuFilters}>
+              <Input
+                id="res-menu-search"
+                name="menuSearch"
+                placeholder="Buscar plato..."
+                value={menuSearch}
+                onChange={e => setMenuSearch(e.target.value)}
+                icon={<Search size={15} />}
+              />
+              <Select
+                id="res-menu-category"
+                name="menuCategory"
+                value={menuCategory}
+                onChange={e => setMenuCategory(e.target.value)}
+              >
+                <option value="">Todas las categorías</option>
+                {MENU_CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </Select>
+            </div>
+
+            <div className={styles.menuItems}>
+              {visibleCategories.map(cat => (
+                <div key={cat}>
+                  <div className={styles.menuCategoryTitle}>{cat}</div>
+                  {filteredMenu.filter(m => m.category === cat).map(item => (
+                    <div key={item.id} className={styles.menuItem}>
+                      <div className={styles.menuItemInfo}>
+                        <span className={styles.menuItemName}>{item.name}</span>
+                        <span className={styles.menuItemPrice}>S/ {item.price.toFixed(2)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.menuAddBtn}
+                        onClick={() => addDish(item)}
+                      >
+                        <Plus size={13} /> Agregar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              {filteredMenu.length === 0 && (
+                <p className={styles.menuEmpty}>No se encontraron platos.</p>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.preOrderPanel}>
+            <h4 className={styles.preOrderTitle}>Pre-pedido de reserva</h4>
+            {preOrder.length === 0 ? (
+              <p className={styles.preOrderEmpty}>Agrega platos del menú para armar el pedido</p>
+            ) : (
+              <>
+                <div className={styles.preOrderItems}>
+                  {preOrder.map(p => (
+                    <div key={p.id} className={styles.preOrderItem}>
+                      <div className={styles.preOrderItemInfo}>
+                        <span className={styles.preOrderItemName}>{p.name}</span>
+                        <span className={styles.preOrderItemPrice}>
+                          S/ {(p.price * p.qty).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className={styles.preOrderItemControls}>
+                        <button type="button" className={styles.qtyBtn} onClick={() => changeQty(p.id, -1)} aria-label="Quitar uno">
+                          <Minus size={12} />
+                        </button>
+                        <span className={styles.qtyValue}>{p.qty}</span>
+                        <button type="button" className={styles.qtyBtn} onClick={() => changeQty(p.id, 1)} aria-label="Agregar uno">
+                          <Plus size={12} />
+                        </button>
+                        <button type="button" className={styles.removeBtn} onClick={() => removeDish(p.id)} aria-label="Eliminar plato">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.preOrderTotal}>
+                  <span>Total pre-pedido</span>
+                  <strong>S/ {preOrderTotal.toFixed(2)}</strong>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Botones */}
