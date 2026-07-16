@@ -18,6 +18,15 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 
+const getUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('pardos_user'))
+    return user?.role || ''
+  } catch {
+    return ''
+  }
+}
+
 // ── Estados del ticket de cocina ──────────────────────────────────────────────
 export const TICKET_STATUS = {
   PENDING:     'pending',      // Recibido, aún no se empieza a preparar
@@ -119,7 +128,7 @@ export function KitchenProvider({ children }) {
     : '/cocina/api'
 
   const refreshTickets = useCallback(() => {
-    fetch(`${API_URL}/tickets`)
+    fetch(`${API_URL}/tickets`, { headers: { 'x-user-role': getUserRole() } })
       .then(res => res.json())
       .then(data => {
         let incoming = []
@@ -173,7 +182,7 @@ export function KitchenProvider({ children }) {
     // Send to backend and refresh to get the real server-generated ID
     fetch(`${API_URL}/tickets`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(data)
     })
       .then(res => res.json())
@@ -202,7 +211,7 @@ export function KitchenProvider({ children }) {
         // Persist via PATCH /tickets/:id with updated items
         fetch(`${API_URL}/tickets/${ticketId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
           body: JSON.stringify({ items: newItems })
         }).catch(err => console.warn("Backend sync failed for updateItemStatus:", err))
 
@@ -227,7 +236,7 @@ export function KitchenProvider({ children }) {
 
     fetch(`${API_URL}/tickets/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: newStatus })
     }).catch(err => console.warn("Backend sync failed for updateTicketStatus:", err))
   }, [API_URL])
@@ -241,7 +250,7 @@ export function KitchenProvider({ children }) {
 
     fetch(`${API_URL}/tickets/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(updates)
     }).catch(err => console.warn("Backend sync failed for updateTicket:", err))
   }, [API_URL])
@@ -256,7 +265,7 @@ export function KitchenProvider({ children }) {
       toDelete.forEach(t => {
         fetch(`${API_URL}/tickets/${t.id}/status`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
           body: JSON.stringify({ status: TICKET_STATUS.SERVED })
         }).catch(err => console.warn("Backend sync failed for deleteTicket:", err))
       })

@@ -71,6 +71,7 @@ describe('Caja Service Tests', () => {
     // REGISTRAR UN PAGO PARA ESTE TURNO
     await request(app)
       .post('/api/payments')
+      .set('x-user-role', 'cajero')
       .send({
         reservationId: 'R106',
         clientName: 'Pedro Perez',
@@ -88,4 +89,5 @@ describe('Caja Service Tests', () => {
     expect(res.body.totalAmount).toBe(50.00)
     expect(res.body.totalTx).toBe(1)
   })
+
 })

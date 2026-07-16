@@ -20,6 +20,7 @@ import cors from 'cors'
 import { v4 as uuidv4 } from 'uuid'
 import client from 'prom-client'
 import { httpMetricsMiddleware, pagosRegistrados, pagosMontoSoles, turnosCaja } from './metrics.js'
+import { requireRole } from './auth.js'
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -142,7 +143,7 @@ app.get('/api/payments/methods', (_req, res) => {
 })
 
 /** POST /api/payments — Registrar nuevo cobro */
-app.post('/api/payments', (req, res) => {
+app.post('/api/payments', requireRole(['admin', 'cajero']), (req, res) => {
   const data = req.body
   if (!data.amount || data.amount <= 0 || !data.cashierId || !data.clientName) {
     return res.status(400).json({ error: 'Faltan datos obligatorios o el monto es invalido' })
@@ -161,7 +162,7 @@ app.post('/api/payments', (req, res) => {
 })
 
 /** PATCH /api/payments/:id/void — Anular una cuenta (acción del Líder) */
-app.patch('/api/payments/:id/void', (req, res) => {
+app.patch('/api/payments/:id/void', requireRole(['admin']), (req, res) => {
   const idx = payments.findIndex(p => p.id === req.params.id)
   if (idx === -1) return res.status(404).json({ error: 'Pago no encontrado' })
   if (payments[idx].status === 'anulado') {
