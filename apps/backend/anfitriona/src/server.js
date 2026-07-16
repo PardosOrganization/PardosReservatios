@@ -587,6 +587,7 @@ app.post('/api/reservations', requireRole(['admin', 'hostess']), async (req, res
     const newReservation = result.rows[0]
 
     console.log(`[INFO] Nueva reserva creada con éxito. ID: ${newReservation.id}, Estado: ${newReservation.status}, Cliente: ${newReservation.clientName}, Personas: ${newReservation.guests}, Mesa: ${newReservation.tableId || 'Pendiente'}`)
+    console.log(`[AUDIT] reserva.creada | actor=${req.headers['x-user-role'] || 'desconocido'} | id=${newReservation.id} | cliente=${newReservation.clientName} | estado=${newReservation.status}`)
     reservasCreadas.inc({ status, source })
     res.status(201).json(formatReservation(newReservation))
   } catch (err) {
@@ -641,6 +642,7 @@ app.patch('/api/reservations/:id', requireRole(['admin', 'cajero', 'hostess']), 
       return res.status(404).json({ error: 'Reserva no encontrada' })
     }
     if (updates.status) reservasCambiosEstado.inc({ status: updates.status })
+    console.log(`[AUDIT] reserva.actualizada | actor=${req.headers['x-user-role'] || 'desconocido'} | id=${id} | campos=${Object.keys(updates).join(',')}`)
     res.json(formatReservation(result.rows[0]))
   } catch (err) {
     console.error('Error al actualizar reserva:', err)
@@ -656,6 +658,7 @@ app.delete('/api/reservations/:id', requireRole(['admin']), async (req, res) => 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Reserva no encontrada' })
     }
+    console.log(`[AUDIT] reserva.eliminada | actor=${req.headers['x-user-role'] || 'desconocido'} | id=${id}`)
     res.status(204).end()
   } catch (err) {
     console.error('Error al eliminar reserva:', err)
