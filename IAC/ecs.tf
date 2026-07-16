@@ -60,10 +60,12 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-        - job_name: 'app-metrics'
+        - job_name: 'svc-${each.key}'
           scrape_interval: 15s
           static_configs:
             - targets: ['localhost:8080']
+              labels:
+                service: 'svc-${each.key}'
           metrics_path: '/metrics'
 processors:
   batch:

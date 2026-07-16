@@ -230,15 +230,17 @@ resource "aws_ecs_task_definition" "loki" {
   container_definitions = jsonencode([
     {
       name      = "loki"
-      image     = "grafana/loki:3.0.0"
+      image     = "${aws_ecr_repository.loki.repository_url}:latest"
       essential = true
       portMappings = [{
         containerPort = 3100
         protocol      = "tcp"
       }]
-      command = ["-config.file=/etc/loki/local-config.yaml"]
+      # expand-env permite que el config lea LOKI_S3_BUCKET y AWS_REGION del entorno
+      command = ["-config.file=/etc/loki/loki-config-aws.yaml", "-config.expand-env=true"]
       environment = [
-        { name = "LOKI_S3_BUCKET", value = aws_s3_bucket.loki_storage.id }
+        { name = "LOKI_S3_BUCKET", value = aws_s3_bucket.loki_storage.id },
+        { name = "AWS_REGION", value = var.region }
       ]
       logConfiguration = {
         logDriver = "awslogs"

@@ -23,6 +23,12 @@ import cors from 'cors'
 import { v4 as uuidv4 } from 'uuid'
 import client from 'prom-client'
 import pg from 'pg'
+import {
+  httpMetricsMiddleware,
+  reservasCreadas,
+  reservasCambiosEstado,
+  clientesRegistrados,
+} from './metrics.js'
 
 const { Pool } = pg
 
@@ -230,6 +236,9 @@ app.use((req, res, next) => {
   }
   next()
 })
+
+// Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
+app.use(httpMetricsMiddleware)
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0]
@@ -556,6 +565,7 @@ app.post('/api/reservations', async (req, res) => {
     const newReservation = result.rows[0]
 
     console.log(`[INFO] Nueva reserva creada con éxito. ID: ${newReservation.id}, Estado: ${newReservation.status}, Cliente: ${newReservation.clientName}, Personas: ${newReservation.guests}, Mesa: ${newReservation.tableId || 'Pendiente'}`)
+    reservasCreadas.inc({ status, source })
     res.status(201).json(formatReservation(newReservation))
   } catch (err) {
     console.error('Error al insertar reserva en base de datos:', err)
@@ -606,6 +616,7 @@ app.patch('/api/reservations/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Reserva no encontrada' })
     }
+    if (updates.status) reservasCambiosEstado.inc({ status: updates.status })
     res.json(formatReservation(result.rows[0]))
   } catch (err) {
     console.error('Error al actualizar reserva:', err)
@@ -667,6 +678,7 @@ app.post('/api/clients', (req, res) => {
     vip: false,
   }
   clients.unshift(newClient)
+  clientesRegistrados.inc()
   res.status(201).json(newClient)
 })
 

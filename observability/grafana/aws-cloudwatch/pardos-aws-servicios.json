@@ -1,0 +1,229 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_CLOUDWATCH",
+      "label": "CloudWatch",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "cloudwatch",
+      "pluginName": "CloudWatch"
+    }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Peticiones HTTP por Servicio (Pardos/ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "Pardos/ECS",
+          "metricName": "http_requests_total",
+          "statistic": "Sum",
+          "dimensions": { "service": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.service')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "title": "Errores 5xx por Servicio (Pardos/ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "Pardos/ECS",
+          "metricName": "http_requests_total",
+          "statistic": "Sum",
+          "dimensions": { "service": ["*"], "status_code": ["500"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.service')} ${PROP('Dim.status_code')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "title": "Duración de Peticiones por Servicio (promedio)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "Pardos/ECS",
+          "metricName": "http_request_duration_seconds",
+          "statistic": "Average",
+          "dimensions": { "service": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.service')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "title": "Peticiones por Endpoint (Pardos/ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "Pardos/ECS",
+          "metricName": "http_requests_total",
+          "statistic": "Sum",
+          "dimensions": { "service": ["*"], "route": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.service')} ${PROP('Dim.route')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 5,
+      "title": "Uso de CPU por Servicio (ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "AWS/ECS",
+          "metricName": "CPUUtilization",
+          "statistic": "Average",
+          "dimensions": { "ServiceName": ["*"], "ClusterName": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.ServiceName')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 6,
+      "title": "Uso de Memoria por Servicio (ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "AWS/ECS",
+          "metricName": "MemoryUtilization",
+          "statistic": "Average",
+          "dimensions": { "ServiceName": ["*"], "ClusterName": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.ServiceName')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "id": 7,
+      "title": "Conexiones Activas a la BD (RDS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "AWS/RDS",
+          "metricName": "DatabaseConnections",
+          "statistic": "Average",
+          "dimensions": { "DBInstanceIdentifier": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.DBInstanceIdentifier')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 8,
+      "title": "CPU de la BD (RDS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "namespace": "AWS/RDS",
+          "metricName": "CPUUtilization",
+          "statistic": "Average",
+          "dimensions": { "DBInstanceIdentifier": ["*"] },
+          "matchExact": false,
+          "region": "default",
+          "label": "${PROP('Dim.DBInstanceIdentifier')}",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "queryMode": "Metrics"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["pardos", "servicios", "cloudwatch"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Pardos AWS - Salud de Servicios",
+  "uid": "pardos-aws-servicios",
+  "version": 1
+}

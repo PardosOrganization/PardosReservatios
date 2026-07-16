@@ -1,0 +1,198 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "templating": {
+    "list": [
+      {
+        "name": "servicio",
+        "label": "Servicio",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+        "query": "label_values(service)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+        "options": [],
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Tasa de Errores por Servicio (ventana 5m)",
+      "type": "timeseries",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "sum by (service) (count_over_time({service=~\"$servicio\"} |~ `(?i)(error|critical|exception)` [5m]))",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "title": "Volumen de Logs por Servicio (ventana 5m)",
+      "type": "timeseries",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "sum by (service) (count_over_time({service=~\"$servicio\"}[5m]))",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "title": "🔴 Errores Críticos y Excepciones",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service=~\"$servicio\"} |~ `(?i)(error|critical|exception)`",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "title": "📝 Auditoría (eventos AUDIT)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service=~\"$servicio\"} |= `[AUDIT]`",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 17 },
+      "id": 5,
+      "title": "💼 Eventos de Negocio (reservas creadas)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service=~\"$servicio\"} |~ `Nueva reserva|reserva creada|Semillas`",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 17 },
+      "id": 6,
+      "title": "🔄 Ciclo de Vida (arranques y conexiones a BD)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service=~\"$servicio\"} |~ `Conectado exitosamente|verificada/creada|escuchando|listening`",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
+      "id": 7,
+      "title": "📜 Todos los Logs (flujo completo)",
+      "type": "logs",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service=~\"$servicio\"}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["pardos", "logs", "loki"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Pardos AWS - Logs y Auditoría",
+  "uid": "pardos-aws-logs",
+  "version": 1
+}

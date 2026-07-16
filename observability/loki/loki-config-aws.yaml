@@ -1,0 +1,49 @@
+# Configuración de Loki para AWS (Fargate): almacena chunks e índice en S3.
+# El bucket y la región llegan por variables de entorno de la task definition
+# (requiere arrancar Loki con -config.expand-env=true).
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  path_prefix: /tmp/loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    s3:
+      bucketnames: ${LOKI_S3_BUCKET}
+      region: ${AWS_REGION}
+      s3forcepathstyle: false
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /tmp/loki/tsdb-index
+    cache_location: /tmp/loki/tsdb-cache
+
+compactor:
+  working_directory: /tmp/loki/compactor
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
