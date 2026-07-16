@@ -1,11 +1,6 @@
 name: CD Push to ECR and Deploy to ECS
 
 on:
-  push:
-    branches:
-      - develop
-      - qa
-      - main
   workflow_call:
 
 env:
@@ -61,7 +56,7 @@ jobs:
 
       - name: Terraform Init y Apply
         run: |
-          cd iac
+          cd IAC
           terraform init
           terraform workspace select $TARGET_ENV || terraform workspace new $TARGET_ENV
           terraform apply -var-file=$TF_VARS_FILE -auto-approve
@@ -286,11 +281,11 @@ jobs:
           if [[ "$REF" == "refs/heads/develop" ]]; then
             echo "Promoting develop to qa..."
             git checkout qa
-            git merge ${{ github.sha }} -m "chore: auto-merge develop into qa [skip ci]"
+            git merge ${{ github.sha }} -m "chore: auto-merge develop into qa"
             git push origin qa
           elif [[ "$REF" == "refs/heads/qa" ]]; then
             echo "Promoting qa to main..."
             git checkout main
-            git merge ${{ github.sha }} -m "chore: auto-merge qa into main [skip ci]"
+            git merge ${{ github.sha }} -m "chore: auto-merge qa into main"
             git push origin main
           fi

@@ -19,6 +19,7 @@ jobs:
   lint-terraform:
     name: Terraform Lint and Security Scan
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     steps:
       - name: Checkout del codigo
         uses: actions/checkout@v4
@@ -103,6 +104,7 @@ jobs:
   build-backend:
     name: Build Backend ${{ matrix.service }}
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     strategy:
       fail-fast: false
       matrix:
@@ -153,6 +155,7 @@ jobs:
   build-frontend:
     name: Build Frontend ${{ matrix.app }}
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feat/')
     strategy:
       fail-fast: false
       matrix:
@@ -193,4 +196,18 @@ jobs:
           BODY=$(jq -n --arg ts "$TIMESTAMP" --arg msg "[CI/CD] [ERROR] Fallo la compilacion del frontend: ${{ matrix.app }}." '{"streams": [{"stream": {"env": "dev", "service": "github-actions", "event": "failure", "component": "frontend", "app": "${{ matrix.app }}"}, "values": [[$ts, $msg]]}]}')
           curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
 
-
+  # JOB 4: Despliegue en cadena (CD)
+  trigger-cd:
+    name: Trigger CD Deployment
+    needs: [lint-terraform, build-backend, build-frontend]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' ||
+       github.ref == 'refs/heads/develop' ||
+       github.ref == 'refs/heads/qa') &&
+      (needs.lint-terraform.result == 'success' || needs.lint-terraform.result == 'skipped') &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped')
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit
