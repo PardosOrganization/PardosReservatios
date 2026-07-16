@@ -34,12 +34,10 @@ import { requireRole } from './auth.js'
 // Inicializar contadores en 0 para que Prometheus reciba datos desde el inicio
 clientesRegistrados.inc(0)
 const STATUS_LIST = ['requested', 'approved', 'rejected', 'cancelled', 'seated', 'completed', 'pending']
-const SOURCES_LIST = ['system', 'web', 'phone', 'in-person']
 for (const s of STATUS_LIST) {
   reservasCambiosEstado.inc({ status: s }, 0)
-  for (const src of SOURCES_LIST) {
-    reservasCreadas.inc({ status: s, source: src }, 0)
-  }
+  // Inicializamos solo con source 'system' para no duplicar 4 veces la leyenda en Grafana
+  reservasCreadas.inc({ status: s, source: 'system' }, 0)
 }
 
 const { Pool } = pg
