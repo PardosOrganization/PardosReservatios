@@ -170,6 +170,7 @@ export function KitchenProvider({ children }) {
 
   /**
    * updateItemStatus — Avanza el estado de un ítem individual en un ticket.
+   * Actualiza localmente y luego persiste el ticket completo.
    */
   const updateItemStatus = useCallback((ticketId, menuId, newStatus) => {
     setTickets(prev =>
@@ -178,20 +179,19 @@ export function KitchenProvider({ children }) {
         const newItems = t.items.map(item =>
           item.menuId === menuId ? { ...item, status: newStatus } : item
         )
-        // Check if all items are ready, to automatically advance the ticket?
-        // Let's just update the items.
-        return { ...t, items: newItems, updatedAt: new Date().toISOString() }
+        const updated = { ...t, items: newItems, updatedAt: new Date().toISOString() }
+
+        // Persist full ticket via PATCH /tickets/{id}
+        fetch(`${API_URL}/tickets/${ticketId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: newItems, updatedAt: updated.updatedAt })
+        }).catch(err => console.warn("Sync item status failed (offline mode)", err))
+
+        return updated
       })
     )
-
-    fetch(`${API_URL}/tickets/${ticketId}/items/${menuId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    })
-      .then(() => refreshTickets())
-      .catch(err => console.error("Error updating item status", err))
-  }, [refreshTickets])
+  }, [API_URL])
 
   /**
    * updateTicketStatus — Avanza el estado de un ticket.
@@ -199,20 +199,19 @@ export function KitchenProvider({ children }) {
    * @param {string} newStatus - TICKET_STATUS value
    */
   const updateTicketStatus = useCallback((id, newStatus) => {
+    const updatedAt = new Date().toISOString()
     setTickets(prev =>
       prev.map(t =>
-        t.id === id ? { ...t, status: newStatus, updatedAt: new Date().toISOString() } : t
+        t.id === id ? { ...t, status: newStatus, updatedAt } : t
       )
     )
 
-    fetch(`${API_URL}/tickets/${id}/status`, {
+    fetch(`${API_URL}/tickets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    })
-      .then(() => refreshTickets())
-      .catch(err => console.error("Error updating ticket status", err))
-  }, [refreshTickets])
+      body: JSON.stringify({ status: newStatus, updatedAt })
+    }).catch(err => console.warn("Sync ticket status failed (offline mode)", err))
+  }, [API_URL])
 
   /**
    * updateTicket — Actualiza items o notas de un ticket pendiente.
@@ -224,21 +223,23 @@ export function KitchenProvider({ children }) {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
-    })
-      .then(() => refreshTickets())
-      .catch(err => console.error("Error updating ticket", err))
-  }, [refreshTickets])
+    }).catch(err => console.warn("Sync ticket update failed (offline mode)", err))
+  }, [API_URL])
 
   /**
    * deleteTicketByReservation — Elimina un ticket asociado a una reserva cancelada.
    */
   const deleteTicketByReservation = useCallback((reservationId) => {
-    setTickets(prev => prev.filter(t => t.reservationId !== reservationId))
-    
-    // In a real app we would call DELETE /api/tickets?reservationId=...
-    // But since this is JSON server, we'd need to find the ticket ID first
-    // For now, updating local state is enough for the UI to reflect it.
-  }, [])
+    setTickets(prev => {
+      const toDelete = prev.filter(t => t.reservationId === reservationId)
+      // Attempt to delete from server too
+      toDelete.forEach(t => {
+        fetch(`${API_URL}/tickets/${t.id}`, { method: 'DELETE' })
+          .catch(err => console.warn("Sync ticket delete failed (offline mode)", err))
+      })
+      return prev.filter(t => t.reservationId !== reservationId)
+    })
+  }, [API_URL])
 
   // Tickets activos (no servidos)
   const activeTickets = tickets.filter(t => t.status !== TICKET_STATUS.SERVED)
