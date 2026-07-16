@@ -97,7 +97,7 @@
     {
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "id": 4,
-      "title": "Peticiones por Endpoint (Pardos/ECS)",
+      "title": "Peticiones API de Negocio por Servicio (Pardos/ECS)",
       "type": "timeseries",
       "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
@@ -113,10 +113,71 @@
           "region": "default",
           "label": "",
           "period": "",
-          "sqlExpression": "SELECT SUM(http_requests_total) FROM \"Pardos/ECS\" GROUP BY \"service\", \"route\"",
+          "sqlExpression": "SELECT SUM(http_requests_total) FROM \"Pardos/ECS\" WHERE \"route\" != '/api/debug/audit' AND \"route\" != '/api/debug/error' AND \"route\" != '/health' AND \"route\" != '/metrics' GROUP BY \"service\"",
           "metricQueryType": 1,
           "metricEditorMode": 1,
           "queryMode": "Metrics"
+        }
+      ]
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "id": 9,
+      "title": "Peticiones Debug y Health (Pardos/ECS)",
+      "type": "timeseries",
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "region": "default",
+          "id": "e1",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"http_requests_total\" \"/api/debug/audit\"', 'Sum'))",
+          "label": "debug audit",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "matchExact": false,
+          "statistic": "Sum"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "region": "default",
+          "id": "e2",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"http_requests_total\" \"/api/debug/error\"', 'Sum'))",
+          "label": "debug error",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "matchExact": false,
+          "statistic": "Sum"
+        },
+        {
+          "refId": "C",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "region": "default",
+          "id": "e3",
+          "expression": "SUM(SEARCH('\"Pardos/ECS\" \"http_requests_total\" \"/health\"', 'Sum'))",
+          "label": "health",
+          "period": "",
+          "metricQueryType": 0,
+          "metricEditorMode": 1,
+          "queryMode": "Metrics",
+          "namespace": "",
+          "metricName": "",
+          "dimensions": {},
+          "matchExact": false,
+          "statistic": "Sum"
         }
       ]
     },
