@@ -111,6 +111,22 @@ data "aws_iam_policy_document" "ecs_task" {
     actions   = ["cloudwatch:PutMetricData"]
     resources = ["*"]
   }
+  statement {
+    # El exportador awsemf de ADOT publica métricas como eventos EMF vía la API de Logs
+    sid = "ADOTEMFLogs"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutRetentionPolicy",
+    ]
+    resources = [
+      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/${local.name}/ecs/*",
+      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/${local.name}/ecs/*:*",
+    ]
+  }
 }
 
 resource "aws_iam_policy" "ecs_task" {
