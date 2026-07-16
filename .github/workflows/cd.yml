@@ -232,6 +232,9 @@ jobs:
           ansible-playbook -i ansible/hosts.ini ansible/deploy-services.yml \
             --extra-vars "env=$TARGET_ENV image_tag=${{ github.sha }}" > ansible.log 2>&1 || (
               TIMESTAMP=$(date +%s%N)
+              echo "=== full ansible.log output ==="
+              cat ansible.log
+              echo "==============================="
               ERR_TEXT=$(tail -n 20 ansible.log)
               BODY=$(jq -n --arg ts "$TIMESTAMP" --arg err "[CD] [ERROR] Ansible deploy failed:\n$ERR_TEXT" '{"streams": [{"stream": {"env": "'$TARGET_ENV'", "service": "github-actions", "event": "failure"}, "values": [[$ts, $err]]}]}')
               curl -H "Content-Type: application/json" -X POST -d "$BODY" https://efa5866d8i.execute-api.us-east-1.amazonaws.com/loki/api/v1/push
