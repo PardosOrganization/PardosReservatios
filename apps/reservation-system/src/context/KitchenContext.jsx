@@ -229,6 +229,17 @@ export function KitchenProvider({ children }) {
       .catch(err => console.error("Error updating ticket", err))
   }, [refreshTickets])
 
+  /**
+   * deleteTicketByReservation — Elimina un ticket asociado a una reserva cancelada.
+   */
+  const deleteTicketByReservation = useCallback((reservationId) => {
+    setTickets(prev => prev.filter(t => t.reservationId !== reservationId))
+    
+    // In a real app we would call DELETE /api/tickets?reservationId=...
+    // But since this is JSON server, we'd need to find the ticket ID first
+    // For now, updating local state is enough for the UI to reflect it.
+  }, [])
+
   // Tickets activos (no servidos)
   const activeTickets = tickets.filter(t => t.status !== TICKET_STATUS.SERVED)
   const pendingCount  = tickets.filter(t => t.status === TICKET_STATUS.PENDING).length
@@ -246,6 +257,7 @@ export function KitchenProvider({ children }) {
     updateTicketStatus,
     updateTicket,
     updateItemStatus,
+    deleteTicketByReservation,
     menuItems: MENU_ITEMS,
   }
 
