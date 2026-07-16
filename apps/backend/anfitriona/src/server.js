@@ -90,8 +90,8 @@ async function initDatabase() {
     await client.query(createTableQuery)
     console.log('✅ Tabla "reservations" verificada/creada con éxito.')
 
-    // Semillas deshabilitadas: la tabla arranca vacia y solo contiene datos reales
-    const SEED_ENABLED = false
+    // Insertar datos semilla solo si la tabla esta vacia
+    const SEED_ENABLED = true
     const countResult = await client.query('SELECT COUNT(*) FROM reservations')
     const count = parseInt(countResult.rows[0].count, 10)
     if (SEED_ENABLED && count === 0) {
