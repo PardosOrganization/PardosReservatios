@@ -61,39 +61,41 @@ export const ROLE_PERMISSIONS = {
   lider: {
     label: 'Líder · Jefe de Salón',
     color: '#2c3e88',
-    // Sin configuración del sistema ni reportes contables generales
-    canManageUsers: false,
-    canConfigureSystem: false,
-    canViewIncomesChart: false,
-    canViewAdminDashboard: false,
-    canManageAllUsers: false,
-    canExportData: false,
-    canViewReports: false,
+    // Gestión general / sistema (igual al administrador)
+    canManageUsers: true,
+    canConfigureSystem: true,
+    canViewIncomesChart: true,
+    canViewAdminDashboard: true,
+    canManageAllUsers: true,
+    canExportData: true,
+    canViewReports: true,
     canViewHistory: true,
-    // Todos los permisos de la Anfitriona
+    // Reservas y clientes
     canManageReservations: true,
     canViewAllReservations: true,
     canCancelAnyReservation: true,
-    canDeleteReservations: false,
+    canDeleteReservations: true,
     canManageClients: true,
-    canDeleteClients: false,
+    canDeleteClients: true,
+    // Mesas
     canManageTables: true,
     canSeatGuests: true,
-    // Caja: puede anular cuentas y autorizar descuentos, pero el cobro es del cajero
+    // Caja
     canViewCash: true,
-    canManageCash: false,
-    canProcessPayments: false,
+    canManageCash: true,
+    canProcessPayments: true,
     canApplyDiscounts: true,
     canVoidPayments: true,
-    // Todos los permisos del Mozo + eliminación de productos
+    // Cocina / órdenes
     canViewKitchen: true,
-    canManageKitchenOrders: false,
+    canManageKitchenOrders: true,
     canCreateKitchenOrders: true,
     canAddOrderItems: true,
-    canRemoveOrderItems: true,   // único rol operativo autorizado
-    canUpdateKitchenStatus: false,
+    canRemoveOrderItems: true,
+    canUpdateKitchenStatus: true,
     canRequestBill: true,
-    canManageMenu: false,
+    // Menú
+    canManageMenu: true,
   },
 
   cajero: {
