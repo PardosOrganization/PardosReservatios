@@ -16,8 +16,8 @@
 import { useState, useRef } from 'react'
 import { CreditCard, DollarSign, Plus, Clock, CheckCircle, X, Printer, Receipt, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { useCash, PAYMENT_METHODS } from '../../context/CashContext'
-import { useAuth } from '../../context/AuthContext'
-import { MENU_ITEMS } from '../../context/KitchenContext'
+import { useAuth, ROLE_PERMISSIONS } from '../../context/AuthContext'
+import { MENU_ITEMS, useKitchen, TICKET_STATUS } from '../../context/KitchenContext'
 import { Card, StatCard } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
@@ -146,24 +146,39 @@ function Boleta({ payment, onClose }) {
 }
 
 // ── Fila de pago en historial ─────────────────────────────────────────────────
-function PaymentRow({ p, onViewBoleta }) {
+function PaymentRow({ p, onViewBoleta, canVoid, onVoid }) {
   const [expanded, setExpanded] = useState(false)
   const method = PAYMENT_METHODS.find(m => m.id === p.method)
   const hasItems = p.items && p.items.length > 0
+  const isVoided = p.status === 'anulado'
 
   return (
-    <div className={styles.paymentEntry}>
+    <div className={styles.paymentEntry} style={isVoided ? { opacity: 0.55 } : undefined}>
       <div className={styles.paymentItem} onClick={() => hasItems && setExpanded(v => !v)}>
         <span className={styles.payIcon}>{method?.icon || '💰'}</span>
         <div className={styles.payInfo}>
-          <span className={styles.payClient}>{p.clientName}</span>
-          <span className={styles.payMeta}>{p.time} · {method?.label} · {p.guests} pers.</span>
+          <span className={styles.payClient}>
+            {p.clientName}
+            {isVoided && <span style={{ color: '#e8453c', fontWeight: 700, marginLeft: 6, fontSize: 11 }}>ANULADO</span>}
+          </span>
+          <span className={styles.payMeta}>
+            {p.time} · {method?.label} · {p.guests} pers.
+            {isVoided && p.voidReason ? ` · Motivo: ${p.voidReason}` : ''}
+          </span>
         </div>
-        <span className={styles.payAmount}>S/ {p.amount.toFixed(2)}</span>
+        <span className={styles.payAmount} style={isVoided ? { textDecoration: 'line-through' } : undefined}>
+          S/ {p.amount.toFixed(2)}
+        </span>
         <div className={styles.payActions}>
           <button className={styles.iconBtn} title="Ver boleta" onClick={e => { e.stopPropagation(); onViewBoleta(p) }}>
             <Receipt size={14} />
           </button>
+          {canVoid && !isVoided && (
+            <button className={styles.iconBtn} title="Anular cuenta (solo Líder)" style={{ color: '#e8453c' }}
+              onClick={e => { e.stopPropagation(); onVoid(p) }}>
+              <X size={14} />
+            </button>
+          )}
           {hasItems && (
             <button className={styles.iconBtn} title="Ver pedido" onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}>
               {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -192,7 +207,9 @@ function PaymentRow({ p, onViewBoleta }) {
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function CashPage() {
   const { user } = useAuth()
-  const { payments, todayPayments, todayTotal, todayByMethod, shift, openShift, closeShift, addPayment } = useCash()
+  const perms = ROLE_PERMISSIONS[user?.role] || {}
+  const { payments, todayPayments, todayTotal, todayByMethod, shift, openShift, closeShift, addPayment, voidPayment } = useCash()
+  const { tickets, updateTicket } = useKitchen()
 
   const [isPaymentOpen, setPaymentOpen] = useState(false)
   const [isShiftOpen,   setShiftOpen]   = useState(false)
@@ -202,11 +219,40 @@ export default function CashPage() {
   const [errors,        setErrors]      = useState({})
   const [initialCash,   setInitialCash] = useState('')
   const [closePreview,  setClosePreview] = useState(null)
+  const [voidTarget,    setVoidTarget]  = useState(null)
+  const [voidReason,    setVoidReason]  = useState('')
 
   // Ítems del pedido en el formulario
   const [orderItems, setOrderItems] = useState([])
+  // Ticket de cocina seleccionado para cobrar (pre-cuenta)
+  const [selectedTicketId, setSelectedTicketId] = useState('')
 
-  const orderTotal = orderItems.reduce((s, i) => s + i.price * i.qty, 0)
+  // Tickets cobrables: listos/servidos o con pre-cuenta solicitada, sin pagar
+  const billableTickets = tickets.filter(t =>
+    !t.paid &&
+    (t.billRequested || [TICKET_STATUS.READY, TICKET_STATUS.SERVED].includes(t.status))
+  )
+  const selectedTicket = billableTickets.find(t => t.id === selectedTicketId) || null
+
+  // Descuento pre-autorizado por el Líder en el ticket seleccionado
+  const authorizedDiscount = selectedTicket?.discount ? Number(selectedTicket.discount) : 0
+
+  const orderSubtotal = orderItems.reduce((s, i) => s + (i.price || 0) * i.qty, 0)
+  const orderTotal = Math.max(0, orderSubtotal - authorizedDiscount)
+
+  // El cajero no arma órdenes manualmente: debe cobrar desde un ticket
+  const canEditItems = perms.canAddOrderItems
+
+  const handleSelectTicket = (id) => {
+    setSelectedTicketId(id)
+    const t = billableTickets.find(x => x.id === id)
+    if (t) {
+      setForm(f => ({ ...f, clientName: t.clientName, guests: String(t.guests || 1) }))
+      setOrderItems(t.items.map(i => ({ menuId: i.menuId, name: i.name, price: i.price || 0, qty: i.qty })))
+    } else {
+      setOrderItems([])
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -236,7 +282,11 @@ export default function CashPage() {
     const e = {}
     if (!form.clientName.trim()) e.clientName = 'Nombre requerido'
     if (!form.method) e.method = 'Método de pago requerido'
-    if (orderItems.length === 0 && orderTotal === 0) e.items = 'Agrega al menos un ítem al pedido'
+    if (orderItems.length === 0) {
+      e.items = canEditItems
+        ? 'Agrega al menos un ítem al pedido'
+        : 'Selecciona el ticket de cocina a cobrar'
+    }
     return e
   }
 
@@ -245,22 +295,36 @@ export default function CashPage() {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
 
-    const totalAmount = orderTotal > 0 ? orderTotal : 0
-
     const newPayment = addPayment({
       ...form,
-      amount:     totalAmount,
-      guests:     Number(form.guests) || 1,
-      items:      orderItems,
-      cashierId:  user.id,
+      amount:      orderTotal,
+      discount:    authorizedDiscount,
+      discountBy:  selectedTicket?.discountBy || null,
+      ticketId:    selectedTicket?.id || null,
+      guests:      Number(form.guests) || 1,
+      items:       orderItems,
+      cashierId:   user.id,
       cashierName: user.name,
     })
 
-    toast.success(`Boleta generada: S/ ${totalAmount.toFixed(2)}`)
+    // Cierra formalmente la mesa: el ticket queda pagado y servido
+    if (selectedTicket) {
+      updateTicket(selectedTicket.id, { paid: true, status: TICKET_STATUS.SERVED, billRequested: false })
+    }
+
+    toast.success(`Boleta generada: S/ ${orderTotal.toFixed(2)}`)
     setBoletaPayment(newPayment)
     setForm(EMPTY_PAYMENT)
     setOrderItems([])
+    setSelectedTicketId('')
     setPaymentOpen(false)
+  }
+
+  const handleVoidPayment = () => {
+    voidPayment(voidTarget.id, voidReason, user.name)
+    toast.success(`Cuenta ${voidTarget.id} anulada por ${user.name}`)
+    setVoidTarget(null)
+    setVoidReason('')
   }
 
   const handleOpenShift = () => {
@@ -293,11 +357,13 @@ export default function CashPage() {
           <p className={styles.subtitle}>Módulo de cobros, boletas y gestión de turno</p>
         </div>
         <div className={styles.headerActions}>
-          {shift ? (
+          {perms.canManageCash && (shift ? (
             <>
-              <Button variant="secondary" icon={<Plus size={16} />} onClick={() => setPaymentOpen(true)} id="btn-nuevo-cobro">
-                Nuevo cobro
-              </Button>
+              {perms.canProcessPayments && (
+                <Button variant="secondary" icon={<Plus size={16} />} onClick={() => setPaymentOpen(true)} id="btn-nuevo-cobro">
+                  Nuevo cobro
+                </Button>
+              )}
               <Button variant="danger" icon={<X size={16} />} onClick={handleCloseShift} id="btn-cerrar-turno">
                 Cerrar turno
               </Button>
@@ -306,7 +372,7 @@ export default function CashPage() {
             <Button variant="primary" icon={<CreditCard size={16} />} onClick={() => setShiftOpen(true)} id="btn-abrir-turno">
               Abrir turno
             </Button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -375,7 +441,8 @@ export default function CashPage() {
           ) : (
             <div className={styles.paymentList}>
               {todayPayments.map(p => (
-                <PaymentRow key={p.id} p={p} onViewBoleta={setBoletaPayment} />
+                <PaymentRow key={p.id} p={p} onViewBoleta={setBoletaPayment}
+                  canVoid={perms.canVoidPayments} onVoid={setVoidTarget} />
               ))}
             </div>
           )}
@@ -383,7 +450,7 @@ export default function CashPage() {
       </div>
 
       {/* ── Modal: Nuevo cobro ──────────────────── */}
-      <Modal isOpen={isPaymentOpen} onClose={() => { setPaymentOpen(false); setOrderItems([]) }}
+      <Modal isOpen={isPaymentOpen} onClose={() => { setPaymentOpen(false); setOrderItems([]); setSelectedTicketId('') }}
         title="Registrar Cobro / Generar Boleta" size="lg">
         <form onSubmit={handleRegisterPayment} className={styles.form} noValidate>
           <div className={styles.row2}>
@@ -403,49 +470,75 @@ export default function CashPage() {
             </div>
           </div>
 
+          {/* Ticket de cocina a cobrar */}
+          <Select label="Ticket de cocina (pre-cuenta / mesa por cobrar)" id="pay-ticket"
+            value={selectedTicketId} onChange={e => handleSelectTicket(e.target.value)}>
+            <option value="">{canEditItems ? '— Cobro manual (sin ticket) —' : 'Seleccionar ticket...'}</option>
+            {billableTickets.map(t => (
+              <option key={t.id} value={t.id}>
+                Mesa {t.tableId} — {t.clientName} ({t.items.length} ítems{t.billRequested ? ' · pre-cuenta' : ''}{t.discount > 0 ? ' · con descuento' : ''})
+              </option>
+            ))}
+          </Select>
+          {!canEditItems && (
+            <p className={styles.orderEmpty} style={{ margin: 0 }}>
+              El cajero cobra las órdenes tal como fueron enviadas por el mozo; no puede modificar sus productos.
+            </p>
+          )}
+
           {/* Selector de ítems del menú */}
           <div className={styles.menuSection}>
-            <p className={styles.menuTitle}>Pedido (selecciona ítems del menú)</p>
+            <p className={styles.menuTitle}>{canEditItems ? 'Pedido (selecciona ítems del menú)' : 'Orden a cobrar'}</p>
             {errors.items && <p className={styles.errorText}>{errors.items}</p>}
 
             <div className={styles.menuAndOrder}>
-              {/* Menú por categoría */}
-              <div className={styles.menuCategories}>
-                {categories.map(cat => (
-                  <div key={cat} className={styles.menuCat}>
-                    <p className={styles.catTitle}>{cat}</p>
-                    {MENU_ITEMS.filter(m => m.category === cat).map(item => (
-                      <button key={item.id} type="button"
-                        className={styles.menuItemBtn}
-                        onClick={() => addOrderItem(item)}>
-                        <span className={styles.menuItemName}>{item.name}</span>
-                        <span className={styles.menuItemPrice}>S/ {item.price.toFixed(2)}</span>
-                        <Plus size={13} className={styles.menuItemAdd} />
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              {/* Menú por categoría — solo roles que pueden armar la orden */}
+              {canEditItems && (
+                <div className={styles.menuCategories}>
+                  {categories.map(cat => (
+                    <div key={cat} className={styles.menuCat}>
+                      <p className={styles.catTitle}>{cat}</p>
+                      {MENU_ITEMS.filter(m => m.category === cat).map(item => (
+                        <button key={item.id} type="button"
+                          className={styles.menuItemBtn}
+                          onClick={() => addOrderItem(item)}>
+                          <span className={styles.menuItemName}>{item.name}</span>
+                          <span className={styles.menuItemPrice}>S/ {item.price.toFixed(2)}</span>
+                          <Plus size={13} className={styles.menuItemAdd} />
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Orden actual */}
               <div className={styles.orderSide}>
                 <p className={styles.menuTitle}>Orden actual</p>
                 {orderItems.length === 0 ? (
-                  <p className={styles.orderEmpty}>Sin ítems aún</p>
+                  <p className={styles.orderEmpty}>
+                    {canEditItems ? 'Sin ítems aún' : 'Selecciona un ticket para cargar la orden'}
+                  </p>
                 ) : (
                   <div className={styles.orderList}>
                     {orderItems.map(item => (
                       <div key={item.menuId} className={styles.orderRow}>
                         <span className={styles.orderName}>{item.name}</span>
-                        <div className={styles.orderQtyCtrl}>
-                          <button type="button" onClick={() => updateQty(item.menuId, -1)}>−</button>
-                          <span>{item.qty}</span>
-                          <button type="button" onClick={() => updateQty(item.menuId, +1)}>+</button>
-                        </div>
-                        <span className={styles.orderPrice}>S/ {(item.price * item.qty).toFixed(2)}</span>
-                        <button type="button" className={styles.removeBtn} onClick={() => removeOrderItem(item.menuId)}>
-                          <Trash2 size={13} />
-                        </button>
+                        {canEditItems ? (
+                          <div className={styles.orderQtyCtrl}>
+                            <button type="button" onClick={() => updateQty(item.menuId, -1)}>−</button>
+                            <span>{item.qty}</span>
+                            <button type="button" onClick={() => updateQty(item.menuId, +1)}>+</button>
+                          </div>
+                        ) : (
+                          <span className={styles.orderQtyCtrl}>× {item.qty}</span>
+                        )}
+                        <span className={styles.orderPrice}>S/ {((item.price || 0) * item.qty).toFixed(2)}</span>
+                        {canEditItems && (
+                          <button type="button" className={styles.removeBtn} onClick={() => removeOrderItem(item.menuId)}>
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     ))}
                     <div className={styles.orderTotalRow}>
@@ -456,6 +549,12 @@ export default function CashPage() {
                       <span>IGV (18%)</span>
                       <span>S/ {(orderTotal - orderTotal / (1 + IGV_RATE)).toFixed(2)}</span>
                     </div>
+                    {authorizedDiscount > 0 && (
+                      <div className={styles.orderTotalRow} style={{ color: '#27ae60' }}>
+                        <span>Descuento autorizado ({selectedTicket?.discountBy})</span>
+                        <span>− S/ {authorizedDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className={`${styles.orderTotalRow} ${styles.grandTotal}`}>
                       <strong>TOTAL</strong>
                       <strong>S/ {orderTotal.toFixed(2)}</strong>
@@ -471,13 +570,36 @@ export default function CashPage() {
             value={form.notes} onChange={handleChange} />
 
           <div className={styles.formActions}>
-            <Button type="button" variant="ghost" onClick={() => { setPaymentOpen(false); setOrderItems([]) }}>Cancelar</Button>
+            <Button type="button" variant="ghost" onClick={() => { setPaymentOpen(false); setOrderItems([]); setSelectedTicketId('') }}>Cancelar</Button>
             <Button type="submit" variant="primary" icon={<Receipt size={15} />}
               disabled={orderItems.length === 0}>
               Generar boleta · S/ {orderTotal.toFixed(2)}
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* ── Modal: Anular cuenta (solo Líder) ────── */}
+      <Modal isOpen={!!voidTarget} onClose={() => { setVoidTarget(null); setVoidReason('') }}
+        title="Anular Cuenta" size="sm">
+        {voidTarget && (
+          <div className={styles.shiftForm}>
+            <p className={styles.shiftDesc}>
+              Vas a anular la boleta <strong>{voidTarget.id}</strong> de{' '}
+              <strong>{voidTarget.clientName}</strong> por{' '}
+              <strong>S/ {voidTarget.amount.toFixed(2)}</strong>. La anulación queda
+              registrada a tu nombre y el monto se excluye de los totales del turno.
+            </p>
+            <Input label="Motivo de la anulación" id="void-reason" placeholder="Error de cobro, devolución..."
+              value={voidReason} onChange={e => setVoidReason(e.target.value)} />
+            <div className={styles.formActions}>
+              <Button variant="ghost" onClick={() => { setVoidTarget(null); setVoidReason('') }}>Cancelar</Button>
+              <Button variant="danger" icon={<X size={15} />} onClick={handleVoidPayment}>
+                Anular cuenta
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* ── Modal: Boleta ───────────────────────── */}
