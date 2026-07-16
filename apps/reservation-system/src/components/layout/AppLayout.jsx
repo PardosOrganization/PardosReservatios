@@ -41,7 +41,7 @@ const NAV_ITEMS = [
     path: '/analiticas',
     label: 'Analíticas',
     icon: <TrendingUp size={20} />,
-    roles: ['admin'],
+    roles: ['admin', 'lider'],
   },
   {
     id: 'reservations',
@@ -90,14 +90,14 @@ const NAV_ITEMS = [
     path: '/reportes',
     label: 'Reportes',
     icon: <ChartBar size={20} />,
-    roles: ['admin', 'cajero'],
+    roles: ['admin', 'lider', 'cajero'],
   },
   {
     id: 'settings',
     path: '/configuracion',
     label: 'Configuración',
     icon: <Settings size={20} />,
-    roles: ['admin'],
+    roles: ['admin', 'lider'],
   },
 ]
 
