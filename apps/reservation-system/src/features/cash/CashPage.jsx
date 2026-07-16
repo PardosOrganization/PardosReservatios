@@ -211,7 +211,7 @@ export default function CashPage() {
   const perms = ROLE_PERMISSIONS[user?.role] || {}
   const { payments, todayPayments, todayTotal, todayByMethod, shift, openShift, closeShift, addPayment, voidPayment } = useCash()
   const { tickets, updateTicket } = useKitchen()
-  const { reservations } = useReservations()
+  const { reservations, completeReservation } = useReservations()
   
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
 
@@ -314,6 +314,14 @@ export default function CashPage() {
     // Cierra formalmente la mesa: el ticket queda pagado y servido
     if (selectedTicket) {
       updateTicket(selectedTicket.id, { paid: true, status: TICKET_STATUS.SERVED, billRequested: false })
+      if (selectedTicket.reservationId) {
+        completeReservation(selectedTicket.reservationId)
+      }
+    }
+    
+    // Si la reserva se cobró desde el panel de reservas (mockup)
+    if (form.reservationId) {
+      completeReservation(form.reservationId)
     }
 
     toast.success(`Boleta generada: S/ ${orderTotal.toFixed(2)}`)
@@ -426,7 +434,7 @@ export default function CashPage() {
                  </div>
                  <span className={styles.resStatus}>En mesa</span>
                  <Button size="sm" variant="success" onClick={() => {
-                     setForm(f => ({ ...f, clientName: r.clientName, guests: String(r.guests) }))
+                     setForm(f => ({ ...f, clientName: r.clientName, guests: String(r.guests), reservationId: r.id }))
                      setPaymentOpen(true)
                  }}>$ Cobrar</Button>
                </div>
