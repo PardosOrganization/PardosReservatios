@@ -79,6 +79,11 @@ for (const m of PAYMENT_METHODS) {
   pagosMontoSoles.inc({ method: m.id }, 0)
 }
 
+// Inicializar turnos de caja en 0 para que el panel tenga serie desde el arranque
+for (const accion of ['abierto', 'cerrado']) {
+  turnosCaja.inc({ accion }, 0)
+}
+
 // ── Datos en memoria (seed) ─────────────────────────────────────────────────
 
 let payments = [
