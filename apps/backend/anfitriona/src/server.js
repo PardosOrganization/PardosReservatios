@@ -81,13 +81,16 @@ async function initDatabase() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       created_by VARCHAR(50),
       occasion VARCHAR(100),
-      source VARCHAR(50) DEFAULT 'system'
+      source VARCHAR(50) DEFAULT 'system',
+      pre_order JSONB
     );
   `
   try {
     const client = await pool.connect()
     console.log('🔌 Conectado exitosamente a PostgreSQL (RDS Proxy)')
     await client.query(createTableQuery)
+    // Migracion para tablas creadas antes de que existiera el pre-pedido
+    await client.query('ALTER TABLE reservations ADD COLUMN IF NOT EXISTS pre_order JSONB')
     console.log('✅ Tabla "reservations" verificada/creada con éxito.')
 
     // Insertar datos semilla solo si la tabla esta vacia
@@ -498,7 +501,7 @@ app.get('/api/debug/error', (_req, res) => {
 /** GET /api/reservations — Todas las reservas */
 app.get('/api/reservations', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations ORDER BY created_at DESC')
+    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder" FROM reservations ORDER BY created_at DESC')
     res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener reservas de la base de datos:', err)
@@ -509,7 +512,7 @@ app.get('/api/reservations', async (_req, res) => {
 /** GET /api/reservations/requested — Solo solicitudes pendientes de aprobación */
 app.get('/api/reservations/requested', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE status = \'requested\' ORDER BY created_at DESC')
+    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder" FROM reservations WHERE status = \'requested\' ORDER BY created_at DESC')
     res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener solicitudes:', err)
@@ -521,7 +524,7 @@ app.get('/api/reservations/requested', async (_req, res) => {
 app.get('/api/reservations/today', async (_req, res) => {
   const today = todayStr()
   try {
-    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE date = $1 AND status NOT IN (\'cancelled\', \'rejected\') ORDER BY time ASC', [today])
+    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder" FROM reservations WHERE date = $1 AND status NOT IN (\'cancelled\', \'rejected\') ORDER BY time ASC', [today])
     res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener reservas de hoy:', err)
@@ -532,7 +535,7 @@ app.get('/api/reservations/today', async (_req, res) => {
 /** GET /api/reservations/history — Historial (completed, cancelled, no_show, rejected) */
 app.get('/api/reservations/history', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source FROM reservations WHERE status IN (\'completed\', \'cancelled\', \'no_show\', \'rejected\') ORDER BY date DESC, time DESC')
+    const result = await pool.query('SELECT id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder" FROM reservations WHERE status IN (\'completed\', \'cancelled\', \'no_show\', \'rejected\') ORDER BY date DESC, time DESC')
     res.json(result.rows.map(formatReservation))
   } catch (err) {
     console.error('Error al obtener historial de reservas:', err)
@@ -551,16 +554,19 @@ app.post('/api/reservations', async (req, res) => {
   try {
     const insertQuery = `
       INSERT INTO reservations (
-        id, client_id, client_name, client_phone, client_email, 
-        date, time, guests, table_id, status, notes, 
-        created_at, created_by, occasion, source
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      RETURNING id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source
+        id, client_id, client_name, client_phone, client_email,
+        date, time, guests, table_id, status, notes,
+        created_at, created_by, occasion, source, pre_order
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder"
     `
+    const preOrder = Array.isArray(data.preOrder) && data.preOrder.length > 0
+      ? JSON.stringify(data.preOrder)
+      : null
     const values = [
       id, data.clientId || null, data.clientName, data.clientPhone || null, data.clientEmail || null,
       data.date, data.time, data.guests, data.tableId || null, status, data.notes || '',
-      createdAt, data.createdBy || null, data.occasion || '', source
+      createdAt, data.createdBy || null, data.occasion || '', source, preOrder
     ]
     const result = await pool.query(insertQuery, values)
     const newReservation = result.rows[0]
@@ -589,13 +595,15 @@ app.patch('/api/reservations/:id', async (req, res) => {
     notes: 'notes',
     guests: 'guests',
     time: 'time',
-    date: 'date'
+    date: 'date',
+    preOrder: 'pre_order'
   }
 
   for (const [key, value] of Object.entries(updates)) {
     if (allowedUpdates[key]) {
       fields.push(`${allowedUpdates[key]} = $${idx}`)
-      values.push(value)
+      // JSONB: node-pg serializa mal los arrays JS (los convierte a array SQL)
+      values.push(key === 'preOrder' ? JSON.stringify(value) : value)
       idx++
     }
   }
@@ -609,7 +617,7 @@ app.patch('/api/reservations/:id', async (req, res) => {
     UPDATE reservations 
     SET ${fields.join(', ')} 
     WHERE id = $${idx} 
-    RETURNING id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source
+    RETURNING id, client_id AS "clientId", client_name AS "clientName", client_phone AS "clientPhone", client_email AS "clientEmail", date, time, guests, table_id AS "tableId", status, notes, created_at AS "createdAt", created_by AS "createdBy", occasion, source, pre_order AS "preOrder"
   `
 
   try {

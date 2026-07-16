@@ -139,3 +139,46 @@
 .card--no_show {
   opacity: 0.8;
 }
+
+/* ── Pre-pedido ─────────────────────────────────────────────────────────── */
+
+.preOrder {
+  background: var(--color-cream, #fdf6ee);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preOrderLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary);
+}
+
+.preOrderList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--color-text-mid);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preOrderTotal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  border-top: 1px dashed var(--color-border-light);
+  padding-top: 4px;
+  margin-top: 2px;
+}
