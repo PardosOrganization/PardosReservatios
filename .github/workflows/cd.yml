@@ -227,12 +227,12 @@ jobs:
           sudo apt-get install -y python3-pip
           pip install ansible boto3 botocore
 
-       - name: Ejecutar playbook de despliegue
-         run: |
-           ansible-playbook -i ansible/hosts.ini ansible/deploy-services.yml \
-             --extra-vars "env=$TARGET_ENV image_tag=${{ github.sha }}"
-         env:
-           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      - name: Ejecutar playbook de despliegue
+        run: |
+          ansible-playbook -i ansible/hosts.ini ansible/deploy-services.yml \
+            --extra-vars "env=$TARGET_ENV image_tag=${{ github.sha }}"
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
       - name: Notificar Exito de Despliegue a Loki
         if: success()
