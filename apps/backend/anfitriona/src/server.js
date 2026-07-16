@@ -29,6 +29,7 @@ import {
   reservasCambiosEstado,
   clientesRegistrados,
 } from './metrics.js'
+import { requireRole } from './auth.js'
 
 const { Pool } = pg
 
@@ -549,7 +550,7 @@ app.get('/api/reservations/history', async (_req, res) => {
 })
 
 /** POST /api/reservations — Crear nueva reserva */
-app.post('/api/reservations', async (req, res) => {
+app.post('/api/reservations', requireRole(['admin', 'hostess']), async (req, res) => {
   const data = req.body
   const id = `R${uuidv4().slice(0, 6).toUpperCase()}`
   const status = data.status || 'requested'
@@ -586,7 +587,7 @@ app.post('/api/reservations', async (req, res) => {
 })
 
 /** PATCH /api/reservations/:id — Actualizar reserva */
-app.patch('/api/reservations/:id', async (req, res) => {
+app.patch('/api/reservations/:id', requireRole(['admin', 'cajero', 'hostess']), async (req, res) => {
   const { id } = req.params
   const updates = req.body
 
@@ -639,7 +640,7 @@ app.patch('/api/reservations/:id', async (req, res) => {
 })
 
 /** DELETE /api/reservations/:id — Eliminar reserva */
-app.delete('/api/reservations/:id', async (req, res) => {
+app.delete('/api/reservations/:id', requireRole(['admin']), async (req, res) => {
   const { id } = req.params
   try {
     const result = await pool.query('DELETE FROM reservations WHERE id = $1 RETURNING *', [id])

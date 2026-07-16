@@ -19,6 +19,15 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { format, subDays } from 'date-fns'
 
+const getUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('pardos_user'))
+    return user?.role || ''
+  } catch {
+    return ''
+  }
+}
+
 // ── Estados posibles de una reserva ──────────────────────────────────────────
 export const RESERVATION_STATUS = {
   REQUESTED: 'requested',  // Solicitada por cliente externo — en espera de aprobación
@@ -299,7 +308,7 @@ export function ReservationProvider({ children }) {
 
   // Fetch reservations and tables from API
   const refreshData = useCallback(() => {
-    fetch(`${API_URL}/reservations`)
+    fetch(`${API_URL}/reservations`, { headers: { 'x-user-role': getUserRole() } })
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data.value)) {
@@ -316,7 +325,7 @@ export function ReservationProvider({ children }) {
         setIsLoading(false)
       })
 
-    fetch(`${API_URL}/tables`)
+    fetch(`${API_URL}/tables`, { headers: { 'x-user-role': getUserRole() } })
       .then(res => res.json())
       .then(data => {
         if (data && Array.isArray(data.value)) {
@@ -347,7 +356,7 @@ export function ReservationProvider({ children }) {
     
     fetch(`${API_URL}/reservations`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(newReservation)
     })
       .then(() => refreshData())
@@ -364,7 +373,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(updates)
     })
       .then(() => refreshData())
@@ -383,7 +392,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: RESERVATION_STATUS.CANCELLED, cancelReason: reason })
     })
       .then(() => refreshData())
@@ -402,7 +411,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: RESERVATION_STATUS.COMPLETED })
     })
       .then(() => refreshData())
@@ -421,7 +430,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: RESERVATION_STATUS.SEATED, seatedAt: new Date().toISOString() })
     })
       .then(() => refreshData())
@@ -444,7 +453,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(newReservation)
     })
       .then(() => refreshData())
@@ -470,7 +479,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: RESERVATION_STATUS.PENDING, tableId, approvedBy, approvedAt: new Date().toISOString() })
     })
       .then(() => refreshData())
@@ -493,7 +502,7 @@ export function ReservationProvider({ children }) {
 
     fetch(`${API_URL}/reservations/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify({ status: RESERVATION_STATUS.REJECTED, rejectReason: reason })
     })
       .then(() => refreshData())

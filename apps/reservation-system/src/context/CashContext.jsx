@@ -16,6 +16,15 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { format, subDays } from 'date-fns'
 
+const getUserRole = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('pardos_user'))
+    return user?.role || ''
+  } catch {
+    return ''
+  }
+}
+
 // ── Métodos de pago ───────────────────────────────────────────────────────────
 export const PAYMENT_METHODS = [
   { id: 'efectivo',     label: 'Efectivo',        icon: '💵' },
@@ -69,7 +78,7 @@ export function CashProvider({ children }) {
     : '/caja/api'
 
   const refreshPayments = useCallback(() => {
-    fetch(`${API_URL}/payments`)
+    fetch(`${API_URL}/payments`, { headers: { 'x-user-role': getUserRole() } })
       .then(res => res.json())
       .then(data => {
         let incoming = []
@@ -96,7 +105,7 @@ export function CashProvider({ children }) {
         setLoading(false)
       })
 
-    fetch(`${API_URL}/shift`)
+    fetch(`${API_URL}/shift`, { headers: { 'x-user-role': getUserRole() } })
       .then(res => res.json())
       .then(data => {
         // El backend responde { active, shift }; tambien se acepta el turno plano
@@ -141,7 +150,7 @@ export function CashProvider({ children }) {
 
     fetch(`${API_URL}/shift/open`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(newShift)
     })
       .then(() => refreshPayments())
@@ -175,7 +184,7 @@ export function CashProvider({ children }) {
 
     fetch(`${API_URL}/shift/close`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(summary)
     })
       .then(() => refreshPayments())
@@ -201,7 +210,7 @@ export function CashProvider({ children }) {
 
     fetch(`${API_URL}/payments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(newPayment)
     })
       .then(() => refreshPayments())
@@ -220,7 +229,7 @@ export function CashProvider({ children }) {
 
     fetch(`${API_URL}/payments/${id}/void`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-user-role': getUserRole() },
       body: JSON.stringify(voidData)
     })
       .then(() => refreshPayments())
