@@ -211,13 +211,22 @@ export default function ReservationsPage() {
 
   const handleSeat = (reservation) => {
     seatReservation(reservation.id)
+    
+    const ticketItems = (reservation.preOrder || []).map(p => ({
+      menuId: p.id,
+      name: p.name,
+      qty: p.qty,
+      price: p.price,
+      status: 'pending'
+    }))
+
     addTicket({
       tableId: reservation.tableId || 'TXX',
       clientName: reservation.clientName,
       guests: reservation.guests,
       priority: reservation.occasion ? 'high' : 'normal',
       notes: reservation.notes,
-      items: [],
+      items: ticketItems,
       reservationId: reservation.id,
       createdBy: user?.name || 'Sistema',
     })
