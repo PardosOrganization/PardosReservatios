@@ -23,7 +23,7 @@ ecs_desired_count = 1
 ecs_min_capacity  = 1
 ecs_max_capacity  = 2
 
-log_retention_days        = 30
+log_retention_days        = 90
 waf_rate_limit            = 2000
 enable_s3_replication     = false
 enable_dr_region          = false

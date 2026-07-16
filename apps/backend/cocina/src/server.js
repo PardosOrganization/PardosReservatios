@@ -209,6 +209,15 @@ app.patch('/api/tickets/:id', (req, res) => {
   res.json(tickets[idx])
 })
 
+/** DELETE /api/tickets/:id — Eliminar un ticket */
+app.delete('/api/tickets/:id', (req, res) => {
+  const { id } = req.params
+  const idx = tickets.findIndex(t => t.id === id)
+  if (idx === -1) return res.status(404).json({ error: 'Ticket no encontrado' })
+  tickets.splice(idx, 1)
+  res.status(204).end()
+})
+
 const initialTickets = JSON.parse(JSON.stringify(tickets))
 
 // ── Exportacion ──────────────────────────────────────────────────────────────

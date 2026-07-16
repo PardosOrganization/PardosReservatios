@@ -59,7 +59,7 @@ jobs:
           cd IAC
           terraform init
           terraform workspace select $TARGET_ENV || terraform workspace new $TARGET_ENV
-          terraform apply -target=aws_s3_bucket.frontend -target=aws_ecr_repository.this -target=aws_ecr_repository.loki -target=aws_ecs_service.loki -target=aws_iam_role_policy_attachment.ecs_task -target=aws_cloudfront_function.spa_router -target=aws_cloudfront_distribution.this -target=aws_apigatewayv2_route.microservices_api_public -var-file=$TF_VARS_FILE -auto-approve
+          terraform apply -target=aws_s3_bucket.frontend -target=aws_ecr_repository.this -target=aws_ecr_repository.loki -target=aws_ecs_service.loki -target=aws_iam_role_policy_attachment.ecs_task -target=aws_cloudfront_function.spa_router -target=aws_cloudfront_distribution.this -target=aws_apigatewayv2_route.microservices_api_public -target=aws_cloudwatch_log_group.ecs -target=aws_cloudwatch_log_group.adot -target=aws_cloudwatch_log_group.elasticache -target=aws_cloudwatch_log_group.rds_enhanced -target=aws_cloudwatch_log_group.alb -target=aws_cloudwatch_log_group.api_gw -target=aws_cloudwatch_log_group.flow -target=aws_cloudwatch_log_group.waf -target=aws_cloudwatch_log_group.route53 -target=aws_cloudwatch_log_group.db_rotation -var-file=$TF_VARS_FILE -auto-approve
 
   # JOB 3: Build, tag y push de microservicios a ECR
   push-backend:
