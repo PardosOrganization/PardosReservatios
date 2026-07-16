@@ -18,6 +18,7 @@ import { CreditCard, DollarSign, Plus, Clock, CheckCircle, X, Printer, Receipt, 
 import { useCash, PAYMENT_METHODS } from '../../context/CashContext'
 import { useAuth, ROLE_PERMISSIONS } from '../../context/AuthContext'
 import { MENU_ITEMS, useKitchen, TICKET_STATUS } from '../../context/KitchenContext'
+import { useReservations } from '../../context/ReservationContext'
 import { Card, StatCard } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
@@ -210,6 +211,9 @@ export default function CashPage() {
   const perms = ROLE_PERMISSIONS[user?.role] || {}
   const { payments, todayPayments, todayTotal, todayByMethod, shift, openShift, closeShift, addPayment, voidPayment } = useCash()
   const { tickets, updateTicket } = useKitchen()
+  const { reservations } = useReservations()
+  
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
 
   const [isPaymentOpen, setPaymentOpen] = useState(false)
   const [isShiftOpen,   setShiftOpen]   = useState(false)
@@ -405,6 +409,32 @@ export default function CashPage() {
         <StatCard label="IGV (18%)"       value={`S/ ${(todayTotal * IGV_RATE / (1 + IGV_RATE)).toFixed(2)}`} icon={<Receipt size={22} />} color="warning" />
       </div>
 
+      {/* Reservas pendientes de cobro (Mockup) */}
+      <Card title="Reservas pendientes de cobro" subtitle="Selecciona una reserva para cobrar">
+        <div style={{ marginBottom: 12, width: '200px' }}>
+          <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+        </div>
+        <div className={styles.reservationList}>
+          {reservations.filter(r => r.date === filterDate && r.status === 'seated').length === 0 ? (
+            <p className={styles.empty}>No hay reservas en mesa para esta fecha</p>
+          ) : (
+             reservations.filter(r => r.date === filterDate && r.status === 'seated').map(r => (
+               <div key={r.id} className={styles.resRow}>
+                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                   <span className={styles.resTable}>MESA {r.table}</span>
+                   <span className={styles.resClient}>{r.client.name}</span>
+                 </div>
+                 <span className={styles.resStatus}>En mesa</span>
+                 <Button size="sm" variant="success" onClick={() => {
+                     setForm(f => ({ ...f, clientName: r.client.name, guests: String(r.guests) }))
+                     setPaymentOpen(true)
+                 }}>$ Cobrar</Button>
+               </div>
+             ))
+          )}
+        </div>
+      </Card>
+
       <div className={styles.grid2}>
         {/* Métodos de pago */}
         <Card title="Cobros por método" subtitle="Resumen del día">
@@ -451,12 +481,20 @@ export default function CashPage() {
 
       {/* ── Modal: Nuevo cobro ──────────────────── */}
       <Modal isOpen={isPaymentOpen} onClose={() => { setPaymentOpen(false); setOrderItems([]); setSelectedTicketId('') }}
-        title="Registrar Cobro / Generar Boleta" size="lg">
+        title="Registrar Cobro" size="lg">
         <form onSubmit={handleRegisterPayment} className={styles.form} noValidate>
+          
           <div className={styles.row2}>
+            <Input label="Fecha de reserva" name="date" type="date" value={filterDate} disabled />
             <Input label="Nombre del cliente" name="clientName" id="pay-client"
               placeholder="Nombre del cliente" value={form.clientName}
               onChange={handleChange} error={errors.clientName} required />
+          </div>
+
+          <div className={styles.row2}>
+            <Select label="Vincular a Reserva (Opcional)" value="">
+              <option value="">{form.clientName ? form.clientName : 'Seleccionar...'}</option>
+            </Select>
             <div className={styles.row2}>
               <Input label="N° personas" name="guests" id="pay-guests" type="number"
                 min={1} max={20} placeholder="2"
@@ -470,110 +508,94 @@ export default function CashPage() {
             </div>
           </div>
 
+          <div className={styles.row2}>
+            <Input label="Cupón de descuento (Opcional)" placeholder="Código..." />
+          </div>
+
+          <div className={styles.couponAlert}>
+            💡 Cupones detectados (1): Selecciona uno para aplicarlo
+            <br />
+            <strong>PRD-POSTRE-6FCW</strong> (POSTRE)
+          </div>
+
           {/* Ticket de cocina a cobrar */}
-          <Select label="Ticket de cocina (pre-cuenta / mesa por cobrar)" id="pay-ticket"
+          <Select label="Ticket de cocina" id="pay-ticket"
             value={selectedTicketId} onChange={e => handleSelectTicket(e.target.value)}>
-            <option value="">{canEditItems ? '— Cobro manual (sin ticket) —' : 'Seleccionar ticket...'}</option>
+            <option value="">Seleccionar ticket...</option>
             {billableTickets.map(t => (
               <option key={t.id} value={t.id}>
-                Mesa {t.tableId} — {t.clientName} ({t.items.length} ítems{t.billRequested ? ' · pre-cuenta' : ''}{t.discount > 0 ? ' · con descuento' : ''})
+                Mesa {t.tableId} — {t.clientName} ({t.items.length} ítems{t.billRequested ? ' · pre-cuenta' : ''})
               </option>
             ))}
           </Select>
-          {!canEditItems && (
-            <p className={styles.orderEmpty} style={{ margin: 0 }}>
-              El cajero cobra las órdenes tal como fueron enviadas por el mozo; no puede modificar sus productos.
-            </p>
-          )}
 
           {/* Selector de ítems del menú */}
           <div className={styles.menuSection}>
-            <p className={styles.menuTitle}>{canEditItems ? 'Pedido (selecciona ítems del menú)' : 'Orden a cobrar'}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p className={styles.menuTitle}>🍴 Platos servidos por cocina · puedes ajustar antes de cobrar</p>
+              <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Código para reclamos: 698611</span>
+            </div>
+            
             {errors.items && <p className={styles.errorText}>{errors.items}</p>}
 
-            <div className={styles.menuAndOrder}>
-              {/* Menú por categoría — solo roles que pueden armar la orden */}
-              {canEditItems && (
-                <div className={styles.menuCategories}>
-                  {categories.map(cat => (
-                    <div key={cat} className={styles.menuCat}>
-                      <p className={styles.catTitle}>{cat}</p>
-                      {MENU_ITEMS.filter(m => m.category === cat).map(item => (
-                        <button key={item.id} type="button"
-                          className={styles.menuItemBtn}
-                          onClick={() => addOrderItem(item)}>
-                          <span className={styles.menuItemName}>{item.name}</span>
-                          <span className={styles.menuItemPrice}>S/ {item.price.toFixed(2)}</span>
-                          <Plus size={13} className={styles.menuItemAdd} />
-                        </button>
-                      ))}
+            <div className={styles.orderSideMockup}>
+              {orderItems.length === 0 ? (
+                <p className={styles.orderEmpty}>Selecciona un ticket para cargar la orden</p>
+              ) : (
+                <div className={styles.orderList}>
+                  {orderItems.map(item => {
+                    const ticketItem = selectedTicket?.items?.find(i => i.menuId === item.menuId);
+                    const isPending = ticketItem && ticketItem.status !== 'ready';
+                    return (
+                      <div key={item.menuId} className={styles.orderRowMockup}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                          <span className={styles.orderName}>{item.qty}x {item.name}</span>
+                          {isPending && <span className={styles.missingBadge}>Falta servir</span>}
+                        </div>
+                        <span className={styles.orderPrice}>S/ {((item.price || 0) * item.qty).toFixed(2)}</span>
+                      </div>
+                    )
+                  })}
+                  <div style={{ marginTop: 8 }}>
+                    <Button type="button" variant="ghost" size="sm" style={{ border: '1px dashed var(--color-primary)', color: 'var(--color-primary)' }}>
+                      + Editar pedido · {orderItems.length} ítems
+                    </Button>
+                  </div>
+                  
+                  <div className={styles.orderTotalRow} style={{ marginTop: 16 }}>
+                    <span>Subtotal</span>
+                    <span>S/ {(orderTotal / (1 + IGV_RATE)).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.orderTotalRow}>
+                    <span>IGV (18%)</span>
+                    <span>S/ {(orderTotal - orderTotal / (1 + IGV_RATE)).toFixed(2)}</span>
+                  </div>
+                  {authorizedDiscount > 0 && (
+                    <div className={styles.orderTotalRow} style={{ color: '#27ae60' }}>
+                      <span>Descuento autorizado ({selectedTicket?.discountBy})</span>
+                      <span>− S/ {authorizedDiscount.toFixed(2)}</span>
                     </div>
-                  ))}
+                  )}
+                  <div className={`${styles.orderTotalRow} ${styles.grandTotal}`}>
+                    <strong>TOTAL A COBRAR</strong>
+                    <strong>S/ {orderTotal.toFixed(2)}</strong>
+                  </div>
                 </div>
               )}
-
-              {/* Orden actual */}
-              <div className={styles.orderSide}>
-                <p className={styles.menuTitle}>Orden actual</p>
-                {orderItems.length === 0 ? (
-                  <p className={styles.orderEmpty}>
-                    {canEditItems ? 'Sin ítems aún' : 'Selecciona un ticket para cargar la orden'}
-                  </p>
-                ) : (
-                  <div className={styles.orderList}>
-                    {orderItems.map(item => (
-                      <div key={item.menuId} className={styles.orderRow}>
-                        <span className={styles.orderName}>{item.name}</span>
-                        {canEditItems ? (
-                          <div className={styles.orderQtyCtrl}>
-                            <button type="button" onClick={() => updateQty(item.menuId, -1)}>−</button>
-                            <span>{item.qty}</span>
-                            <button type="button" onClick={() => updateQty(item.menuId, +1)}>+</button>
-                          </div>
-                        ) : (
-                          <span className={styles.orderQtyCtrl}>× {item.qty}</span>
-                        )}
-                        <span className={styles.orderPrice}>S/ {((item.price || 0) * item.qty).toFixed(2)}</span>
-                        {canEditItems && (
-                          <button type="button" className={styles.removeBtn} onClick={() => removeOrderItem(item.menuId)}>
-                            <Trash2 size={13} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <div className={styles.orderTotalRow}>
-                      <span>Subtotal</span>
-                      <span>S/ {(orderTotal / (1 + IGV_RATE)).toFixed(2)}</span>
-                    </div>
-                    <div className={styles.orderTotalRow}>
-                      <span>IGV (18%)</span>
-                      <span>S/ {(orderTotal - orderTotal / (1 + IGV_RATE)).toFixed(2)}</span>
-                    </div>
-                    {authorizedDiscount > 0 && (
-                      <div className={styles.orderTotalRow} style={{ color: '#27ae60' }}>
-                        <span>Descuento autorizado ({selectedTicket?.discountBy})</span>
-                        <span>− S/ {authorizedDiscount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className={`${styles.orderTotalRow} ${styles.grandTotal}`}>
-                      <strong>TOTAL</strong>
-                      <strong>S/ {orderTotal.toFixed(2)}</strong>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
-          <Textarea label="Notas" name="notes" id="pay-notes"
-            placeholder="Observaciones del cobro..."
-            value={form.notes} onChange={handleChange} />
+          <div style={{ border: '1px solid #e8453c', padding: 8, borderRadius: 6 }}>
+             <Textarea label="Observaciones (Solo uso interno, no sale en boleta)" name="notes" id="pay-notes"
+               placeholder="Ej: Cliente solicitó..."
+               value={form.notes} onChange={handleChange} />
+          </div>
 
           <div className={styles.formActions}>
             <Button type="button" variant="ghost" onClick={() => { setPaymentOpen(false); setOrderItems([]); setSelectedTicketId('') }}>Cancelar</Button>
-            <Button type="submit" variant="primary" icon={<Receipt size={15} />}
+            <Button type="submit" variant="success" icon={<Receipt size={15} />}
               disabled={orderItems.length === 0}>
-              Generar boleta · S/ {orderTotal.toFixed(2)}
+              Confirmar Pago y Generar Boleta
             </Button>
           </div>
         </form>
