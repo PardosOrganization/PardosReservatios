@@ -112,7 +112,7 @@ describe('Anfitriona Service Tests', () => {
       guests: 2,
       occasion: 'Aniversario'
     }
-    const res = await request(app).post('/api/reservations').send(newRes)
+    const res = await request(app).post('/api/reservations').set('x-user-role', 'hostess').send(newRes)
     expect(res.status).toBe(201)
     expect(res.body.clientName).toBe('Gabriela Torres')
     expect(res.body.guests).toBe(2)
