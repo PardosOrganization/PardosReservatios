@@ -508,16 +508,6 @@ export default function CashPage() {
             </div>
           </div>
 
-          <div className={styles.row2}>
-            <Input label="Cupón de descuento (Opcional)" placeholder="Código..." />
-          </div>
-
-          <div className={styles.couponAlert}>
-            💡 Cupones detectados (1): Selecciona uno para aplicarlo
-            <br />
-            <strong>PRD-POSTRE-6FCW</strong> (POSTRE)
-          </div>
-
           {/* Ticket de cocina a cobrar */}
           <Select label="Ticket de cocina" id="pay-ticket"
             value={selectedTicketId} onChange={e => handleSelectTicket(e.target.value)}>
@@ -583,12 +573,6 @@ export default function CashPage() {
                 </div>
               )}
             </div>
-          </div>
-
-          <div style={{ border: '1px solid #e8453c', padding: 8, borderRadius: 6 }}>
-             <Textarea label="Observaciones (Solo uso interno, no sale en boleta)" name="notes" id="pay-notes"
-               placeholder="Ej: Cliente solicitó..."
-               value={form.notes} onChange={handleChange} />
           </div>
 
           <div className={styles.formActions}>
