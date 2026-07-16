@@ -224,10 +224,7 @@ async function initDatabase() {
 initDatabase()
 
 // Endpoint de métricas de Prometheus
-app.get('/metrics', async (req, res) => {
-  res.setHeader('Content-Type', client.register.contentType)
-  res.send(await client.register.metrics())
-})
+
 
 // Middleware para soportar prefijos de enrutamiento del ALB en AWS
 app.use((req, res, next) => {
@@ -239,6 +236,12 @@ app.use((req, res, next) => {
     }
   }
   next()
+})
+
+// Endpoint de métricas de Prometheus
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType)
+  res.send(await client.register.metrics())
 })
 
 // Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
