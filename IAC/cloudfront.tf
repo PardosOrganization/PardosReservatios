@@ -31,6 +31,14 @@ resource "aws_cloudfront_response_headers_policy" "this" {
   }
 }
 
+resource "aws_cloudfront_function" "spa_router" {
+  name    = "${local.name}-spa-router"
+  runtime = "cloudfront-js-2.0"
+  comment = "Reescribe rutas de SPA al index.html correspondiente"
+  publish = true
+  code    = file("${path.module}/cloudfront_spa_router.js")
+}
+
 resource "aws_cloudfront_distribution" "this" {
   #checkov:skip=CKV2_AWS_46:Falso positivo; el origen es un ALB, la referencia a S3 es solo para logs
   #checkov:skip=CKV_AWS_174:El viewer certificate usa el protocolo por defecto de CloudFront que esta certificado por AWS.
@@ -101,6 +109,11 @@ resource "aws_cloudfront_distribution" "this" {
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
 
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_router.arn
+    }
+
     forwarded_values {
       query_string = false
       cookies {
@@ -117,6 +130,11 @@ resource "aws_cloudfront_distribution" "this" {
     target_origin_id           = "s3-empleados"
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.this.id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_router.arn
+    }
 
     forwarded_values {
       query_string = false
