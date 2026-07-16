@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "ecs_execution" {
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage",
     ]
-    resources = [for r in aws_ecr_repository.this : r.arn]
+    resources = concat([for r in aws_ecr_repository.this : r.arn], [aws_ecr_repository.loki.arn])
   }
 
   statement {

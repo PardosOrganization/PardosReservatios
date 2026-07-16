@@ -20,6 +20,7 @@ import express from 'express'
 import cors from 'cors'
 import { v4 as uuidv4 } from 'uuid'
 import client from 'prom-client'
+import { httpMetricsMiddleware, ticketsCreados, ticketsCambiosEstado } from './metrics.js'
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -47,6 +48,9 @@ app.use((req, res, next) => {
   }
   next()
 })
+
+// Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
+app.use(httpMetricsMiddleware)
 
 // ── Estados del ticket ──────────────────────────────────────────────────────
 const TICKET_STATUS = {
@@ -166,6 +170,7 @@ app.post('/api/tickets', (req, res) => {
     createdAt: new Date().toISOString(),
   }
   tickets.unshift(newTicket)
+  ticketsCreados.inc({ priority: newTicket.priority || 'normal' })
   res.status(201).json(newTicket)
 })
 
@@ -185,6 +190,7 @@ app.patch('/api/tickets/:id/status', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Ticket no encontrado' })
 
   tickets[idx] = { ...tickets[idx], status, updatedAt: new Date().toISOString() }
+  ticketsCambiosEstado.inc({ status })
   res.json(tickets[idx])
 })
 

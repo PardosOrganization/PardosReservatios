@@ -20,6 +20,7 @@
 import express from 'express'
 import cors from 'cors'
 import client from 'prom-client'
+import { httpMetricsMiddleware, notificacionesLeidas } from './metrics.js'
 
 const app = express()
 const PORT = process.env.PORT || 8080
@@ -47,6 +48,9 @@ app.use((req, res, next) => {
   }
   next()
 })
+
+// Instrumentación HTTP para Prometheus (después de normalizar el prefijo del ALB)
+app.use(httpMetricsMiddleware)
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split('T')[0]
@@ -151,6 +155,7 @@ app.patch('/api/notifications/:id/read', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Notificación no encontrada' })
 
   notifications[idx].read = true
+  notificacionesLeidas.inc()
   res.json(notifications[idx])
 })
 
